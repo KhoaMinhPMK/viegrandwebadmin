@@ -1017,3 +1017,354 @@ body {
         font-size: 0.8rem;
     }
 }
+
+/* ===============================
+   EDIT USER MODAL
+   =============================== */
+
+.edit-modal {
+    max-width: 900px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.edit-modal .modal-header {
+    background: linear-gradient(135deg, #2E86AB 0%, #1B5E7A 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 10px 10px 0 0;
+}
+
+.edit-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.edit-modal .modal-header h2 i {
+    color: #FFD700;
+}
+
+/* Edit Form Layout */
+.edit-form {
+    padding: 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #2E86AB;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-group label i {
+    width: 16px;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.8rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2E86AB;
+    box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-group input:hover,
+.form-group select:hover {
+    border-color: #5ba3c7;
+}
+
+.field-note {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-top: 0.2rem;
+}
+
+/* Admin Fields */
+.admin-only-fields {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.2rem;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.admin-only-fields::before {
+    content: "🔐 Admin Database Only";
+    position: absolute;
+    top: -8px;
+    left: 15px;
+    background: #f8f9fa;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    color: #2E86AB;
+    font-weight: 600;
+}
+
+/* Current Info */
+.current-info h4 {
+    color: #2E86AB;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.db-badge {
+    background: #2E86AB;
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Warning & Preview */
+.warning-box {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.warning-box i {
+    color: #856404;
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+}
+
+.warning-box div {
+    color: #856404;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.changes-preview {
+    background: linear-gradient(135deg, #d1ecf1 0%, #b8daff 100%);
+    border: 1px solid #2E86AB;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1rem 0;
+}
+
+.changes-preview h4 {
+    color: #2E86AB;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.change-item {
+    background: white;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid #2E86AB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.change-item:last-child {
+    margin-bottom: 0;
+}
+
+.change-field {
+    font-weight: 600;
+    color: #2E86AB;
+    font-size: 0.9rem;
+}
+
+.change-values {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+}
+
+.old-value {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-decoration: line-through;
+}
+
+.new-value {
+    background: #d4edda;
+    color: #155724;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.change-arrow {
+    color: #2E86AB;
+    font-weight: bold;
+}
+
+/* Edit Modal Footer */
+.edit-modal .modal-footer {
+    padding: 1.5rem 2rem;
+    background: #f8f9fa;
+    border-radius: 0 0 10px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.btn-preview {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-preview:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.loading-indicator {
+    color: #2E86AB;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.loading-indicator i {
+    color: #2E86AB;
+}
+
+/* Responsive cho Edit Modal */
+@media (max-width: 768px) {
+    .edit-modal {
+        width: 98%;
+        margin: 1% auto;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+    
+    .edit-modal .modal-footer {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .button-group {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .form-group input,
+    .form-group select {
+        padding: 0.9rem;
+        font-size: 16px; /* Tránh zoom trên mobile */
+    }
+}

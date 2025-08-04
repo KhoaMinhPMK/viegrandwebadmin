@@ -206,6 +206,148 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content edit-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-user-edit"></i>
+                    Chỉnh sửa thông tin người dùng
+                </h2>
+                <span class="close" id="closeEditModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" class="edit-form">
+                    <div class="form-grid">
+                        <!-- Left Column -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="editUsername">
+                                    <i class="fas fa-user"></i>
+                                    Tên đăng nhập
+                                </label>
+                                <input type="text" id="editUsername" name="username" placeholder="Nhập tên đăng nhập">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="editEmail">
+                                    <i class="fas fa-envelope"></i>
+                                    Email
+                                </label>
+                                <input type="email" id="editEmail" name="email" placeholder="Nhập địa chỉ email">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="editFullName">
+                                    <i class="fas fa-id-card"></i>
+                                    Họ và tên
+                                </label>
+                                <input type="text" id="editFullName" name="full_name" placeholder="Nhập họ và tên đầy đủ">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="editPhone">
+                                    <i class="fas fa-phone"></i>
+                                    Số điện thoại
+                                </label>
+                                <input type="tel" id="editPhone" name="phone" placeholder="Nhập số điện thoại">
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-column">
+                            <!-- Admin Fields -->
+                            <div class="admin-only-fields" id="adminOnlyFields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="editRole">
+                                        <i class="fas fa-user-tag"></i>
+                                        Vai trò
+                                    </label>
+                                    <select id="editRole" name="role">
+                                        <option value="">-- Không thay đổi --</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="editor">Editor</option>
+                                        <option value="viewer">Viewer</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editStatus">
+                                        <i class="fas fa-toggle-on"></i>
+                                        Trạng thái
+                                    </label>
+                                    <select id="editStatus" name="status">
+                                        <option value="">-- Không thay đổi --</option>
+                                        <option value="active">Hoạt động</option>
+                                        <option value="inactive">Không hoạt động</option>
+                                        <option value="suspended">Tạm khóa</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Current Info -->
+                            <div class="current-info">
+                                <h4>
+                                    <i class="fas fa-info-circle"></i>
+                                    Thông tin hiện tại
+                                </h4>
+                                <div class="info-card">
+                                    <div class="info-row">
+                                        <span class="info-label">ID:</span>
+                                        <span id="currentUserId">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Database:</span>
+                                        <span id="currentDatabase" class="db-badge">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Ngày tạo:</span>
+                                        <span id="currentCreated">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Cập nhật cuối:</span>
+                                        <span id="currentUpdated">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warnings & Preview -->
+                    <div class="warning-box" id="editWarnings" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div id="warningText"></div>
+                    </div>
+
+                    <div class="changes-preview" id="changesPreview" style="display: none;">
+                        <h4>
+                            <i class="fas fa-list-alt"></i>
+                            Xem trước thay đổi
+                        </h4>
+                        <div id="changesList"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="button-group">
+                    <button type="button" class="btn btn-preview" id="previewChangesBtn">
+                        <i class="fas fa-eye"></i> Xem trước
+                    </button>
+                    <button type="submit" class="btn btn-success" id="saveChangesBtn" form="editUserForm">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">
+                        <i class="fas fa-times"></i> Hủy bỏ
+                    </button>
+                </div>
+                <div class="loading-indicator" id="editLoadingIndicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Đang cập nhật...
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
