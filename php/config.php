@@ -135,16 +135,16 @@ class Utils {
                 }
             }
             
-            if (!header_sent('Access-Control-Allow-Origin')) {
+            if (!self::headers_sent_check('Access-Control-Allow-Origin')) {
                 header("Access-Control-Allow-Origin: $allowOrigin");
             }
-            if (!header_sent('Access-Control-Allow-Methods')) {
+            if (!self::headers_sent_check('Access-Control-Allow-Methods')) {
                 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
             }
-            if (!header_sent('Access-Control-Allow-Headers')) {
+            if (!self::headers_sent_check('Access-Control-Allow-Headers')) {
                 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
             }
-            if (!header_sent('Access-Control-Allow-Credentials')) {
+            if (!self::headers_sent_check('Access-Control-Allow-Credentials')) {
                 header('Access-Control-Allow-Credentials: true');
             }
         }
@@ -156,7 +156,7 @@ class Utils {
     /**
      * Kiểm tra xem header đã được gửi chưa
      */
-    private static function header_sent($header) {
+    private static function headers_sent_check($header) {
         $headers = headers_list();
         foreach ($headers as $h) {
             if (stripos($h, $header) === 0) {
