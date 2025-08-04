@@ -139,6 +139,73 @@
         </div>
     </main>
 
+    <!-- User Detail Modal -->
+    <div id="userDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user"></i> Chi tiết người dùng</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="user-detail-container">
+                    <div class="user-avatar-large">
+                        <span id="modalUserAvatar">U</span>
+                    </div>
+                    <div class="user-detail-info">
+                        <div class="detail-row">
+                            <label>ID:</label>
+                            <span id="modalUserId">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Tên đầy đủ:</label>
+                            <span id="modalUserFullName">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Tên đăng nhập:</label>
+                            <span id="modalUserUsername">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Email:</label>
+                            <span id="modalUserEmail">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Số điện thoại:</label>
+                            <span id="modalUserPhone">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Vai trò:</label>
+                            <span id="modalUserRole" class="role-badge">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Trạng thái:</label>
+                            <span id="modalUserStatus" class="status-badge">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Ngày tạo:</label>
+                            <span id="modalUserCreated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Đăng nhập cuối:</label>
+                            <span id="modalUserLastLogin">-</span>
+                        </div>
+                        <div class="detail-row" id="modalPremiumRow" style="display: none;">
+                            <label>Premium:</label>
+                            <span id="modalUserPremium">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-edit" id="editUserBtn">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+                <button class="btn btn-secondary" id="closeModalBtn">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

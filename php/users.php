@@ -155,20 +155,50 @@ class UsersHandler {
      */
     public function getUserById($userId) {
         try {
-            $stmt = $this->db->prepare("
-                SELECT 
-                    id, 
-                    username, 
-                    email, 
-                    full_name, 
-                    phone, 
-                    role, 
-                    status, 
-                    created_at, 
-                    last_login 
-                FROM users 
-                WHERE id = ?
-            ");
+            $connection = $this->getCurrentConnection();
+            $table = $this->getCurrentTable();
+            
+            if ($this->currentDb === 'main') {
+                // Query cho database viegrand (bảng user)
+                $stmt = $connection->prepare("
+                    SELECT 
+                        userId as id,
+                        userName as username, 
+                        email, 
+                        userName as full_name,
+                        phone, 
+                        CASE 
+                            WHEN premium_status = 1 THEN 'premium'
+                            ELSE 'user' 
+                        END as role,
+                        CASE 
+                            WHEN premium_status = 1 THEN 'premium'
+                            ELSE 'active' 
+                        END as status,
+                        premium_status,
+                        created_at, 
+                        updated_at as last_login
+                    FROM $table 
+                    WHERE userId = ?
+                ");
+            } else {
+                // Query cho database admin (bảng users)
+                $stmt = $connection->prepare("
+                    SELECT 
+                        id, 
+                        username, 
+                        email, 
+                        full_name, 
+                        phone, 
+                        role, 
+                        status, 
+                        created_at, 
+                        last_login 
+                    FROM $table 
+                    WHERE id = ?
+                ");
+            }
+            
             $stmt->execute([$userId]);
             $user = $stmt->fetch();
             
@@ -180,6 +210,7 @@ class UsersHandler {
             }
             
             // Format dữ liệu
+            $user['database_source'] = $this->currentDb;
             $user['avatar'] = $this->generateAvatar($user['full_name'] ?: $user['username']);
             $user['role_display'] = $this->getRoleDisplay($user['role']);
             $user['status_display'] = $this->getStatusDisplay($user['status']);
@@ -187,7 +218,7 @@ class UsersHandler {
             $user['last_login_formatted'] = $user['last_login'] ? 
                 date('d/m/Y H:i', strtotime($user['last_login'])) : 'Chưa đăng nhập';
             
-            Utils::logActivity("Retrieved user info for ID: $userId", 'INFO');
+            Utils::logActivity("Retrieved user info for ID: $userId from {$this->currentDb} database", 'INFO');
             
             return [
                 'success' => true,

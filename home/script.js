@@ -401,13 +401,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         tbody.innerHTML = users.map(user => `
-            <tr>
+            <tr data-user-id="${user.id}">
                 <td>
                     <div class="user-avatar-cell">${user.avatar}</div>
                 </td>
                 <td>
                     <div class="user-info">
-                        <div class="user-name">${user.full_name || 'Chưa cập nhật'}</div>
+                        <div class="user-name clickable" onclick="showUserDetail(${user.id}, '${user.database_source || currentDatabase}')" 
+                             title="Click để xem chi tiết">
+                            ${user.full_name || 'Chưa cập nhật'}
+                        </div>
                         <div class="user-username">@${user.username}</div>
                         ${user.database_source ? `<div style="font-size: 0.7rem; color: #666; margin-top: 2px;">
                             <i class="fas fa-database"></i> ${user.database_source === 'admin' ? 'Admin DB' : 'Main DB'}
@@ -425,14 +428,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${user.last_login_formatted}</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="action-btn btn-view" onclick="viewUser(${user.id}, '${user.database_source || currentDatabase}')">
-                            <i class="fas fa-eye"></i> Xem
+                        <button class="action-btn btn-view" onclick="showUserDetail(${user.id}, '${user.database_source || currentDatabase}')" title="Xem chi tiết">
+                            <i class="fas fa-eye"></i> <span>Xem</span>
                         </button>
-                        <button class="action-btn btn-edit" onclick="editUser(${user.id}, '${user.database_source || currentDatabase}')">
-                            <i class="fas fa-edit"></i> Sửa
+                        <button class="action-btn btn-edit" onclick="editUser(${user.id}, '${user.database_source || currentDatabase}')" title="Chỉnh sửa">
+                            <i class="fas fa-edit"></i> <span>Sửa</span>
                         </button>
-                        <button class="action-btn btn-delete" onclick="deleteUser(${user.id}, '${user.database_source || currentDatabase}')">
-                            <i class="fas fa-trash"></i> Xóa
+                        <button class="action-btn btn-delete" onclick="deleteUser(${user.id}, '${user.database_source || currentDatabase}')" title="Xóa">
+                            <i class="fas fa-trash"></i> <span>Xóa</span>
                         </button>
                     </div>
                 </td>
@@ -577,4 +580,176 @@ document.addEventListener('DOMContentLoaded', function() {
             // TODO: Implement delete user API call with database parameter
         }
     };
+
+    // Modal Functions
+    function initializeModal() {
+        const modal = document.getElementById('userDetailModal');
+        const closeBtn = document.querySelector('.close');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        
+        // Close modal events
+        closeBtn.onclick = closeModal;
+        closeModalBtn.onclick = closeModal;
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.style.display === 'block') {
+                closeModal();
+            }
+        });
+    }
+    
+    function openModal() {
+        const modal = document.getElementById('userDetailModal');
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+    
+    function closeModal() {
+        const modal = document.getElementById('userDetailModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore scroll
+    }
+    
+    function showUserDetail(userId, dbSource = null) {
+        const database = dbSource || currentDatabase;
+        
+        // Show loading in modal
+        openModal();
+        
+        // Find user data from current loaded users or fetch from API
+        const tableRows = document.querySelectorAll('#usersTableBody tr');
+        let userData = null;
+        
+        tableRows.forEach(row => {
+            const userIdCell = row.querySelector('[data-user-id]');
+            if (userIdCell && userIdCell.getAttribute('data-user-id') == userId) {
+                userData = extractUserDataFromRow(row);
+            }
+        });
+        
+        if (userData) {
+            populateModal(userData, database);
+        } else {
+            // Fetch user detail from API if not found in current table
+            fetchUserDetail(userId, database);
+        }
+    }
+    
+    function extractUserDataFromRow(row) {
+        const cells = row.querySelectorAll('td');
+        return {
+            id: row.querySelector('[data-user-id]').getAttribute('data-user-id'),
+            avatar: cells[0].textContent.trim(),
+            username: cells[1].querySelector('.user-username')?.textContent.trim() || '',
+            full_name: cells[1].querySelector('.user-name')?.textContent.trim() || '',
+            email: cells[2].textContent.trim(),
+            role: cells[3].querySelector('.role-badge')?.textContent.trim() || '',
+            status: cells[4].querySelector('.status-badge')?.textContent.trim() || '',
+            created_at: cells[5].textContent.trim(),
+            last_login: cells[6].textContent.trim(),
+            phone: 'N/A' // Will be fetched from API if needed
+        };
+    }
+    
+    async function fetchUserDetail(userId, database) {
+        try {
+            console.log(`Fetching user detail: ID=${userId}, DB=${database}`);
+            const response = await fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`);
+            
+            console.log('Response status:', response.status);
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+            
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error('Server trả về dữ liệu không hợp lệ');
+            }
+            
+            console.log('Parsed result:', result);
+            
+            if (result.success) {
+                populateModal(result.data, database);
+            } else {
+                showNotification(result.message || 'Không thể tải thông tin chi tiết người dùng', 'error');
+                closeModal();
+            }
+        } catch (error) {
+            console.error('Error fetching user detail:', error);
+            showNotification(`Có lỗi xảy ra khi tải thông tin người dùng: ${error.message}`, 'error');
+            closeModal();
+        }
+    }
+    
+    function populateModal(userData, database) {
+        // Update avatar
+        const avatar = userData.full_name ? userData.full_name.charAt(0).toUpperCase() : 
+                     userData.username ? userData.username.charAt(0).toUpperCase() : 'U';
+        document.getElementById('modalUserAvatar').textContent = avatar;
+        
+        // Update user info
+        document.getElementById('modalUserId').textContent = userData.id || '-';
+        document.getElementById('modalUserFullName').textContent = userData.full_name || userData.username || '-';
+        document.getElementById('modalUserUsername').textContent = userData.username || '-';
+        document.getElementById('modalUserEmail').textContent = userData.email || '-';
+        document.getElementById('modalUserPhone').textContent = userData.phone || '-';
+        document.getElementById('modalUserCreated').textContent = formatDate(userData.created_at) || '-';
+        document.getElementById('modalUserLastLogin').textContent = formatDate(userData.last_login) || 'Chưa đăng nhập';
+        
+        // Update role badge
+        const roleElement = document.getElementById('modalUserRole');
+        roleElement.textContent = userData.role || '-';
+        roleElement.className = `role-badge role-${userData.role}`;
+        
+        // Update status badge
+        const statusElement = document.getElementById('modalUserStatus');
+        statusElement.textContent = userData.status || '-';
+        statusElement.className = `status-badge status-${userData.status}`;
+        
+        // Show/hide premium info for main database
+        const premiumRow = document.getElementById('modalPremiumRow');
+        if (database === 'main' && userData.premium_status !== undefined) {
+            premiumRow.style.display = 'flex';
+            document.getElementById('modalUserPremium').textContent = userData.premium_status ? 'Premium' : 'Thường';
+        } else {
+            premiumRow.style.display = 'none';
+        }
+        
+        // Update edit button
+        const editBtn = document.getElementById('editUserBtn');
+        editBtn.onclick = () => editUser(userData.id, database);
+    }
+    
+    function formatDate(dateString) {
+        if (!dateString || dateString === '0000-00-00 00:00:00') return null;
+        
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return dateString;
+        }
+    }
+    
+    // Initialize modal when page loads
+    initializeModal();
+    
+    // Make showUserDetail globally available
+    window.showUserDetail = showUserDetail;
 });
