@@ -116,12 +116,54 @@ class Utils {
     public static function sendResponse($data, $code = 200) {
         http_response_code($code);
         header('Content-Type: application/json; charset=utf-8');
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization');
+        
+        // Chỉ set CORS headers nếu chưa được set
+        if (!headers_sent()) {
+            // Kiểm tra origin
+            $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+            $allowedOrigins = [
+                'http://localhost',
+                'http://127.0.0.1',
+                'https://viegrand.site'
+            ];
+            
+            $allowOrigin = '*';
+            foreach ($allowedOrigins as $allowed) {
+                if (strpos($origin, $allowed) === 0) {
+                    $allowOrigin = $origin;
+                    break;
+                }
+            }
+            
+            if (!header_sent('Access-Control-Allow-Origin')) {
+                header("Access-Control-Allow-Origin: $allowOrigin");
+            }
+            if (!header_sent('Access-Control-Allow-Methods')) {
+                header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+            }
+            if (!header_sent('Access-Control-Allow-Headers')) {
+                header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+            }
+            if (!header_sent('Access-Control-Allow-Credentials')) {
+                header('Access-Control-Allow-Credentials: true');
+            }
+        }
         
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit;
+    }
+    
+    /**
+     * Kiểm tra xem header đã được gửi chưa
+     */
+    private static function header_sent($header) {
+        $headers = headers_list();
+        foreach ($headers as $h) {
+            if (stripos($h, $header) === 0) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
