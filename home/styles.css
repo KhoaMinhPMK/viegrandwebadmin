@@ -229,6 +229,31 @@ body {
     flex-wrap: wrap;
 }
 
+.database-selector {
+    padding: 0.75rem 1rem;
+    border: 2px solid #2E86AB;
+    border-radius: 25px;
+    background: white;
+    color: #2E86AB;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+    min-width: 200px;
+}
+
+.database-selector:hover, .database-selector:focus {
+    background: #2E86AB;
+    color: white;
+}
+
+.database-selector option {
+    background: white;
+    color: #333;
+    padding: 10px;
+}
+
 .search-box {
     display: flex;
     align-items: center;
@@ -388,6 +413,11 @@ body {
     color: white;
 }
 
+.role-customer {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
 .status-badge {
     display: inline-block;
     padding: 0.3rem 0.8rem;
@@ -409,6 +439,11 @@ body {
 .status-suspended {
     background: #fff3cd;
     color: #856404;
+}
+
+.status-pending {
+    background: #e2e3e5;
+    color: #6c757d;
 }
 
 .action-buttons {

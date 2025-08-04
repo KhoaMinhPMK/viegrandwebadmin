@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let currentLimit = 10;
     let currentSearchQuery = '';
+    let currentDatabase = 'admin'; // Mặc định dùng admin database
     
     // Khởi tạo trang
     initializePage();
@@ -28,6 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Khởi tạo quản lý users
         initializeUsersManagement();
+        
+        // Khởi tạo database selector
+        initializeDatabaseSelector();
         
         // Load danh sách users
         loadUsers();
@@ -183,6 +187,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Khởi tạo database selector
+    function initializeDatabaseSelector() {
+        const databaseSelector = document.getElementById('databaseSelector');
+        if (databaseSelector) {
+            databaseSelector.addEventListener('change', function() {
+                currentDatabase = this.value;
+                currentPage = 1; // Reset về trang đầu
+                loadUsers(); // Reload dữ liệu
+                
+                // Cập nhật thông báo
+                const dbName = this.value === 'admin' ? 'Admin Database (Login Web)' : 'Main Database (VieGrand Chính)';
+                showNotification(`Đã chuyển sang ${dbName}`, 'info');
+            });
+        }
+    }
+    
     function showNotification(message, type = 'info') {
         // Tạo notification element
         const notification = document.createElement('div');
@@ -325,10 +345,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             showLoading(true);
             
-            let url = `${API_BASE_URL}users.php?action=list&page=${currentPage}&limit=${currentLimit}`;
+            let url = `${API_BASE_URL}users.php?action=list&db=${currentDatabase}&page=${currentPage}&limit=${currentLimit}`;
             
             if (currentSearchQuery) {
-                url = `${API_BASE_URL}users.php?action=search&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
+                url = `${API_BASE_URL}users.php?action=search&db=${currentDatabase}&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
             }
             
             console.log('Loading users from:', url);
@@ -341,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 displayUsers(result.data.users);
                 displayPagination(result.data.pagination);
+                updateDatabaseInfo(result.data);
                 showNoData(false);
             } else {
                 showNotification(result.message || 'Không thể tải danh sách người dùng', 'error');
@@ -352,6 +373,18 @@ document.addEventListener('DOMContentLoaded', function() {
             showNoData(true);
         } finally {
             showLoading(false);
+        }
+    }
+    
+    // Function để cập nhật thông tin database hiện tại
+    function updateDatabaseInfo(data) {
+        const header = document.querySelector('.section-header h2');
+        if (header && data.database && data.table) {
+            const dbInfo = currentDatabase === 'admin' ? 
+                '<span style="font-size: 0.7rem; background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 10px;">Admin DB</span>' :
+                '<span style="font-size: 0.7rem; background: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 10px;">Main DB</span>';
+            
+            header.innerHTML = `<i class="fas fa-users"></i> Quản lý người dùng ${dbInfo}`;
         }
     }
     
@@ -374,6 +407,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="user-info">
                         <div class="user-name">${user.full_name || 'Chưa cập nhật'}</div>
                         <div class="user-username">@${user.username}</div>
+                        ${user.database_source ? `<div style="font-size: 0.7rem; color: #666; margin-top: 2px;">
+                            <i class="fas fa-database"></i> ${user.database_source === 'admin' ? 'Admin DB' : 'Main DB'}
+                        </div>` : ''}
                     </div>
                 </td>
                 <td>${user.email || 'Chưa có'}</td>
@@ -387,13 +423,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${user.last_login_formatted}</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="action-btn btn-view" onclick="viewUser(${user.id})">
+                        <button class="action-btn btn-view" onclick="viewUser(${user.id}, '${user.database_source || currentDatabase}')">
                             <i class="fas fa-eye"></i> Xem
                         </button>
-                        <button class="action-btn btn-edit" onclick="editUser(${user.id})">
+                        <button class="action-btn btn-edit" onclick="editUser(${user.id}, '${user.database_source || currentDatabase}')">
                             <i class="fas fa-edit"></i> Sửa
                         </button>
-                        <button class="action-btn btn-delete" onclick="deleteUser(${user.id})">
+                        <button class="action-btn btn-delete" onclick="deleteUser(${user.id}, '${user.database_source || currentDatabase}')">
                             <i class="fas fa-trash"></i> Xóa
                         </button>
                     </div>
@@ -482,6 +518,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function updateDatabaseInfo(data) {
+        // Cập nhật thông tin database trong header
+        const sectionHeader = document.querySelector('.section-header h2');
+        if (sectionHeader && data) {
+            const dbInfo = data.database === 'admin' ? 'Admin DB' : 'Main DB';
+            const tableName = data.table || 'unknown';
+            sectionHeader.innerHTML = `
+                <i class="fas fa-users"></i> Quản lý người dùng 
+                <small style="font-size: 0.7em; color: #666; font-weight: normal;">
+                    (${dbInfo}: ${tableName})
+                </small>
+            `;
+        }
+    }
+    
     function showNoData(show) {
         const noDataMsg = document.getElementById('noDataMessage');
         const table = document.getElementById('usersTable');
@@ -502,20 +553,26 @@ document.addEventListener('DOMContentLoaded', function() {
         loadUsers();
     };
     
-    window.viewUser = function(userId) {
-        showNotification(`Xem thông tin chi tiết user ID: ${userId}`, 'info');
-        // TODO: Implement view user modal
+    window.viewUser = function(userId, dbSource = null) {
+        const database = dbSource || currentDatabase;
+        const dbName = database === 'admin' ? 'Admin Database' : 'Main Database';
+        showNotification(`Xem thông tin chi tiết user ID: ${userId} từ ${dbName}`, 'info');
+        // TODO: Implement view user modal with database parameter
     };
     
-    window.editUser = function(userId) {
-        showNotification(`Chỉnh sửa user ID: ${userId}`, 'info');
-        // TODO: Implement edit user modal
+    window.editUser = function(userId, dbSource = null) {
+        const database = dbSource || currentDatabase;
+        const dbName = database === 'admin' ? 'Admin Database' : 'Main Database';
+        showNotification(`Chỉnh sửa user ID: ${userId} từ ${dbName}`, 'info');
+        // TODO: Implement edit user modal with database parameter
     };
     
-    window.deleteUser = function(userId) {
-        if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-            showNotification(`Xóa user ID: ${userId}`, 'warning');
-            // TODO: Implement delete user API call
+    window.deleteUser = function(userId, dbSource = null) {
+        const database = dbSource || currentDatabase;
+        const dbName = database === 'admin' ? 'Admin Database' : 'Main Database';
+        if (confirm(`Bạn có chắc chắn muốn xóa người dùng này từ ${dbName}?`)) {
+            showNotification(`Xóa user ID: ${userId} từ ${dbName}`, 'warning');
+            // TODO: Implement delete user API call with database parameter
         }
     };
 });

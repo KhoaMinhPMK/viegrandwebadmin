@@ -1,6 +1,6 @@
 <?php
 /**
- * VieGrand Database Configuration
+ * VieGrand Multi-Database Configuration
  * Author: VieGrand Team
  * Date: August 4, 2025
  */
@@ -10,19 +10,19 @@ if (!defined('VIEGRAND_ACCESS')) {
     define('VIEGRAND_ACCESS', true);
 }
 
-// Cấu hình database cho WEB ADMIN (login web)
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'viegrandwebadmin'); // Database cho login web admin
-define('DB_USER', 'root'); 
-define('DB_PASS', ''); 
-define('DB_CHARSET', 'utf8mb4');
+// Cấu hình database cho WEB ADMIN (đăng nhập hệ thống web)
+define('DB_ADMIN_HOST', 'localhost');
+define('DB_ADMIN_NAME', 'viegrandwebadmin');
+define('DB_ADMIN_USER', 'root');
+define('DB_ADMIN_PASS', '');
+define('DB_ADMIN_CHARSET', 'utf8mb4');
 
-// Cấu hình database VIEGRAND CHÍNH (database có sẵn của bạn)
-define('MAIN_DB_HOST', 'localhost');
-define('MAIN_DB_NAME', 'viegrand'); // Database viegrand có sẵn
-define('MAIN_DB_USER', 'root');
-define('MAIN_DB_PASS', '');
-define('MAIN_DB_CHARSET', 'utf8mb4');
+// Cấu hình database cho VIEGRAND MAIN (dữ liệu chính)
+define('DB_MAIN_HOST', 'localhost');
+define('DB_MAIN_NAME', 'viegrand');
+define('DB_MAIN_USER', 'root');
+define('DB_MAIN_PASS', '');
+define('DB_MAIN_CHARSET', 'utf8mb4');
 
 // Cấu hình ứng dụng
 define('APP_NAME', 'VieGrand Admin');
@@ -31,10 +31,10 @@ define('APP_URL', 'https://viegrand.site/viegrandwebadmin/');
 define('API_URL', 'https://viegrand.site/viegrandwebadmin/php/');
 
 // Cấu hình bảo mật
-define('SECRET_KEY', 'viegrand_secret_key_2025'); // Thay đổi key này
-define('SESSION_LIFETIME', 3600); // 1 giờ (tính bằng giây)
+define('SECRET_KEY', 'viegrand_secret_key_2025');
+define('SESSION_LIFETIME', 3600);
 define('MAX_LOGIN_ATTEMPTS', 5);
-define('LOGIN_LOCKOUT_TIME', 900); // 15 phút
+define('LOGIN_LOCKOUT_TIME', 900);
 
 // Cấu hình CORS
 define('ALLOWED_ORIGINS', [
@@ -47,58 +47,59 @@ define('ALLOWED_ORIGINS', [
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 /**
- * Kết nối database với PDO - Hỗ trợ 2 database
+ * Kết nối database với PDO - Multi Database Support
  */
 class Database {
-    private static $instance = null;
+    private static $adminInstance = null;
     private static $mainInstance = null;
     private $pdo;
     
-    private function __construct($useMainDb = false) {
+    private function __construct($type = 'admin') {
         try {
-            if ($useMainDb) {
-                // Kết nối database chính (viegrand)
-                $dsn = "mysql:host=" . MAIN_DB_HOST . ";dbname=" . MAIN_DB_NAME . ";charset=" . MAIN_DB_CHARSET;
-                $user = MAIN_DB_USER;
-                $pass = MAIN_DB_PASS;
+            if ($type === 'admin') {
+                $dsn = "mysql:host=" . DB_ADMIN_HOST . ";dbname=" . DB_ADMIN_NAME . ";charset=" . DB_ADMIN_CHARSET;
+                $user = DB_ADMIN_USER;
+                $pass = DB_ADMIN_PASS;
             } else {
-                // Kết nối database admin (viegrandwebadmin)
-                $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
-                $user = DB_USER;
-                $pass = DB_PASS;
+                $dsn = "mysql:host=" . DB_MAIN_HOST . ";dbname=" . DB_MAIN_NAME . ";charset=" . DB_MAIN_CHARSET;
+                $user = DB_MAIN_USER;
+                $pass = DB_MAIN_PASS;
             }
             
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . ($useMainDb ? MAIN_DB_CHARSET : DB_CHARSET)
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . ($type === 'admin' ? DB_ADMIN_CHARSET : DB_MAIN_CHARSET)
             ];
             
             $this->pdo = new PDO($dsn, $user, $pass, $options);
         } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            error_log("Database connection failed ($type): " . $e->getMessage());
             die(json_encode([
                 'success' => false,
-                'message' => 'Database connection failed'
+                'message' => "Database connection failed ($type)"
             ]));
         }
     }
     
-    // Lấy instance cho database admin (mặc định)
-    public static function getInstance() {
-        if (self::$instance === null) {
-            self::$instance = new self(false);
+    public static function getAdminInstance() {
+        if (self::$adminInstance === null) {
+            self::$adminInstance = new self('admin');
         }
-        return self::$instance;
+        return self::$adminInstance;
     }
     
-    // Lấy instance cho database chính (viegrand)
     public static function getMainInstance() {
         if (self::$mainInstance === null) {
-            self::$mainInstance = new self(true);
+            self::$mainInstance = new self('main');
         }
         return self::$mainInstance;
+    }
+    
+    // Backward compatibility
+    public static function getInstance() {
+        return self::getAdminInstance();
     }
     
     public function getConnection() {

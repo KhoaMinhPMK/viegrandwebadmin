@@ -8,12 +8,13 @@ define('VIEGRAND_ACCESS', true);
 require_once 'config.php';
 
 /**
- * Lớp xử lý đăng nhập
+ * Lớp xử lý đăng nhập - Sử dụng Admin Database
  */
 class LoginHandler {
     private $db;
     
     public function __construct() {
+        // Sử dụng Admin Database cho login web
         $this->db = Database::getInstance()->getConnection();
     }
     
