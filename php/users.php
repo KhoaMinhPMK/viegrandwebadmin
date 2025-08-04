@@ -237,6 +237,114 @@ class UsersHandler {
     /**
      * Cập nhật thông tin người dùng
      */
+    /**
+     * Cập nhật user theo email (email không được thay đổi)
+     */
+    public function updateUserByEmail($email, $data) {
+        try {
+            // Debug log
+            Utils::logActivity("UpdateUserByEmail called - Email: $email, Database: {$this->currentDb}, Data: " . json_encode($data), 'DEBUG');
+            
+            $connection = $this->getCurrentConnection();
+            $table = $this->getCurrentTable();
+            
+            // Tìm user bằng email trước
+            $findUserStmt = $connection->prepare("SELECT " . 
+                ($this->currentDb === 'main' ? 'userId' : 'id') . " FROM $table WHERE email = ?");
+            $findUserStmt->execute([Utils::validateInput($email)]);
+            $user = $findUserStmt->fetch();
+            
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'Người dùng không tồn tại'
+                ];
+            }
+            
+            $userId = $user[$this->currentDb === 'main' ? 'userId' : 'id'];
+            
+            // Loại bỏ email khỏi dữ liệu cập nhật
+            if (isset($data['email'])) {
+                unset($data['email']);
+            }
+            
+            if (empty($data)) {
+                return [
+                    'success' => false,
+                    'message' => 'Không có dữ liệu hợp lệ để cập nhật (email không được thay đổi)'
+                ];
+            }
+            
+            // Validate dữ liệu
+            $allowedFields = $this->getAllowedUpdateFields();
+            $updateData = [];
+            $updateFields = [];
+            
+            foreach ($allowedFields as $field => $dbField) {
+                if ($field === 'email') continue; // Skip email field
+                
+                if (isset($data[$field]) && $data[$field] !== '') {
+                    $updateFields[] = "$dbField = ?";
+                    $updateData[] = Utils::validateInput($data[$field]);
+                }
+            }
+            
+            if (empty($updateFields)) {
+                return [
+                    'success' => false,
+                    'message' => 'Không có dữ liệu hợp lệ để cập nhật'
+                ];
+            }
+            
+            // Kiểm tra username trùng lặp (nếu có update username)
+            if (isset($data['username'])) {
+                $usernameField = $this->currentDb === 'main' ? 'userName' : 'username';
+                $usernameCheckStmt = $connection->prepare("SELECT COUNT(*) FROM $table WHERE $usernameField = ? AND " . 
+                    ($this->currentDb === 'main' ? 'userId' : 'id') . " != ?");
+                $usernameCheckStmt->execute([Utils::validateInput($data['username']), $userId]);
+                
+                if ($usernameCheckStmt->fetchColumn() > 0) {
+                    return [
+                        'success' => false,
+                        'message' => 'Tên đăng nhập này đã được sử dụng bởi người dùng khác'
+                    ];
+                }
+            }
+            
+            // Thêm timestamp cập nhật
+            $updateFields[] = "updated_at = NOW()";
+            
+            // Thực hiện cập nhật
+            $sql = "UPDATE $table SET " . implode(', ', $updateFields) . 
+                   " WHERE email = ?";
+            $updateData[] = Utils::validateInput($email);
+            
+            $stmt = $connection->prepare($sql);
+            $stmt->execute($updateData);
+            
+            // Log activity
+            $fieldsUpdated = array_keys($data);
+            Utils::logActivity("Updated user by email: $email in {$this->currentDb} database. Fields: " . 
+                implode(', ', $fieldsUpdated), 'INFO');
+            
+            // Lấy thông tin user sau khi cập nhật
+            $updatedUser = $this->getUserById($userId);
+            
+            return [
+                'success' => true,
+                'message' => 'Cập nhật thông tin người dùng thành công',
+                'data' => $updatedUser['data'] ?? null
+            ];
+            
+        } catch (Exception $e) {
+            Utils::logActivity("Error updating user by email: $email - " . $e->getMessage(), 'ERROR');
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật thông tin người dùng'
+            ];
+        }
+    }
+
     public function updateUser($userId, $data) {
         try {
             // Debug log
@@ -344,23 +452,22 @@ class UsersHandler {
      */
     private function getAllowedUpdateFields() {
         if ($this->currentDb === 'main') {
-            // Fields cho database viegrand (bảng user)
+            // Fields cho database viegrand (bảng user) - Email không được phép thay đổi
             return [
                 'username' => 'userName',
-                'email' => 'email',
                 'full_name' => 'userName', // Trong DB main, full_name và username cùng field
                 'phone' => 'phone'
-                // Note: Không cho phép update premium_status trực tiếp
+                // Note: Không cho phép update email và premium_status trực tiếp
             ];
         } else {
-            // Fields cho database admin (bảng users)
+            // Fields cho database admin (bảng users) - Email không được phép thay đổi
             return [
                 'username' => 'username',
-                'email' => 'email', 
                 'full_name' => 'full_name',
                 'phone' => 'phone',
                 'role' => 'role',
                 'status' => 'status'
+                // Note: Không cho phép update email trực tiếp
             ];
         }
     }
@@ -565,12 +672,12 @@ switch ($method) {
         $database = $_GET['db'] ?? 'admin';
         $usersHandler = new UsersHandler($database);
         
-        $userId = (int)($_GET['id'] ?? 0);
+        $email = $_GET['email'] ?? '';
         
-        if ($userId <= 0) {
+        if (empty($email)) {
             Utils::sendResponse([
                 'success' => false,
-                'message' => 'ID người dùng không hợp lệ'
+                'message' => 'Email người dùng không hợp lệ'
             ], 400);
         }
         
@@ -584,7 +691,12 @@ switch ($method) {
             ], 400);
         }
         
-        $result = $usersHandler->updateUser($userId, $inputData);
+        // Loại bỏ email khỏi dữ liệu cập nhật vì email không được thay đổi
+        if (isset($inputData['email'])) {
+            unset($inputData['email']);
+        }
+        
+        $result = $usersHandler->updateUserByEmail($email, $inputData);
         
         if ($result['success']) {
             Utils::sendResponse($result, 200);

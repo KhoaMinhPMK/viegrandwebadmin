@@ -803,13 +803,9 @@ document.addEventListener('DOMContentLoaded', function() {
         field.style.borderColor = '';
         hideWarnings();
         
-        if (field.id === 'editEmail' && value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-                field.style.borderColor = '#dc3545';
-                showWarning('Email không đúng định dạng');
-                return false;
-            }
+        // Bỏ qua validation cho email vì nó là readonly
+        if (field.id === 'editEmail') {
+            return true; // Email là readonly, luôn valid
         }
         
         if (field.id === 'editPhone' && value) {
@@ -843,7 +839,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const changes = {};
         const currentData = getCurrentFormData();
         
-        const fieldsToCheck = ['username', 'email', 'full_name', 'phone'];
+        // Bỏ qua email vì nó không được phép thay đổi
+        const fieldsToCheck = ['username', 'full_name', 'phone'];
         if (currentDatabase === 'admin') {
             fieldsToCheck.push('role', 'status');
         }
@@ -934,7 +931,18 @@ document.addEventListener('DOMContentLoaded', function() {
             updateData[field] = changes[field].new;
         });
         
-        fetch(`${API_BASE_URL}users.php?id=${currentEditUser.id}&db=${currentDatabase}`, {
+        // Loại bỏ email khỏi dữ liệu cập nhật vì email không được thay đổi
+        if (updateData.email) {
+            delete updateData.email;
+        }
+        
+        if (Object.keys(updateData).length === 0) {
+            hideLoadingIndicator();
+            showWarning('Không có dữ liệu nào được phép thay đổi (email là định danh và không thể sửa)');
+            return;
+        }
+        
+        fetch(`${API_BASE_URL}users.php?email=${encodeURIComponent(currentEditUser.email)}&db=${currentDatabase}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -965,7 +973,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function validateAllFields() {
         let isValid = true;
-        const inputs = ['editUsername', 'editEmail', 'editFullName', 'editPhone'];
+        // Bỏ qua email vì nó là readonly và không thể thay đổi
+        const inputs = ['editUsername', 'editFullName', 'editPhone'];
         
         inputs.forEach(inputId => {
             const input = document.getElementById(inputId);
@@ -975,17 +984,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         const username = document.getElementById('editUsername').value.trim();
-        const email = document.getElementById('editEmail').value.trim();
         
         if (!username) {
             showWarning('Tên đăng nhập không được để trống');
             document.getElementById('editUsername').style.borderColor = '#dc3545';
-            isValid = false;
-        }
-        
-        if (!email) {
-            showWarning('Email không được để trống');
-            document.getElementById('editEmail').style.borderColor = '#dc3545';
             isValid = false;
         }
         

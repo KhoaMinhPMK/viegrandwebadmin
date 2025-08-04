@@ -1116,6 +1116,21 @@ body {
     margin-top: 0.2rem;
 }
 
+/* Readonly Fields */
+.readonly-field {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d !important;
+    cursor: not-allowed !important;
+}
+
+.readonly-field:hover,
+.readonly-field:focus {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    box-shadow: none !important;
+}
+
 /* Admin Fields */
 .admin-only-fields {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
