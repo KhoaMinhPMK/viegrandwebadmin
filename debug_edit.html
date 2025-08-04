@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Edit User API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Debug Edit User API</h1>
+        
+        <div class="form-group">
+            <label for="database">Database:</label>
+            <select id="database">
+                <option value="admin">Admin DB</option>
+                <option value="main">Main DB</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="userId">User ID:</label>
+            <input type="number" id="userId" value="21">
+        </div>
+        
+        <div class="form-group">
+            <label for="testData">Test Data (JSON):</label>
+            <textarea id="testData" rows="6">{
+  "username": "test_user_updated",
+  "email": "updated@test.com",
+  "full_name": "Test User Updated"
+}</textarea>
+        </div>
+        
+        <button onclick="testEditAPI()">Test Edit API</button>
+        <button onclick="getUserFirst()">Get User First</button>
+        <button onclick="clearResult()">Clear</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://viegrand.site/viegrandwebadmin/php/';
+        
+        async function getUserFirst() {
+            const userId = document.getElementById('userId').value;
+            const database = document.getElementById('database').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`);
+                const result = await response.json();
+                
+                showResult('GET User Result:', result, response.status === 200 ? 'success' : 'error');
+            } catch (error) {
+                showResult('GET Error:', error.message, 'error');
+            }
+        }
+        
+        async function testEditAPI() {
+            const userId = document.getElementById('userId').value;
+            const database = document.getElementById('database').value;
+            const testData = document.getElementById('testData').value;
+            
+            try {
+                const data = JSON.parse(testData);
+                
+                showResult('Sending Request:', {
+                    url: `${API_BASE_URL}users.php?id=${userId}&db=${database}`,
+                    method: 'PUT',
+                    data: data
+                }, 'info');
+                
+                const response = await fetch(`${API_BASE_URL}users.php?id=${userId}&db=${database}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const responseText = await response.text();
+                let result;
+                
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    showResult('Response Parse Error:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        responseText: responseText,
+                        parseError: parseError.message
+                    }, 'error');
+                    return;
+                }
+                
+                showResult('Edit API Result:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    result: result
+                }, result.success ? 'success' : 'error');
+                
+            } catch (error) {
+                showResult('Edit API Error:', error.message, 'error');
+            }
+        }
+        
+        function showResult(title, data, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `${title}\n${JSON.stringify(data, null, 2)}`;
+        }
+        
+        function clearResult() {
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

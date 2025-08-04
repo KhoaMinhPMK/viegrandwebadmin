@@ -316,8 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 url = `${API_BASE_URL}users.php?action=search&db=${currentDatabase}&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
             }
             
-            console.log('Loading users from:', url);
-            
             const response = await fetch(url);
             const result = await response.json();
             
@@ -622,10 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function fetchUserDetail(userId, database) {
         try {
-            console.log(`Fetching user detail: ID=${userId}, DB=${database}`);
             const response = await fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`);
-            
-            console.log('Response status:', response.status);
             const responseText = await response.text();
             
             let result;
@@ -710,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function openEditUserModal(userId, database) {
         currentDatabase = database;
         
-        showNotification('info', 'Đang tải thông tin người dùng...');
+        showNotification('Đang tải thông tin người dùng...', 'info');
         
         fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`)
             .then(response => response.json())
@@ -722,11 +717,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     populateEditForm(result.data, database);
                     showEditModal();
                 } else {
-                    showNotification('error', result.message || 'Không thể tải thông tin người dùng');
+                    showNotification(result.message || 'Không thể tải thông tin người dùng', 'error');
                 }
             })
             .catch(error => {
-                showNotification('error', 'Lỗi kết nối khi tải thông tin người dùng');
+                showNotification('Lỗi kết nối khi tải thông tin người dùng', 'error');
             });
     }
     
@@ -951,7 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hideLoadingIndicator();
             
             if (result.success) {
-                showNotification('success', 'Cập nhật thông tin người dùng thành công!');
+                showNotification('Cập nhật thông tin người dùng thành công!', 'success');
                 loadUsers();
                 
                 setTimeout(() => {
@@ -959,12 +954,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 1500);
                 
             } else {
-                showNotification('error', result.message || 'Cập nhật thất bại');
+                showNotification(result.message || 'Cập nhật thất bại', 'error');
             }
         })
         .catch(error => {
             hideLoadingIndicator();
-            showNotification('error', 'Lỗi kết nối khi cập nhật');
+            showNotification('Lỗi kết nối khi cập nhật', 'error');
         });
     }
     

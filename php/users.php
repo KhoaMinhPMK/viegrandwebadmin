@@ -239,6 +239,9 @@ class UsersHandler {
      */
     public function updateUser($userId, $data) {
         try {
+            // Debug log
+            Utils::logActivity("UpdateUser called - UserID: $userId, Database: {$this->currentDb}, Data: " . json_encode($data), 'DEBUG');
+            
             $connection = $this->getCurrentConnection();
             $table = $this->getCurrentTable();
             
