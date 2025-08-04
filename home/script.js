@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Cấu hình
-    const API_BASE_URL = 'https://viegrand.site/viegrandwebadmin/php/';
+    // Cấu hình - Tự động detect môi trường
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE_URL = isLocalhost ? 
+        '../php/' : 
+        'https://viegrand.site/viegrandwebadmin/php/';
+    
+    console.log('API Base URL:', API_BASE_URL);
     
     // Biến global
     let currentPage = 1;
