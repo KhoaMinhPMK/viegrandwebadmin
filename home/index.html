@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGrand - Trang chủ</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Đăng xuất</span>
+            </button>
+            <div class="datetime-display">
+                <div class="time" id="currentTime">00:00:00</div>
+                <div class="date" id="currentDate">Thứ 2, 01/01/2025</div>
+            </div>
+        </div>
+        
+        <div class="header-center">
+            <div class="news-ticker">
+                <div class="ticker-wrap">
+                    <div class="ticker-content" id="tickerContent">
+                        🎉 Chào mừng bạn đến với VieGrand Admin! 
+                        📢 Hệ thống đang hoạt động bình thường. 
+                        🚀 Phiên bản mới đã được cập nhật. 
+                        💼 Kiểm tra báo cáo hàng ngày trong mục Dashboard. 
+                        🔧 Bảo trì hệ thống định kỳ vào 2:00 AM mỗi ngày.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">AD</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Administrator</div>
+                    <div class="user-role" id="userRole">Admin</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h1><i class="fas fa-home"></i> Trang chủ VieGrand</h1>
+            
+            <!-- Users Management Section -->
+            <div class="users-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> Quản lý người dùng</h2>
+                    <div class="section-controls">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm người dùng...">
+                            <button id="searchBtn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <button class="refresh-btn" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="users-table-container">
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Đang tải dữ liệu...</span>
+                    </div>
+                    
+                    <table class="users-table" id="usersTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Avatar</th>
+                                <th>Tên người dùng</th>
+                                <th>Email</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Lần đăng nhập cuối</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination" id="paginationContainer" style="display: none;">
+                        <!-- Pagination will be generated here -->
+                    </div>
+                    
+                    <div class="no-data" id="noDataMessage" style="display: none;">
+                        <i class="fas fa-users-slash"></i>
+                        <h3>Không tìm thấy người dùng</h3>
+                        <p>Không có dữ liệu để hiển thị</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <div class="welcome-card">
+                    <h2>Chào mừng bạn quay trở lại!</h2>
+                    <p>Hệ thống quản trị VieGrand đang hoạt động tốt.</p>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <div class="stat-number">1,234</div>
+                            <div class="stat-label">Người dùng</div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-chart-line"></i>
+                            <div class="stat-number">5,678</div>
+                            <div class="stat-label">Lượt truy cập</div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-database"></i>
+                            <div class="stat-number">98.5%</div>
+                            <div class="stat-label">Hiệu suất</div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <div class="stat-number">Tốt</div>
+                            <div class="stat-label">Bảo mật</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
