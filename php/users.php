@@ -233,6 +233,134 @@ class UsersHandler {
             ];
         }
     }
+
+    /**
+     * Cập nhật thông tin người dùng
+     */
+    public function updateUser($userId, $data) {
+        try {
+            $connection = $this->getCurrentConnection();
+            $table = $this->getCurrentTable();
+            
+            // Validate dữ liệu
+            $allowedFields = $this->getAllowedUpdateFields();
+            $updateData = [];
+            $updateFields = [];
+            
+            foreach ($allowedFields as $field => $dbField) {
+                if (isset($data[$field]) && $data[$field] !== '') {
+                    $updateFields[] = "$dbField = ?";
+                    $updateData[] = Utils::validateInput($data[$field]);
+                }
+            }
+            
+            if (empty($updateFields)) {
+                return [
+                    'success' => false,
+                    'message' => 'Không có dữ liệu hợp lệ để cập nhật'
+                ];
+            }
+            
+            // Kiểm tra user có tồn tại không
+            $checkStmt = $connection->prepare("SELECT COUNT(*) FROM $table WHERE " . 
+                ($this->currentDb === 'main' ? 'userId' : 'id') . " = ?");
+            $checkStmt->execute([$userId]);
+            
+            if ($checkStmt->fetchColumn() == 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Người dùng không tồn tại'
+                ];
+            }
+            
+            // Kiểm tra email trùng lặp (nếu có update email)
+            if (isset($data['email'])) {
+                $emailCheckStmt = $connection->prepare("SELECT COUNT(*) FROM $table WHERE email = ? AND " . 
+                    ($this->currentDb === 'main' ? 'userId' : 'id') . " != ?");
+                $emailCheckStmt->execute([Utils::validateInput($data['email']), $userId]);
+                
+                if ($emailCheckStmt->fetchColumn() > 0) {
+                    return [
+                        'success' => false,
+                        'message' => 'Email này đã được sử dụng bởi người dùng khác'
+                    ];
+                }
+            }
+            
+            // Kiểm tra username trùng lặp (nếu có update username)
+            if (isset($data['username'])) {
+                $usernameField = $this->currentDb === 'main' ? 'userName' : 'username';
+                $usernameCheckStmt = $connection->prepare("SELECT COUNT(*) FROM $table WHERE $usernameField = ? AND " . 
+                    ($this->currentDb === 'main' ? 'userId' : 'id') . " != ?");
+                $usernameCheckStmt->execute([Utils::validateInput($data['username']), $userId]);
+                
+                if ($usernameCheckStmt->fetchColumn() > 0) {
+                    return [
+                        'success' => false,
+                        'message' => 'Tên đăng nhập này đã được sử dụng bởi người dùng khác'
+                    ];
+                }
+            }
+            
+            // Thêm timestamp cập nhật
+            $updateFields[] = "updated_at = NOW()";
+            
+            // Thực hiện cập nhật
+            $sql = "UPDATE $table SET " . implode(', ', $updateFields) . 
+                   " WHERE " . ($this->currentDb === 'main' ? 'userId' : 'id') . " = ?";
+            $updateData[] = $userId;
+            
+            $stmt = $connection->prepare($sql);
+            $stmt->execute($updateData);
+            
+            // Log activity
+            $fieldsUpdated = array_keys($data);
+            Utils::logActivity("Updated user ID: $userId in {$this->currentDb} database. Fields: " . 
+                implode(', ', $fieldsUpdated), 'INFO');
+            
+            // Lấy thông tin user sau khi cập nhật
+            $updatedUser = $this->getUserById($userId);
+            
+            return [
+                'success' => true,
+                'message' => 'Cập nhật thông tin người dùng thành công',
+                'data' => $updatedUser['data'] ?? null
+            ];
+            
+        } catch (Exception $e) {
+            Utils::logActivity("Error updating user ID: $userId - " . $e->getMessage(), 'ERROR');
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật thông tin người dùng'
+            ];
+        }
+    }
+    
+    /**
+     * Lấy danh sách fields được phép cập nhật theo database
+     */
+    private function getAllowedUpdateFields() {
+        if ($this->currentDb === 'main') {
+            // Fields cho database viegrand (bảng user)
+            return [
+                'username' => 'userName',
+                'email' => 'email',
+                'full_name' => 'userName', // Trong DB main, full_name và username cùng field
+                'phone' => 'phone'
+                // Note: Không cho phép update premium_status trực tiếp
+            ];
+        } else {
+            // Fields cho database admin (bảng users)
+            return [
+                'username' => 'username',
+                'email' => 'email', 
+                'full_name' => 'full_name',
+                'phone' => 'phone',
+                'role' => 'role',
+                'status' => 'status'
+            ];
+        }
+    }
     
     /**
      * Tìm kiếm users
@@ -416,13 +544,49 @@ switch ($method) {
                         'GET /users.php?action=list&db=main&page=1&limit=10' => 'Lấy users từ Main DB',
                         'GET /users.php?action=search&q=keyword&db=admin' => 'Tìm kiếm trong Admin DB',
                         'GET /users.php?action=search&q=keyword&db=main' => 'Tìm kiếm trong Main DB',
-                        'GET /users.php?action=get&id=1&db=admin' => 'Lấy thông tin user từ Admin DB'
+                        'GET /users.php?action=get&id=1&db=admin' => 'Lấy thông tin user từ Admin DB',
+                        'GET /users.php?action=get&id=1&db=main' => 'Lấy thông tin user từ Main DB',
+                        'PUT /users.php?id=1&db=admin' => 'Cập nhật thông tin user trong Admin DB',
+                        'PUT /users.php?id=1&db=main' => 'Cập nhật thông tin user trong Main DB'
                     ],
                     'databases' => [
                         'admin' => 'viegrandwebadmin.users (Web Admin Login)',
                         'main' => 'viegrand.user (Main Production Data)'
                     ]
                 ]);
+        }
+        break;
+        
+    case 'PUT':
+        // Xử lý cập nhật user
+        $database = $_GET['db'] ?? 'admin';
+        $usersHandler = new UsersHandler($database);
+        
+        $userId = (int)($_GET['id'] ?? 0);
+        
+        if ($userId <= 0) {
+            Utils::sendResponse([
+                'success' => false,
+                'message' => 'ID người dùng không hợp lệ'
+            ], 400);
+        }
+        
+        // Lấy dữ liệu từ request body
+        $inputData = json_decode(file_get_contents('php://input'), true);
+        
+        if (empty($inputData)) {
+            Utils::sendResponse([
+                'success' => false,
+                'message' => 'Dữ liệu cập nhật không hợp lệ'
+            ], 400);
+        }
+        
+        $result = $usersHandler->updateUser($userId, $inputData);
+        
+        if ($result['success']) {
+            Utils::sendResponse($result, 200);
+        } else {
+            Utils::sendResponse($result, 400);
         }
         break;
         

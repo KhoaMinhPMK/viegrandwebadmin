@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Edit User API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Edit User API</h1>
+        
+        <!-- Form để test edit user -->
+        <div class="form-group">
+            <label for="database">Database:</label>
+            <select id="database">
+                <option value="admin">Admin DB (viegrand_admin.users)</option>
+                <option value="main">Main DB (viegrand.user)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="userId">User ID:</label>
+            <input type="number" id="userId" placeholder="Nhập ID user cần edit" value="1">
+        </div>
+        
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" placeholder="Username mới">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="Email mới">
+        </div>
+        
+        <div class="form-group">
+            <label for="fullName">Full Name:</label>
+            <input type="text" id="fullName" placeholder="Họ tên mới">
+        </div>
+        
+        <div class="form-group">
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" placeholder="Số điện thoại mới">
+        </div>
+        
+        <div class="form-group" id="adminFields" style="display: none;">
+            <label for="role">Role (Admin DB only):</label>
+            <select id="role">
+                <option value="">-- Không thay đổi --</option>
+                <option value="admin">Admin</option>
+                <option value="editor">Editor</option>
+                <option value="viewer">Viewer</option>
+            </select>
+        </div>
+        
+        <div class="form-group" id="statusFields" style="display: none;">
+            <label for="status">Status (Admin DB only):</label>
+            <select id="status">
+                <option value="">-- Không thay đổi --</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+            </select>
+        </div>
+        
+        <button onclick="getUserInfo()">Get User Info</button>
+        <button onclick="updateUser()">Update User</button>
+        <button onclick="clearForm()">Clear Form</button>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Kết quả:</h3>
+            <pre id="resultContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide admin fields based on database selection
+        document.getElementById('database').addEventListener('change', function() {
+            const isAdmin = this.value === 'admin';
+            document.getElementById('adminFields').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('statusFields').style.display = isAdmin ? 'block' : 'none';
+        });
+
+        // Get user info trước khi edit
+        async function getUserInfo() {
+            const userId = document.getElementById('userId').value;
+            const database = document.getElementById('database').value;
+            
+            if (!userId) {
+                showResult('error', 'Vui lòng nhập User ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`php/users.php?action=get&id=${userId}&db=${database}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // Fill form với dữ liệu hiện tại
+                    const user = result.data;
+                    document.getElementById('username').value = user.username || '';
+                    document.getElementById('email').value = user.email || '';
+                    document.getElementById('fullName').value = user.full_name || '';
+                    document.getElementById('phone').value = user.phone || '';
+                    
+                    if (database === 'admin') {
+                        document.getElementById('role').value = user.role || '';
+                        document.getElementById('status').value = user.status || '';
+                    }
+                    
+                    showResult('success', 'Đã tải thông tin user thành công!', result);
+                } else {
+                    showResult('error', result.message || 'Không tìm thấy user');
+                }
+            } catch (error) {
+                showResult('error', 'Lỗi kết nối: ' + error.message);
+            }
+        }
+        
+        // Update user
+        async function updateUser() {
+            const userId = document.getElementById('userId').value;
+            const database = document.getElementById('database').value;
+            
+            if (!userId) {
+                showResult('error', 'Vui lòng nhập User ID');
+                return;
+            }
+            
+            // Collect form data
+            const updateData = {};
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (username) updateData.username = username;
+            if (email) updateData.email = email;
+            if (fullName) updateData.full_name = fullName;
+            if (phone) updateData.phone = phone;
+            
+            // Admin-only fields
+            if (database === 'admin') {
+                const role = document.getElementById('role').value;
+                const status = document.getElementById('status').value;
+                
+                if (role) updateData.role = role;
+                if (status) updateData.status = status;
+            }
+            
+            if (Object.keys(updateData).length === 0) {
+                showResult('error', 'Vui lòng nhập ít nhất một trường để cập nhật');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`php/users.php?id=${userId}&db=${database}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('success', 'Cập nhật thành công!', result);
+                } else {
+                    showResult('error', result.message || 'Cập nhật thất bại');
+                }
+            } catch (error) {
+                showResult('error', 'Lỗi kết nối: ' + error.message);
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('username').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('fullName').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('role').value = '';
+            document.getElementById('status').value = '';
+            document.getElementById('result').style.display = 'none';
+        }
+        
+        function showResult(type, message, data = null) {
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+            
+            let content = message;
+            if (data) {
+                content += '\n\nDữ liệu trả về:\n' + JSON.stringify(data, null, 2);
+            }
+            
+            resultContent.textContent = content;
+        }
+        
+        // Initialize form
+        document.getElementById('database').dispatchEvent(new Event('change'));
+    </script>
+</body>
+</html>
