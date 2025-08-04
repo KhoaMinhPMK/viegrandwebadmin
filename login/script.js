@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
-    const API_BASE_URL = 'https://viegrand.site/viegrandweb/php/';
+    const API_BASE_URL = 'https://viegrand.site/viegrandwebadmin/php/';
     
     loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();

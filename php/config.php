@@ -20,8 +20,8 @@ define('DB_CHARSET', 'utf8mb4');
 // Cấu hình ứng dụng
 define('APP_NAME', 'VieGrand Admin');
 define('APP_VERSION', '1.0.0');
-define('APP_URL', 'https://viegrand.site/viegrandweb/');
-define('API_URL', 'https://viegrand.site/viegrandweb/php/');
+define('APP_URL', 'https://viegrand.site/viegrandwebadmin/');
+define('API_URL', 'https://viegrand.site/viegrandwebadmin/php/');
 
 // Cấu hình bảo mật
 define('SECRET_KEY', 'viegrand_secret_key_2025'); // Thay đổi key này
