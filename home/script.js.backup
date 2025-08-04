@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let currentLimit = 10;
     let currentSearchQuery = '';
-    let currentDatabase = 'admin';
+    let currentDatabase = 'admin'; // Mặc định dùng admin database
     
+    // Khởi tạo trang
     initializePage();
     
     function initializePage() {
