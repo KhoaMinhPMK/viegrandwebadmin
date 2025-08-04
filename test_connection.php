@@ -9,7 +9,7 @@ echo "<h2>Test Kết Nối Database VieGrand</h2>";
 $configs = [
     'Admin Database' => [
         'host' => 'localhost',
-        'name' => 'viegrandwebadmin',
+        'name' => 'viegrand_admin',
         'user' => 'root',
         'pass' => ''
     ],
@@ -49,7 +49,7 @@ foreach ($configs as $label => $config) {
         }
         
         // Nếu là database admin, kiểm tra bảng users
-        if ($config['name'] === 'viegrandwebadmin' && in_array('users', $tables)) {
+        if ($config['name'] === 'viegrand_admin' && in_array('users', $tables)) {
             $count = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
             echo "👤 Số lượng admin users: $count<br>";
         }

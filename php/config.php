@@ -12,7 +12,7 @@ if (!defined('VIEGRAND_ACCESS')) {
 
 // Cấu hình database cho WEB ADMIN (login web)
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'viegrandwebadmin'); // Database cho login web admin
+define('DB_NAME', 'viegrand_admin'); // Database cho login web admin
 define('DB_USER', 'root'); 
 define('DB_PASS', ''); 
 define('DB_CHARSET', 'utf8mb4');
