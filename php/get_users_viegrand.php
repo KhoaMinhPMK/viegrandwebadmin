@@ -41,7 +41,7 @@ try {
     // Get users with pagination
     $stmt = $pdo->prepare("
         SELECT 
-            id, 
+            userId, 
             username, 
             email, 
             full_name, 
@@ -74,7 +74,7 @@ try {
         $statusDisplay = getStatusDisplay($user['status']);
         
         $formattedUsers[] = [
-            'id' => $user['id'],
+            'userId' => $user['userId'],
             'username' => $user['username'],
             'email' => $user['email'],
             'full_name' => $user['full_name'],
