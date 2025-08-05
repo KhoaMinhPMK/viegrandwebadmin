@@ -92,6 +92,31 @@ try {
     
     foreach ($allowedFields as $field) {
         if (isset($input[$field]) && $input[$field] !== '') {
+            // Additional validation for specific fields
+            if ($field === 'email' && !filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Invalid email format provided.'
+                ]);
+                exit();
+            }
+            
+            if ($field === 'role' && !in_array($input[$field], ['admin', 'manager', 'user'])) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Invalid role. Must be admin, manager, or user.'
+                ]);
+                exit();
+            }
+            
+            if ($field === 'status' && !in_array($input[$field], ['active', 'inactive', 'suspended'])) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Invalid status. Must be active, inactive, or suspended.'
+                ]);
+                exit();
+            }
+            
             $updateFields[] = "$field = ?";
             $params[] = $input[$field];
         }

@@ -101,8 +101,39 @@ try {
         'blood_pressure_systolic', 'blood_pressure_diastolic', 'heart_rate'
     ];
     
+    // Handle field mapping - convert frontend field names to database field names
+    if (isset($input['username']) && !isset($input['userName'])) {
+        $input['userName'] = $input['username'];
+        unset($input['username']);
+    }
+    
     foreach ($allowedFields as $field) {
         if (isset($input[$field])) {
+            // Additional validation for specific fields
+            if ($field === 'email' && $input[$field] !== '' && !filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Invalid email format provided.'
+                ]);
+                exit();
+            }
+            
+            if ($field === 'age' && $input[$field] !== '' && (!is_numeric($input[$field]) || $input[$field] < 0 || $input[$field] > 150)) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Invalid age. Must be between 0 and 150.'
+                ]);
+                exit();
+            }
+            
+            if ($field === 'premium_status' && !in_array($input[$field], ['0', '1', 0, 1])) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Invalid premium status. Must be 0 or 1.'
+                ]);
+                exit();
+            }
+            
             $updateFields[] = "$field = ?";
             $params[] = $input[$field];
         }

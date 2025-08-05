@@ -600,8 +600,14 @@ async function saveChanges() {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     
-    // Add user ID
+    // Add user ID and handle field mapping based on database
     data.id = currentUserData.id;
+    
+    // Handle field mapping for main database (userName vs username)
+    if (currentUserData.database === 'main' && data.username) {
+        data.userName = data.username;
+        delete data.username;
+    }
     
     try {
         document.getElementById('editLoadingIndicator').style.display = 'flex';
@@ -609,6 +615,8 @@ async function saveChanges() {
         
         const apiUrl = currentUserData.database === 'admin' ? UPDATE_ADMIN_API : UPDATE_MAIN_API;
         const method = 'PUT';
+        
+        console.log('Sending data to API:', { apiUrl, data });
         
         const response = await fetch(apiUrl, {
             method: method,
@@ -619,23 +627,45 @@ async function saveChanges() {
         });
         
         const result = await response.json();
+        console.log('API Response:', result);
         
         if (result.success) {
             showNotification('Cập nhật người dùng thành công!', 'success');
             closeEditModal();
             
-            // Reload current database
+            // Update the local data with new information
             if (currentUserData.database === 'admin') {
-                loadAdminUsers();
+                // Update admin users array
+                const userIndex = adminUsersData.findIndex(u => u.id === currentUserData.id);
+                if (userIndex !== -1) {
+                    // Merge updated data with existing user data
+                    adminUsersData[userIndex] = {
+                        ...adminUsersData[userIndex],
+                        ...data,
+                        updated_at_formatted: new Date().toLocaleString('vi-VN')
+                    };
+                }
+                loadAdminUsers(); // Refresh admin table
             } else {
-                loadMainUsers();
+                // Update main users array
+                const userIndex = mainUsersData.findIndex(u => u.id === currentUserData.id);
+                if (userIndex !== -1) {
+                    // Merge updated data with existing user data
+                    mainUsersData[userIndex] = {
+                        ...mainUsersData[userIndex],
+                        ...data,
+                        updated_at_formatted: new Date().toLocaleString('vi-VN')
+                    };
+                }
+                loadMainUsers(); // Refresh main table
             }
         } else {
             showNotification(result.message || 'Có lỗi xảy ra khi cập nhật', 'error');
+            console.error('Update failed:', result);
         }
     } catch (error) {
         console.error('Error updating user:', error);
-        showNotification('Có lỗi xảy ra khi cập nhật người dùng', 'error');
+        showNotification('Có lỗi kết nối. Vui lòng thử lại sau.', 'error');
     } finally {
         document.getElementById('editLoadingIndicator').style.display = 'none';
         document.getElementById('saveChangesBtn').disabled = false;
@@ -653,28 +683,34 @@ async function confirmDelete() {
             `${DELETE_ADMIN_API}?id=${currentUserData.id}` : 
             `${DELETE_MAIN_API}?id=${currentUserData.id}`;
         
+        console.log('Deleting user:', { apiUrl, userId: currentUserData.id, database: currentUserData.database });
+        
         const response = await fetch(apiUrl, {
             method: 'DELETE'
         });
         
         const result = await response.json();
+        console.log('Delete API Response:', result);
         
         if (result.success) {
             showNotification('Xóa người dùng thành công!', 'success');
             closeDeleteModal();
             
-            // Reload current database
+            // Remove from local data arrays
             if (currentUserData.database === 'admin') {
-                loadAdminUsers();
+                adminUsersData = adminUsersData.filter(u => u.id !== currentUserData.id);
+                loadAdminUsers(); // Refresh admin table
             } else {
-                loadMainUsers();
+                mainUsersData = mainUsersData.filter(u => u.id !== currentUserData.id);
+                loadMainUsers(); // Refresh main table
             }
         } else {
             showNotification(result.message || 'Có lỗi xảy ra khi xóa', 'error');
+            console.error('Delete failed:', result);
         }
     } catch (error) {
         console.error('Error deleting user:', error);
-        showNotification('Có lỗi xảy ra khi xóa người dùng', 'error');
+        showNotification('Có lỗi kết nối. Vui lòng thử lại sau.', 'error');
     } finally {
         document.getElementById('deleteLoadingIndicator').style.display = 'none';
         document.getElementById('confirmDeleteBtn').disabled = false;

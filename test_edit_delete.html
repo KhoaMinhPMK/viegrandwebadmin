@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Edit & Delete APIs</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            box-sizing: border-box;
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-right: 10px;
+        }
+        button:hover { 
+            background: #0056b3; 
+        }
+        button.delete { 
+            background: #dc3545; 
+        }
+        button.delete:hover { 
+            background: #c82333; 
+        }
+        .result { 
+            margin-top: 15px; 
+            padding: 10px; 
+            border-radius: 4px; 
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .success { 
+            background: #d4edda; 
+            border-color: #c3e6cb; 
+            color: #155724; 
+        }
+        .error { 
+            background: #f8d7da; 
+            border-color: #f5c6cb; 
+            color: #721c24; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Edit & Delete APIs</h1>
+        <p>Công cụ này giúp kiểm tra chức năng edit và delete của VieGrand Web Admin.</p>
+
+        <!-- Admin Database Tests -->
+        <div class="test-section">
+            <h2>🔧 Admin Database - Update Test</h2>
+            <div class="form-group">
+                <label>User ID:</label>
+                <input type="number" id="adminUserId" placeholder="Nhập ID của admin user" value="1">
+            </div>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="adminUsername" placeholder="Tên đăng nhập mới">
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="adminEmail" placeholder="Email mới">
+            </div>
+            <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" id="adminFullName" placeholder="Họ tên mới">
+            </div>
+            <div class="form-group">
+                <label>Phone:</label>
+                <input type="text" id="adminPhone" placeholder="Số điện thoại mới">
+            </div>
+            <div class="form-group">
+                <label>Role:</label>
+                <select id="adminRole">
+                    <option value="">-- Chọn vai trò --</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status:</label>
+                <select id="adminStatus">
+                    <option value="">-- Chọn trạng thái --</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+            </div>
+            <button onclick="testAdminUpdate()">Update Admin User</button>
+            <button onclick="testAdminDelete()" class="delete">Delete Admin User</button>
+            <div id="adminResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Main Database Tests -->
+        <div class="test-section">
+            <h2>🏥 Main Database - Update Test</h2>
+            <div class="form-group">
+                <label>User ID:</label>
+                <input type="number" id="mainUserId" placeholder="Nhập ID của main user" value="19">
+            </div>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="mainUsername" placeholder="Tên đăng nhập mới">
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="mainEmail" placeholder="Email mới">
+            </div>
+            <div class="form-group">
+                <label>Phone:</label>
+                <input type="text" id="mainPhone" placeholder="Số điện thoại mới">
+            </div>
+            <div class="form-group">
+                <label>Age:</label>
+                <input type="number" id="mainAge" placeholder="Tuổi" min="0" max="150">
+            </div>
+            <div class="form-group">
+                <label>Gender:</label>
+                <select id="mainGender">
+                    <option value="">-- Chọn giới tính --</option>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                    <option value="other">Khác</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Blood Type:</label>
+                <input type="text" id="mainBlood" placeholder="Nhóm máu (A+, B-, O+, ...)">
+            </div>
+            <div class="form-group">
+                <label>Premium Status:</label>
+                <select id="mainPremium">
+                    <option value="">-- Chọn trạng thái premium --</option>
+                    <option value="0">Regular</option>
+                    <option value="1">Premium</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Height (cm):</label>
+                <input type="number" id="mainHeight" placeholder="Chiều cao">
+            </div>
+            <div class="form-group">
+                <label>Weight (kg):</label>
+                <input type="number" id="mainWeight" placeholder="Cân nặng">
+            </div>
+            <button onclick="testMainUpdate()">Update Main User</button>
+            <button onclick="testMainDelete()" class="delete">Delete Main User</button>
+            <div id="mainResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_UPDATE_API = 'https://viegrand.site/viegrandwebadmin/php/update_user_admin.php';
+        const ADMIN_DELETE_API = 'https://viegrand.site/viegrandwebadmin/php/delete_user_admin.php';
+        const MAIN_UPDATE_API = 'https://viegrand.site/viegrandwebadmin/php/update_user_main.php';
+        const MAIN_DELETE_API = 'https://viegrand.site/viegrandwebadmin/php/delete_user_main.php';
+
+        async function testAdminUpdate() {
+            const resultDiv = document.getElementById('adminResult');
+            const data = {
+                id: parseInt(document.getElementById('adminUserId').value),
+                username: document.getElementById('adminUsername').value,
+                email: document.getElementById('adminEmail').value,
+                full_name: document.getElementById('adminFullName').value,
+                phone: document.getElementById('adminPhone').value,
+                role: document.getElementById('adminRole').value,
+                status: document.getElementById('adminStatus').value
+            };
+
+            // Remove empty fields
+            Object.keys(data).forEach(key => {
+                if (data[key] === '' || data[key] === null) {
+                    delete data[key];
+                }
+            });
+
+            try {
+                console.log('Sending admin update:', data);
+                const response = await fetch(ADMIN_UPDATE_API, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                console.log('Admin update result:', result);
+
+                resultDiv.style.display = 'block';
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<strong>✅ Thành công!</strong><br>${result.message}<br><pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Lỗi!</strong><br>${result.message}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Lỗi kết nối!</strong><br>${error.message}`;
+            }
+        }
+
+        async function testAdminDelete() {
+            if (!confirm('Bạn có chắc chắn muốn xóa admin user này?')) return;
+
+            const resultDiv = document.getElementById('adminResult');
+            const userId = document.getElementById('adminUserId').value;
+
+            try {
+                console.log('Deleting admin user:', userId);
+                const response = await fetch(`${ADMIN_DELETE_API}?id=${userId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                console.log('Admin delete result:', result);
+
+                resultDiv.style.display = 'block';
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<strong>✅ Xóa thành công!</strong><br>${result.message}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Lỗi!</strong><br>${result.message}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Lỗi kết nối!</strong><br>${error.message}`;
+            }
+        }
+
+        async function testMainUpdate() {
+            const resultDiv = document.getElementById('mainResult');
+            const data = {
+                id: parseInt(document.getElementById('mainUserId').value),
+                userName: document.getElementById('mainUsername').value, // Note: userName for main DB
+                email: document.getElementById('mainEmail').value,
+                phone: document.getElementById('mainPhone').value,
+                age: document.getElementById('mainAge').value,
+                gender: document.getElementById('mainGender').value,
+                blood: document.getElementById('mainBlood').value,
+                premium_status: document.getElementById('mainPremium').value,
+                height: document.getElementById('mainHeight').value,
+                weight: document.getElementById('mainWeight').value
+            };
+
+            // Remove empty fields
+            Object.keys(data).forEach(key => {
+                if (data[key] === '' || data[key] === null) {
+                    delete data[key];
+                }
+            });
+
+            try {
+                console.log('Sending main update:', data);
+                const response = await fetch(MAIN_UPDATE_API, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                console.log('Main update result:', result);
+
+                resultDiv.style.display = 'block';
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<strong>✅ Thành công!</strong><br>${result.message}<br><pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Lỗi!</strong><br>${result.message}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Lỗi kết nối!</strong><br>${error.message}`;
+            }
+        }
+
+        async function testMainDelete() {
+            if (!confirm('Bạn có chắc chắn muốn xóa main user này?')) return;
+
+            const resultDiv = document.getElementById('mainResult');
+            const userId = document.getElementById('mainUserId').value;
+
+            try {
+                console.log('Deleting main user:', userId);
+                const response = await fetch(`${MAIN_DELETE_API}?id=${userId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                console.log('Main delete result:', result);
+
+                resultDiv.style.display = 'block';
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<strong>✅ Xóa thành công!</strong><br>${result.message}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Lỗi!</strong><br>${result.message}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Lỗi kết nối!</strong><br>${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
