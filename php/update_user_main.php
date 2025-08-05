@@ -6,7 +6,7 @@
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: PUT, OPTIONS');
+header('Access-Control-Allow-Methods: PUT, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight OPTIONS request
@@ -15,10 +15,46 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     exit();
 }
 
-// Only allow PUT requests
+// Check if this is a test request (GET method)
+$isTestRequest = $_SERVER['REQUEST_METHOD'] === 'GET';
+
+if ($isTestRequest) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'This is an API endpoint for updating users. Use PUT method with JSON data.',
+        'usage' => [
+            'method' => 'PUT',
+            'content-type' => 'application/json',
+            'example_data' => [
+                'id' => 19,
+                'userName' => 'New User Name',
+                'email' => 'new@email.com',
+                'phone' => '123456789',
+                'age' => 25,
+                'gender' => 'Nam',
+                'blood' => 'A+',
+                'premium_status' => 1,
+                'height' => 170,
+                'weight' => 65,
+                'blood_pressure_systolic' => 120,
+                'blood_pressure_diastolic' => 80,
+                'heart_rate' => 75
+            ]
+        ],
+        'note' => 'This endpoint is designed to be called from the frontend application, not accessed directly in browser.'
+    ]);
+    exit();
+}
+
+// Only allow PUT requests for actual updates
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Method not allowed. This API only accepts PUT requests.',
+        'received_method' => $_SERVER['REQUEST_METHOD'],
+        'expected_method' => 'PUT'
+    ]);
     exit();
 }
 
@@ -26,7 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input || !isset($input['id'])) {
-    echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Missing required fields. Please provide user ID and data to update.',
+        'required_fields' => ['id'],
+        'received_data' => $input
+    ]);
     exit();
 }
 
@@ -68,7 +109,12 @@ try {
     }
     
     if (empty($updateFields)) {
-        echo json_encode(['success' => false, 'message' => 'No fields to update']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'No fields to update. Please provide at least one field to modify.',
+            'allowed_fields' => $allowedFields,
+            'received_data' => $input
+        ]);
         exit();
     }
     
@@ -109,7 +155,12 @@ try {
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Database error: ' . $e->getMessage(),
+        'debug_info' => [
+            'host' => $host,
+            'dbname' => $dbname,
+            'error_code' => $e->getCode()
+        ]
     ]);
 }
 ?> 

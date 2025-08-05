@@ -6,7 +6,7 @@
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: DELETE, OPTIONS');
+header('Access-Control-Allow-Methods: DELETE, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight OPTIONS request
@@ -15,10 +15,31 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     exit();
 }
 
-// Only allow DELETE requests
+// Check if this is a test request (GET method)
+$isTestRequest = $_SERVER['REQUEST_METHOD'] === 'GET';
+
+if ($isTestRequest) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'This is an API endpoint for deleting users. Use DELETE method with user ID parameter.',
+        'usage' => [
+            'method' => 'DELETE',
+            'url_example' => '/delete_user_admin.php?id=1',
+            'note' => 'This endpoint is designed to be called from the frontend application, not accessed directly in browser.'
+        ]
+    ]);
+    exit();
+}
+
+// Only allow DELETE requests for actual deletions
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Method not allowed. This API only accepts DELETE requests.',
+        'received_method' => $_SERVER['REQUEST_METHOD'],
+        'expected_method' => 'DELETE'
+    ]);
     exit();
 }
 
@@ -26,7 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
 $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if (!$userId) {
-    echo json_encode(['success' => false, 'message' => 'Missing user ID']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Missing user ID. Please provide user ID in URL parameter.',
+        'example' => '/delete_user_admin.php?id=1'
+    ]);
     exit();
 }
 
@@ -50,7 +75,11 @@ try {
     $user = $checkStmt->fetch();
     
     if (!$user) {
-        echo json_encode(['success' => false, 'message' => 'User not found']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'User not found',
+            'requested_id' => $userId
+        ]);
         exit();
     }
     
@@ -77,7 +106,12 @@ try {
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Database error: ' . $e->getMessage(),
+        'debug_info' => [
+            'host' => $host,
+            'dbname' => $dbname,
+            'error_code' => $e->getCode()
+        ]
     ]);
 }
 ?> 
