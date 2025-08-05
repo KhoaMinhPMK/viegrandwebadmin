@@ -32,6 +32,7 @@ try {
     // Get form data
     $username = $_POST['username'] ?? '';
     $email = $_POST['email'] ?? '';
+    $full_name = $_POST['full_name'] ?? '';
     $phone = $_POST['phone'] ?? '';
     $password = $_POST['password'] ?? '';
     $age = !empty($_POST['age']) ? (int)$_POST['age'] : null;
@@ -47,7 +48,7 @@ try {
     $heart_rate = !empty($_POST['heart_rate']) ? (int)$_POST['heart_rate'] : null;
     
     // Validate required fields
-    if (empty($username) || empty($email) ||  empty($password)) {
+    if (empty($username) || empty($email) || empty($full_name) || empty($password)) {
         echo json_encode(['success' => false, 'message' => 'Missing required fields']);
         exit;
     }
@@ -64,7 +65,7 @@ try {
     // Check if username or email already exists
     $checkSql = "SELECT userId FROM user WHERE userName = :username OR email = :email";
     $checkStmt = $pdo->prepare($checkSql);
-    $checkStmt->bindParam(':username', $username, PDO::PARAM_STR);
+    $checkStmt->bindParam(':username', $full_name, PDO::PARAM_STR);  // Use full_name for userName field check
     $checkStmt->bindParam(':email', $email, PDO::PARAM_STR);
     $checkStmt->execute();
     
@@ -73,14 +74,14 @@ try {
         exit;
     }
     
-    // Insert new user
+    // Insert new user (note: userName field stores what we call full_name in the frontend)
     $sql = "INSERT INTO user (userName, email, phone, password, age, gender, blood, premium_status, 
                               height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, created_at) 
             VALUES (:username, :email, :phone, :password, :age, :gender, :blood, :premium_status,
                     :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate, NOW())";
     
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+    $stmt->bindParam(':username', $full_name, PDO::PARAM_STR);  // Store full_name in userName field
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
     $stmt->bindParam(':password', $hashed_password, PDO::PARAM_STR);
