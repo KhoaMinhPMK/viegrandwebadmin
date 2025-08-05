@@ -189,67 +189,74 @@
         </div>
     </main>
 
-    <!-- User Detail Modal -->
-    <div id="userDetailModal" class="modal">
+    <!-- View User Modal -->
+    <div id="viewUserModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-user"></i> Chi tiết người dùng</h2>
-                <span class="close">&times;</span>
+                <span class="close" id="closeViewModal">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="user-detail-container">
                     <div class="user-avatar-large">
-                        <span id="modalUserAvatar">U</span>
+                        <span id="viewUserAvatar">U</span>
                     </div>
                     <div class="user-detail-info">
                         <div class="detail-row">
                             <label>ID:</label>
-                            <span id="modalUserId">-</span>
+                            <span id="viewUserId">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Tên đầy đủ:</label>
-                            <span id="modalUserFullName">-</span>
+                            <span id="viewUserFullName">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Tên đăng nhập:</label>
-                            <span id="modalUserUsername">-</span>
+                            <span id="viewUserUsername">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Email:</label>
-                            <span id="modalUserEmail">-</span>
+                            <span id="viewUserEmail">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Số điện thoại:</label>
-                            <span id="modalUserPhone">-</span>
+                            <span id="viewUserPhone">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Vai trò:</label>
-                            <span id="modalUserRole" class="role-badge">-</span>
+                            <span id="viewUserRole" class="role-badge">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Trạng thái:</label>
-                            <span id="modalUserStatus" class="status-badge">-</span>
+                            <span id="viewUserStatus" class="status-badge">-</span>
                         </div>
                         <div class="detail-row">
                             <label>Ngày tạo:</label>
-                            <span id="modalUserCreated">-</span>
+                            <span id="viewUserCreated">-</span>
                         </div>
-                        <div class="detail-row">
+                        <div class="detail-row" id="viewUserLastLoginRow">
                             <label>Đăng nhập cuối:</label>
-                            <span id="modalUserLastLogin">-</span>
+                            <span id="viewUserLastLogin">-</span>
                         </div>
-                        <div class="detail-row" id="modalPremiumRow" style="display: none;">
+                        <div class="detail-row" id="viewUserPremiumRow" style="display: none;">
                             <label>Premium:</label>
-                            <span id="modalUserPremium">-</span>
+                            <span id="viewUserPremium">-</span>
+                        </div>
+                        <div class="detail-row" id="viewUserHealthRow" style="display: none;">
+                            <label>Thông tin sức khỏe:</label>
+                            <div id="viewUserHealth" class="health-info"></div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-edit" id="editUserBtn">
+                <button class="btn btn-edit" id="editFromViewBtn">
                     <i class="fas fa-edit"></i> Chỉnh sửa
                 </button>
-                <button class="btn btn-secondary" id="closeModalBtn">
+                <button class="btn btn-danger" id="deleteFromViewBtn">
+                    <i class="fas fa-trash"></i> Xóa
+                </button>
+                <button class="btn btn-secondary" id="closeViewBtn">
                     <i class="fas fa-times"></i> Đóng
                 </button>
             </div>
@@ -264,10 +271,13 @@
                     <i class="fas fa-user-edit"></i>
                     Chỉnh sửa thông tin người dùng
                 </h2>
-                <span class="close" id="closeEditModalBtn">&times;</span>
+                <span class="close" id="closeEditModal">&times;</span>
             </div>
             <div class="modal-body">
                 <form id="editUserForm" class="edit-form">
+                    <input type="hidden" id="editUserId" name="id">
+                    <input type="hidden" id="editUserDatabase" name="database">
+                    
                     <div class="form-grid">
                         <!-- Left Column -->
                         <div class="form-column">
@@ -282,10 +292,9 @@
                             <div class="form-group">
                                 <label for="editEmail">
                                     <i class="fas fa-envelope"></i>
-                                    Email (không thể thay đổi)
+                                    Email
                                 </label>
-                                <input type="email" id="editEmail" name="email" placeholder="Nhập địa chỉ email" readonly class="readonly-field">
-                                <small class="field-note">Email được sử dụng làm định danh và không thể thay đổi</small>
+                                <input type="email" id="editEmail" name="email" placeholder="Nhập địa chỉ email">
                             </div>
 
                             <div class="form-group">
@@ -303,22 +312,19 @@
                                 </label>
                                 <input type="tel" id="editPhone" name="phone" placeholder="Nhập số điện thoại">
                             </div>
-                        </div>
 
-                        <!-- Right Column -->
-                        <div class="form-column">
-                            <!-- Admin Fields -->
-                            <div class="admin-only-fields" id="adminOnlyFields" style="display: none;">
+                            <!-- Admin Database Fields -->
+                            <div class="admin-fields" id="adminFields" style="display: none;">
                                 <div class="form-group">
                                     <label for="editRole">
                                         <i class="fas fa-user-tag"></i>
                                         Vai trò
                                     </label>
                                     <select id="editRole" name="role">
-                                        <option value="">-- Không thay đổi --</option>
+                                        <option value="">-- Chọn vai trò --</option>
                                         <option value="admin">Admin</option>
-                                        <option value="editor">Editor</option>
-                                        <option value="viewer">Viewer</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="user">User</option>
                                     </select>
                                 </div>
 
@@ -328,14 +334,60 @@
                                         Trạng thái
                                     </label>
                                     <select id="editStatus" name="status">
-                                        <option value="">-- Không thay đổi --</option>
+                                        <option value="">-- Chọn trạng thái --</option>
                                         <option value="active">Hoạt động</option>
                                         <option value="inactive">Không hoạt động</option>
-                                        <option value="suspended">Tạm khóa</option>
+                                        <option value="suspended">Bị khóa</option>
                                     </select>
                                 </div>
                             </div>
 
+                            <!-- Main Database Fields -->
+                            <div class="main-fields" id="mainFields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="editAge">
+                                        <i class="fas fa-birthday-cake"></i>
+                                        Tuổi
+                                    </label>
+                                    <input type="number" id="editAge" name="age" placeholder="Nhập tuổi">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editGender">
+                                        <i class="fas fa-venus-mars"></i>
+                                        Giới tính
+                                    </label>
+                                    <select id="editGender" name="gender">
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editBlood">
+                                        <i class="fas fa-tint"></i>
+                                        Nhóm máu
+                                    </label>
+                                    <input type="text" id="editBlood" name="blood" placeholder="Nhập nhóm máu">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editPremiumStatus">
+                                        <i class="fas fa-crown"></i>
+                                        Trạng thái Premium
+                                    </label>
+                                    <select id="editPremiumStatus" name="premium_status">
+                                        <option value="0">Regular User</option>
+                                        <option value="1">Premium User</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-column">
                             <!-- Current Info -->
                             <div class="current-info">
                                 <h4>
@@ -359,6 +411,50 @@
                                         <span class="info-label">Cập nhật cuối:</span>
                                         <span id="currentUpdated">-</span>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Health Info for Main Database -->
+                            <div class="health-fields" id="healthFields" style="display: none;">
+                                <h4>
+                                    <i class="fas fa-heartbeat"></i>
+                                    Thông tin sức khỏe
+                                </h4>
+                                
+                                <div class="form-group">
+                                    <label for="editHeight">
+                                        <i class="fas fa-ruler-vertical"></i>
+                                        Chiều cao (cm)
+                                    </label>
+                                    <input type="number" id="editHeight" name="height" placeholder="Chiều cao">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editWeight">
+                                        <i class="fas fa-weight"></i>
+                                        Cân nặng (kg)
+                                    </label>
+                                    <input type="number" id="editWeight" name="weight" placeholder="Cân nặng">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editBloodPressure">
+                                        <i class="fas fa-heart"></i>
+                                        Huyết áp (mmHg)
+                                    </label>
+                                    <div class="blood-pressure-inputs">
+                                        <input type="number" id="editSystolic" name="blood_pressure_systolic" placeholder="Tâm thu">
+                                        <span>/</span>
+                                        <input type="number" id="editDiastolic" name="blood_pressure_diastolic" placeholder="Tâm trương">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editHeartRate">
+                                        <i class="fas fa-heartbeat"></i>
+                                        Nhịp tim (bpm)
+                                    </label>
+                                    <input type="number" id="editHeartRate" name="heart_rate" placeholder="Nhịp tim">
                                 </div>
                             </div>
                         </div>
@@ -394,6 +490,48 @@
                 <div class="loading-indicator" id="editLoadingIndicator" style="display: none;">
                     <i class="fas fa-spinner fa-spin"></i>
                     Đang cập nhật...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content delete-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Xác nhận xóa người dùng
+                </h2>
+                <span class="close" id="closeDeleteModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Bạn có chắc chắn muốn xóa người dùng này?</h3>
+                    <p>Hành động này không thể hoàn tác. Tất cả dữ liệu của người dùng sẽ bị xóa vĩnh viễn.</p>
+                </div>
+                <div class="user-to-delete">
+                    <div class="user-avatar-small">
+                        <span id="deleteUserAvatar">U</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="deleteUserName">-</div>
+                        <div class="user-email" id="deleteUserEmail">-</div>
+                        <div class="user-database" id="deleteUserDatabase">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Xóa người dùng
+                </button>
+                <button class="btn btn-secondary" id="cancelDeleteBtn">
+                    <i class="fas fa-times"></i> Hủy bỏ
+                </button>
+                <div class="loading-indicator" id="deleteLoadingIndicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Đang xóa...
                 </div>
             </div>
         </div>
