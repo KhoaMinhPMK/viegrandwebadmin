@@ -46,7 +46,6 @@ try {
             email, 
             phone, 
             created_at, 
-            last_login 
         FROM user 
         ORDER BY created_at DESC 
         LIMIT :limit OFFSET :offset
@@ -77,8 +76,6 @@ try {
             'phone' => $user['phone'],
             'created_at' => $user['created_at'],
             'created_at_formatted' => $createdAt,
-            'last_login' => $user['last_login'],
-            'last_login_formatted' => $lastLogin,
         ];
     }
     
