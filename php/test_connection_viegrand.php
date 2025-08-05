@@ -15,12 +15,12 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Test if table exists
-    $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
+    $stmt = $pdo->query("SHOW TABLES LIKE 'user'");
     $tableExists = $stmt->rowCount() > 0;
     
     if ($tableExists) {
         // Get table structure
-        $stmt = $pdo->query("DESCRIBE users");
+        $stmt = $pdo->query("DESCRIBE user");
         $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         echo json_encode([
@@ -32,7 +32,7 @@ try {
     } else {
         echo json_encode([
             'success' => false,
-            'message' => 'Table users does not exist',
+            'message' => 'Table user does not exist',
             'table_exists' => false
         ]);
     }
