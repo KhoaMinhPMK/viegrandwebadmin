@@ -1,398 +1,459 @@
+// Global variables
+let currentDatabase = 'admin';
+let adminCurrentPage = 1;
+let mainCurrentPage = 1;
+let adminCurrentLimit = 10;
+let mainCurrentLimit = 10;
+
+// API URLs
+const ADMIN_API_URL = 'https://viegrand.site/viegrandwebadmin/php/get_users_viegrand_admin.php';
+const MAIN_API_URL = 'https://viegrand.site/viegrandwebadmin/php/get_users_viegrand.php';
+
+// DOM elements
+const tabButtons = document.querySelectorAll('.tab-btn');
+const databaseSections = document.querySelectorAll('.database-section');
+const refreshAdminBtn = document.getElementById('refreshAdminBtn');
+const refreshMainBtn = document.getElementById('refreshMainBtn');
+
+// Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    let currentPage = 1;
-    let currentLimit = 10;
-    
     initializePage();
-    
-    function initializePage() {
-        setDefaultUser();
-        initializeDateTime();
-        initializeNewsTicker();
-        setupLogoutHandler();
-        initializeUsersTable();
-        setupRefreshButton();
-    }
-    
-    function setDefaultUser() {
-        const defaultUser = {
-            username: 'admin',
-            full_name: 'Administrator',
-            role: 'admin'
-        };
-        
-        updateUserDisplay(defaultUser);
-    }
-    
-    function updateUserDisplay(userData) {
-        const userAvatar = document.getElementById('userAvatar');
-        const userName = document.getElementById('userName');
-        const userRole = document.getElementById('userRole');
-        
-        userAvatar.textContent = generateUserAvatar(userData.full_name || userData.username);
-        userName.textContent = userData.full_name || userData.username;
-        userRole.textContent = userData.role ? userData.role.charAt(0).toUpperCase() + userData.role.slice(1) : 'User';
-    }
-    
-    function generateUserAvatar(name) {
-        if (!name) return 'U';
-        
-        const words = name.trim().split(' ');
-        if (words.length >= 2) {
-            return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+    setupEventListeners();
+    loadAdminUsers();
+});
+
+function initializePage() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    loadUserInfo();
+}
+
+function setupEventListeners() {
+    // Tab switching
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const database = button.getAttribute('data-database');
+            switchDatabase(database);
+        });
+    });
+
+    // Refresh buttons
+    refreshAdminBtn.addEventListener('click', loadAdminUsers);
+    refreshMainBtn.addEventListener('click', loadMainUsers);
+
+    // Logout button
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+}
+
+function switchDatabase(database) {
+    // Update active tab
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-database') === database) {
+            btn.classList.add('active');
         }
-        return name.charAt(0).toUpperCase();
-    }
-    
-    function getRoleDisplay(role) {
-        const roles = {
-            'admin': 'Quản trị viên',
-            'manager': 'Quản lý',
-            'user': 'Người dùng'
-        };
-        return roles[role] || 'Người dùng';
-    }
-    
-    function initializeDateTime() {
-        const timeElement = document.getElementById('currentTime');
-        const dateElement = document.getElementById('currentDate');
-        
-        function updateTime() {
-            const now = new Date();
-            timeElement.textContent = now.toLocaleTimeString('vi-VN');
+    });
+
+    // Update active section
+    databaseSections.forEach(section => {
+        section.classList.remove('active');
+    });
+
+    if (database === 'admin') {
+        document.getElementById('adminDatabaseSection').classList.add('active');
+        if (!document.getElementById('adminUsersTable').hasAttribute('data-loaded')) {
+            loadAdminUsers();
         }
-        
-        function updateDate() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit' 
-            };
-            dateElement.textContent = now.toLocaleDateString('vi-VN', options);
-        }
-        
-        updateTime();
-        updateDate();
-        
-        setInterval(updateTime, 1000);
-    }
-    
-    function initializeNewsTicker() {
-        const ticker = document.getElementById('tickerContent');
-        const newsItems = [
-            '<i class="fas fa-party-horn"></i> Chào mừng bạn đến với VieGrand Admin!',
-            '<i class="fas fa-megaphone"></i> Hệ thống đang hoạt động bình thường.',
-            '<i class="fas fa-rocket"></i> Phiên bản mới v1.0.0 đã được cập nhật.',
-            '<i class="fas fa-briefcase"></i> Kiểm tra báo cáo hàng ngày trong mục Dashboard.',
-            '<i class="fas fa-tools"></i> Bảo trì hệ thống định kỳ vào 2:00 AM mỗi ngày.',
-            '<i class="fas fa-shield-alt"></i> Tính năng bảo mật mới đã được kích hoạt.',
-            '<i class="fas fa-database"></i> Dữ liệu được sao lưu tự động hàng ngày.',
-            '<i class="fas fa-bolt"></i> Hiệu suất hệ thống đã được tối ưu hóa.',
-            '<i class="fas fa-bell"></i> Nhận thông báo realtime cho tất cả hoạt động.',
-            '<i class="fas fa-star"></i> Cảm ơn bạn đã sử dụng VieGrand!'
-        ];
-        
-        let currentIndex = 0;
-        
-        function updateTicker() {
-            ticker.innerHTML = newsItems[currentIndex];
-            currentIndex = (currentIndex + 1) % newsItems.length;
-        }
-        
-        updateTicker();
-        setInterval(updateTicker, 5000);
-    }
-    
-    function setupLogoutHandler() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', function() {
-                showNotification('Đang đăng xuất...', 'info');
-                
-                // Chuyển hướng về trang đăng nhập sau 1 giây
-                setTimeout(() => {
-                    window.location.href = '../login/';
-                }, 1000);
-            });
+    } else {
+        document.getElementById('mainDatabaseSection').classList.add('active');
+        if (!document.getElementById('mainUsersTable').hasAttribute('data-loaded')) {
+            loadMainUsers();
         }
     }
-    
-    function showNotification(message, type = 'info') {
-        // Tạo notification element
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-check-circle"></i>
-            <span>${message}</span>
+
+    currentDatabase = database;
+}
+
+// Admin Database Functions
+async function loadAdminUsers() {
+    try {
+        showAdminLoading(true);
+        
+        const url = `${ADMIN_API_URL}?page=${adminCurrentPage}&limit=${adminCurrentLimit}`;
+        console.log('Fetching admin users from:', url);
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        console.log('Admin API Response:', result);
+        
+        if (result.success) {
+            displayAdminUsers(result.data.users);
+            displayAdminPagination(result.data.pagination);
+            showAdminNoData(false);
+            document.getElementById('adminUsersTable').setAttribute('data-loaded', 'true');
+        } else {
+            console.error('Admin API Error:', result.message);
+            showNotification(result.message || 'Không thể tải danh sách Admin', 'error');
+            showAdminNoData(true);
+        }
+    } catch (error) {
+        console.error('Error loading admin users:', error);
+        showNotification('Có lỗi xảy ra khi tải danh sách Admin', 'error');
+        showAdminNoData(true);
+    } finally {
+        showAdminLoading(false);
+    }
+}
+
+function displayAdminUsers(users) {
+    const tbody = document.getElementById('adminUsersTableBody');
+    tbody.innerHTML = '';
+
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div class="user-avatar" title="${user.full_name}">
+                    ${user.avatar}
+                </div>
+            </td>
+            <td>
+                <div class="user-info">
+                    <div class="user-name">${user.full_name}</div>
+                    <div class="user-username">@${user.username}</div>
+                </div>
+            </td>
+            <td>${user.email || 'N/A'}</td>
+            <td>
+                <span class="role-badge ${user.role}">${user.role_display}</span>
+            </td>
+            <td>
+                <span class="status-badge ${user.status}">${user.status_display}</span>
+            </td>
+            <td>${user.created_at_formatted}</td>
+            <td>${user.last_login_formatted}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view-btn" onclick="viewAdminUser(${user.id})" title="Xem chi tiết">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn edit-btn" onclick="editAdminUser(${user.id})" title="Chỉnh sửa">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </td>
         `;
-        
-        // Style cho notification
-        let bgColor = '#28a745';
-        let iconClass = 'fa-check-circle';
-        
-        switch(type) {
-            case 'error':
-                bgColor = '#dc3545';
-                iconClass = 'fa-exclamation-circle';
-                break;
-            case 'warning':
-                bgColor = '#ffc107';
-                iconClass = 'fa-exclamation-triangle';
-                break;
-            case 'info':
-                bgColor = '#17a2b8';
-                iconClass = 'fa-info-circle';
-                break;
-            default:
-                bgColor = '#28a745';
-                iconClass = 'fa-check-circle';
-        }
-        
-        notification.innerHTML = `
-            <i class="fas ${iconClass}"></i>
-            <span>${message}</span>
-        `;
-        
-        notification.style.cssText = `
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: linear-gradient(135deg, ${bgColor} 0%, ${bgColor}dd 100%);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            animation: slideInRight 0.3s ease-out;
-            max-width: 400px;
-        `;
-        
-        // Thêm animation CSS nếu chưa có
-        if (!document.querySelector('#notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'notification-styles';
-            style.textContent = `
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOutRight {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        // Thêm vào DOM
-        document.body.appendChild(notification);
-        
-        // Tự động xóa sau 3 giây
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease-out';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('adminUsersTable').style.display = 'table';
+}
+
+function displayAdminPagination(pagination) {
+    const container = document.getElementById('adminPaginationContainer');
+    if (pagination.total_pages <= 1) {
+        container.style.display = 'none';
+        return;
     }
-    
-    function handleResponsive() {
-        const isMobile = window.innerWidth <= 768;
-        // Add responsive handling if needed
-    }
-    
-    function initializeUsersTable() {
-        loadUsers();
-    }
-    
-    function setupRefreshButton() {
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', function() {
-                loadUsers();
-                showNotification('Đã làm mới dữ liệu', 'success');
-            });
-        }
-    }
-    
-    async function loadUsers() {
-        try {
-            showLoading(true);
-            
-            const url = `https://viegrand.site/viegrandwebadmin/php/get_users.php?page=${currentPage}&limit=${currentLimit}`;
-            console.log('Fetching users from:', url);
-            
-            const response = await fetch(url);
-            const result = await response.json();
-            
-            console.log('API Response:', result);
-            
-            if (result.success) {
-                displayUsers(result.data.users);
-                displayPagination(result.data.pagination);
-                updateDatabaseInfo();
-                showNoData(false);
-            } else {
-                console.error('API Error:', result.message);
-                showNotification(result.message || 'Không thể tải danh sách người dùng', 'error');
-                showNoData(true);
-            }
-        } catch (error) {
-            console.error('Error loading users:', error);
-            showNotification('Có lỗi xảy ra khi tải danh sách người dùng', 'error');
-            showNoData(true);
-        } finally {
-            showLoading(false);
-        }
-    }
-    
-    function updateDatabaseInfo() {
-        const header = document.querySelector('.section-header h2');
-        if (header) {
-            header.innerHTML = `<i class="fas fa-users"></i> Quản lý người dùng <span style="font-size: 0.7rem; background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 10px;">viegrand_admin.users</span>`;
-        }
-    }
-    
-    function displayUsers(users) {
-        const tbody = document.getElementById('usersTableBody');
-        const table = document.getElementById('usersTable');
-        
-        if (!users || users.length === 0) {
-            showNoData(true);
-            table.style.display = 'none';
-            return;
-        }
-        
-        tbody.innerHTML = users.map(user => `
-            <tr data-user-id="${user.id}">
-                <td>
-                    <div class="user-avatar-cell">${user.avatar}</div>
-                </td>
-                <td>
-                    <div class="user-info">
-                        <div class="user-name clickable" title="Click để xem chi tiết">
-                            ${user.full_name || 'Chưa cập nhật'}
-                        </div>
-                        <div class="user-username">@${user.username}</div>
-                    </div>
-                </td>
-                <td>${user.email || 'Chưa có'}</td>
-                <td>
-                    <span class="role-badge role-${user.role}">${user.role_display}</span>
-                </td>
-                <td>
-                    <span class="status-badge status-${user.status}">${user.status_display}</span>
-                </td>
-                <td>${user.created_at_formatted}</td>
-                <td>${user.last_login_formatted}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn btn-view" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i> <span>Xem</span>
-                        </button>
-                        <button class="action-btn btn-edit" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i> <span>Sửa</span>
-                        </button>
-                        <button class="action-btn btn-delete" title="Xóa">
-                            <i class="fas fa-trash"></i> <span>Xóa</span>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        table.style.display = 'table';
-        showNoData(false);
-    }
-    
-    function displayPagination(pagination) {
-        const paginationContainer = document.getElementById('paginationContainer');
-        if (!paginationContainer) return;
-        
-        if (pagination.total_pages <= 1) {
-            paginationContainer.style.display = 'none';
-            return;
-        }
-        
-        let paginationHTML = '<div class="pagination-controls">';
-        
-        // Previous button
-        if (pagination.has_prev) {
-            paginationHTML += `<button onclick="changePage(${pagination.current_page - 1})" class="pagination-btn">
-                <i class="fas fa-chevron-left"></i> Trước
-            </button>`;
-        }
-        
-        // Page numbers
-        const startPage = Math.max(1, pagination.current_page - 2);
-        const endPage = Math.min(pagination.total_pages, pagination.current_page + 2);
-        
-        for (let i = startPage; i <= endPage; i++) {
-            const activeClass = i === pagination.current_page ? 'active' : '';
-            paginationHTML += `<button onclick="changePage(${i})" class="pagination-btn ${activeClass}">${i}</button>`;
-        }
-        
-        // Next button
-        if (pagination.has_next) {
-            paginationHTML += `<button onclick="changePage(${pagination.current_page + 1})" class="pagination-btn">
-                Sau <i class="fas fa-chevron-right"></i>
-            </button>`;
-        }
-        
-        paginationHTML += '</div>';
-        
-        // Pagination info
-        paginationHTML += `<div class="pagination-info">
+
+    container.innerHTML = `
+        <div class="pagination-info">
             Trang ${pagination.current_page} / ${pagination.total_pages} 
             (${pagination.total_users} người dùng)
-        </div>`;
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" onclick="changeAdminPage(${pagination.current_page - 1})" 
+                    ${pagination.current_page <= 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i> Trước
+            </button>
+            <span class="page-info">${pagination.current_page} / ${pagination.total_pages}</span>
+            <button class="pagination-btn" onclick="changeAdminPage(${pagination.current_page + 1})" 
+                    ${pagination.current_page >= pagination.total_pages ? 'disabled' : ''}>
+                Sau <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    `;
+    container.style.display = 'flex';
+}
+
+function changeAdminPage(page) {
+    if (page < 1) return;
+    adminCurrentPage = page;
+    loadAdminUsers();
+}
+
+// Main Database Functions
+async function loadMainUsers() {
+    try {
+        showMainLoading(true);
         
-        paginationContainer.innerHTML = paginationHTML;
-        paginationContainer.style.display = 'flex';
-    }
-    
-    function changePage(page) {
-        currentPage = page;
-        loadUsers();
-    }
-    
-    function showLoading(show) {
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const table = document.getElementById('usersTable');
+        const url = `${MAIN_API_URL}?page=${mainCurrentPage}&limit=${mainCurrentLimit}`;
+        console.log('Fetching main users from:', url);
         
-        if (loadingSpinner) {
-            loadingSpinner.style.display = show ? 'flex' : 'none';
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        console.log('Main API Response:', result);
+        
+        if (result.success) {
+            displayMainUsers(result.data.users);
+            displayMainPagination(result.data.pagination);
+            showMainNoData(false);
+            document.getElementById('mainUsersTable').setAttribute('data-loaded', 'true');
+        } else {
+            console.error('Main API Error:', result.message);
+            showNotification(result.message || 'Không thể tải danh sách Main', 'error');
+            showMainNoData(true);
         }
-        
-        if (table) {
-            table.style.display = show ? 'none' : 'table';
-        }
+    } catch (error) {
+        console.error('Error loading main users:', error);
+        showNotification('Có lỗi xảy ra khi tải danh sách Main', 'error');
+        showMainNoData(true);
+    } finally {
+        showMainLoading(false);
     }
-    
-    function showNoData(show) {
-        const noDataMessage = document.getElementById('noDataMessage');
-        const table = document.getElementById('usersTable');
+}
+
+function displayMainUsers(users) {
+    const tbody = document.getElementById('mainUsersTableBody');
+    tbody.innerHTML = '';
+
+    users.forEach(user => {
+        const row = document.createElement('tr');
         
-        if (noDataMessage) {
-            noDataMessage.style.display = show ? 'flex' : 'none';
-        }
+        // Format health info
+        const healthInfoHtml = formatHealthInfoHtml(user.health_info);
         
-        if (table && show) {
-            table.style.display = 'none';
-        }
+        // Format premium status
+        const premiumStatus = user.premium_status ? 
+            '<span class="premium-badge active"><i class="fas fa-crown"></i> Premium</span>' :
+            '<span class="premium-badge inactive"><i class="fas fa-user"></i> Regular</span>';
+
+        row.innerHTML = `
+            <td>
+                <div class="user-avatar" title="${user.full_name}">
+                    ${user.avatar}
+                </div>
+            </td>
+            <td>
+                <div class="user-info">
+                    <div class="user-name">${user.full_name}</div>
+                    <div class="user-username">@${user.username}</div>
+                </div>
+            </td>
+            <td>${user.email || 'N/A'}</td>
+            <td>
+                <span class="role-badge ${user.role}">${user.role_display}</span>
+            </td>
+            <td>
+                <span class="status-badge ${user.status}">${user.status_display}</span>
+            </td>
+            <td>${premiumStatus}</td>
+            <td>
+                <div class="health-info">
+                    ${healthInfoHtml}
+                </div>
+            </td>
+            <td>${user.created_at_formatted}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view-btn" onclick="viewMainUser(${user.id})" title="Xem chi tiết">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn edit-btn" onclick="editMainUser(${user.id})" title="Chỉnh sửa">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('mainUsersTable').style.display = 'table';
+}
+
+function formatHealthInfoHtml(healthInfo) {
+    if (!healthInfo || Object.keys(healthInfo).length === 0) {
+        return '<span class="health-tag">Chưa có thông tin</span>';
     }
+
+    let html = '';
+    Object.entries(healthInfo).forEach(([key, value]) => {
+        let className = 'health-tag';
+        if (key.includes('premium') || key.includes('blood')) className += ' premium';
+        else if (key.includes('hypertension') || key.includes('heart') || key.includes('stroke')) className += ' condition';
+        else if (key.includes('height') || key.includes('weight') || key.includes('bmi') || key.includes('pressure')) className += ' measurement';
+        
+        html += `<span class="${className}">${value}</span>`;
+    });
     
-    // Make changePage function globally accessible
-    window.changePage = changePage;
+    return html;
+}
+
+function displayMainPagination(pagination) {
+    const container = document.getElementById('mainPaginationContainer');
+    if (pagination.total_pages <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="pagination-info">
+            Trang ${pagination.current_page} / ${pagination.total_pages} 
+            (${pagination.total_users} người dùng)
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" onclick="changeMainPage(${pagination.current_page - 1})" 
+                    ${pagination.current_page <= 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i> Trước
+            </button>
+            <span class="page-info">${pagination.current_page} / ${pagination.total_pages}</span>
+            <button class="pagination-btn" onclick="changeMainPage(${pagination.current_page + 1})" 
+                    ${pagination.current_page >= pagination.total_pages ? 'disabled' : ''}>
+                Sau <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    `;
+    container.style.display = 'flex';
+}
+
+function changeMainPage(page) {
+    if (page < 1) return;
+    mainCurrentPage = page;
+    loadMainUsers();
+}
+
+// Loading and No Data Functions
+function showAdminLoading(show) {
+    const spinner = document.getElementById('adminLoadingSpinner');
+    const table = document.getElementById('adminUsersTable');
+    const pagination = document.getElementById('adminPaginationContainer');
     
-    // Initialize responsive handling
-    window.addEventListener('resize', handleResponsive);
-    handleResponsive();
-});
+    if (show) {
+        spinner.style.display = 'flex';
+        table.style.display = 'none';
+        pagination.style.display = 'none';
+    } else {
+        spinner.style.display = 'none';
+    }
+}
+
+function showMainLoading(show) {
+    const spinner = document.getElementById('mainLoadingSpinner');
+    const table = document.getElementById('mainUsersTable');
+    const pagination = document.getElementById('mainPaginationContainer');
+    
+    if (show) {
+        spinner.style.display = 'flex';
+        table.style.display = 'none';
+        pagination.style.display = 'none';
+    } else {
+        spinner.style.display = 'none';
+    }
+}
+
+function showAdminNoData(show) {
+    const noData = document.getElementById('adminNoDataMessage');
+    const table = document.getElementById('adminUsersTable');
+    const pagination = document.getElementById('adminPaginationContainer');
+    
+    if (show) {
+        noData.style.display = 'flex';
+        table.style.display = 'none';
+        pagination.style.display = 'none';
+    } else {
+        noData.style.display = 'none';
+    }
+}
+
+function showMainNoData(show) {
+    const noData = document.getElementById('mainNoDataMessage');
+    const table = document.getElementById('mainUsersTable');
+    const pagination = document.getElementById('mainPaginationContainer');
+    
+    if (show) {
+        noData.style.display = 'flex';
+        table.style.display = 'none';
+        pagination.style.display = 'none';
+    } else {
+        noData.style.display = 'none';
+    }
+}
+
+// User action functions (placeholder for now)
+function viewAdminUser(userId) {
+    showNotification('Chức năng xem chi tiết Admin sẽ được phát triển sau', 'info');
+}
+
+function editAdminUser(userId) {
+    showNotification('Chức năng chỉnh sửa Admin sẽ được phát triển sau', 'info');
+}
+
+function viewMainUser(userId) {
+    showNotification('Chức năng xem chi tiết Main sẽ được phát triển sau', 'info');
+}
+
+function editMainUser(userId) {
+    showNotification('Chức năng chỉnh sửa Main sẽ được phát triển sau', 'info');
+}
+
+// Utility functions
+function updateDateTime() {
+    const now = new Date();
+    const timeElement = document.getElementById('currentTime');
+    const dateElement = document.getElementById('currentDate');
+    
+    const timeString = now.toLocaleTimeString('vi-VN');
+    const dateString = now.toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    
+    timeElement.textContent = timeString;
+    dateElement.textContent = dateString;
+}
+
+function loadUserInfo() {
+    // Load user info from localStorage or session
+    const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {
+        name: 'Administrator',
+        role: 'Admin',
+        avatar: 'AD'
+    };
+    
+    document.getElementById('userName').textContent = userInfo.name;
+    document.getElementById('userRole').textContent = userInfo.role;
+    document.getElementById('userAvatar').textContent = userInfo.avatar;
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+function logout() {
+    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+        localStorage.removeItem('userInfo');
+        window.location.href = '../login/';
+    }
+}

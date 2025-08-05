@@ -51,24 +51,36 @@
         <div class="content-wrapper">
             <h1><i class="fas fa-home"></i> Trang chủ VieGrand</h1>
             
-            <!-- Users Management Section -->
-            <div class="users-section">
+            <!-- Database Tabs -->
+            <div class="database-tabs">
+                <button class="tab-btn active" data-database="admin">
+                    <i class="fas fa-database"></i>
+                    Admin Database
+                </button>
+                <button class="tab-btn" data-database="main">
+                    <i class="fas fa-users"></i>
+                    Main Database
+                </button>
+            </div>
+
+            <!-- Admin Database Section -->
+            <div class="database-section active" id="adminDatabaseSection">
                 <div class="section-header">
-                    <h2><i class="fas fa-users"></i> Quản lý người dùng</h2>
+                    <h2><i class="fas fa-shield-alt"></i> Admin Database (viegrand_admin.users)</h2>
                     <div class="section-controls">
-                        <button class="refresh-btn" id="refreshBtn">
+                        <button class="refresh-btn" id="refreshAdminBtn">
                             <i class="fas fa-sync-alt"></i> Làm mới
                         </button>
                     </div>
                 </div>
                 
                 <div class="users-table-container">
-                    <div class="loading-spinner" id="loadingSpinner">
+                    <div class="loading-spinner" id="adminLoadingSpinner">
                         <i class="fas fa-spinner fa-spin"></i>
-                        <span>Đang tải dữ liệu...</span>
+                        <span>Đang tải dữ liệu Admin...</span>
                     </div>
                     
-                    <table class="users-table" id="usersTable" style="display: none;">
+                    <table class="users-table" id="adminUsersTable" style="display: none;">
                         <thead>
                             <tr>
                                 <th>Avatar</th>
@@ -81,19 +93,67 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody">
-                            <!-- Data will be loaded here -->
+                        <tbody id="adminUsersTableBody">
+                            <!-- Admin data will be loaded here -->
                         </tbody>
                     </table>
                     
-                    <div class="pagination" id="paginationContainer" style="display: none;">
-                        <!-- Pagination will be generated here -->
+                    <div class="pagination" id="adminPaginationContainer" style="display: none;">
+                        <!-- Admin pagination will be generated here -->
                     </div>
                     
-                    <div class="no-data" id="noDataMessage" style="display: none;">
+                    <div class="no-data" id="adminNoDataMessage" style="display: none;">
                         <i class="fas fa-database"></i>
-                        <h3>Không có dữ liệu</h3>
-                        <p>Chưa có dữ liệu người dùng nào.</p>
+                        <h3>Không có dữ liệu Admin</h3>
+                        <p>Chưa có dữ liệu người dùng Admin nào.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Database Section -->
+            <div class="database-section" id="mainDatabaseSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-heartbeat"></i> Main Database (viegrand.user)</h2>
+                    <div class="section-controls">
+                        <button class="refresh-btn" id="refreshMainBtn">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="users-table-container">
+                    <div class="loading-spinner" id="mainLoadingSpinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Đang tải dữ liệu Main...</span>
+                    </div>
+                    
+                    <table class="users-table" id="mainUsersTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Avatar</th>
+                                <th>Tên người dùng</th>
+                                <th>Email</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Premium</th>
+                                <th>Thông tin sức khỏe</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mainUsersTableBody">
+                            <!-- Main data will be loaded here -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination" id="mainPaginationContainer" style="display: none;">
+                        <!-- Main pagination will be generated here -->
+                    </div>
+                    
+                    <div class="no-data" id="mainNoDataMessage" style="display: none;">
+                        <i class="fas fa-database"></i>
+                        <h3>Không có dữ liệu Main</h3>
+                        <p>Chưa có dữ liệu người dùng Main nào.</p>
                     </div>
                 </div>
             </div>
