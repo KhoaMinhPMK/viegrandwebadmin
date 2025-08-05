@@ -75,9 +75,15 @@ function setupEventListeners() {
     document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
     document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
 
-    // Add user buttons
-    document.getElementById('addAdminBtn').addEventListener('click', () => openAddModal('admin'));
-    document.getElementById('addMainBtn').addEventListener('click', () => openAddModal('main'));
+    // Add user buttons with enhanced feedback
+    document.getElementById('addAdminBtn').addEventListener('click', (e) => {
+        addButtonClickEffect(e.target);
+        setTimeout(() => openAddModal('admin'), 150);
+    });
+    document.getElementById('addMainBtn').addEventListener('click', (e) => {
+        addButtonClickEffect(e.target);
+        setTimeout(() => openAddModal('main'), 150);
+    });
 
     // Add modal buttons
     document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
@@ -951,6 +957,9 @@ async function saveNewUser() {
     
     console.log('Database type:', database); // Debug log
     
+    // Add loading state to save button
+    setButtonLoading(saveBtn, true);
+    
     // Basic form validation
     const username = document.getElementById('addUsername').value.trim();
     const email = document.getElementById('addEmail').value.trim();
@@ -961,6 +970,7 @@ async function saveNewUser() {
     // For main database: need username, email, password (ignore full_name completely)
     if (database === 'admin') {
         if (!username || !email || !fullName || !password) {
+            setButtonLoading(saveBtn, false);
             alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Email, Họ và tên, Mật khẩu)');
             return;
         }
@@ -968,18 +978,18 @@ async function saveNewUser() {
         const role = document.getElementById('addRole').value;
         const status = document.getElementById('addStatus').value;
         if (!role || !status) {
+            setButtonLoading(saveBtn, false);
             alert('Vui lòng chọn Vai trò và Trạng thái cho Admin');
             return;
         }
-    } else {
-        // Main database validation - only need username, email, password (ignore full_name)
-        if (!username || !email || !password) {
-            alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Email, Mật khẩu)');
-            return;
-        }
-    }
-    
-    // Show loading
+        } else {
+            // Main database validation - only need username, email, password (ignore full_name)
+            if (!username || !email || !password) {
+                setButtonLoading(saveBtn, false);
+                alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Email, Mật khẩu)');
+                return;
+            }
+        }    // Show loading
     loadingIndicator.style.display = 'flex';
     saveBtn.disabled = true;
     
@@ -1039,6 +1049,7 @@ async function saveNewUser() {
         } catch (parseError) {
             console.error('JSON parse error:', parseError);
             console.error('Response was:', responseText);
+            setButtonLoading(saveBtn, false);
             alert('Lỗi: Server trả về phản hồi không hợp lệ. Chi tiết: ' + responseText.substring(0, 200));
             return;
         }
@@ -1047,24 +1058,28 @@ async function saveNewUser() {
         
         if (result.success) {
             console.log('User added successfully');
-            closeAddModal();
-            // Refresh the page
-            window.location.reload();
+            setButtonSuccess(saveBtn);
+            setTimeout(() => {
+                closeAddModal();
+                // Refresh the page
+                window.location.reload();
+            }, 1000);
         } else {
             console.error('Add failed:', result.message);
+            setButtonLoading(saveBtn, false);
             alert('Lỗi: ' + result.message);
             // Still refresh the page even if there's an error
-            window.location.reload();
+            setTimeout(() => window.location.reload(), 1000);
         }
         
     } catch (error) {
         console.error('Error adding user:', error);
+        setButtonLoading(saveBtn, false);
         alert('Có lỗi xảy ra khi thêm người dùng: ' + error.message);
         // Refresh the page even if there's an error
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 1000);
     } finally {
         loadingIndicator.style.display = 'none';
-        saveBtn.disabled = false;
     }
 }
 
@@ -1072,5 +1087,56 @@ function logout() {
     if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
         localStorage.removeItem('userInfo');
         window.location.href = '../login/';
+    }
+}
+
+// Enhanced UI helper functions for buttons
+function addButtonClickEffect(button) {
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        button.style.transform = '';
+    }, 150);
+}
+
+function setButtonLoading(button, isLoading) {
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+        const icon = button.querySelector('i');
+        if (icon) {
+            icon.className = 'fas fa-spinner';
+        }
+        const span = button.querySelector('span');
+        if (span) {
+            span.textContent = 'Đang xử lý...';
+        }
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
+        // Reset button content based on button ID
+        if (button.id === 'saveAddBtn') {
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-save';
+            }
+            const span = button.querySelector('span');
+            if (span) {
+                span.textContent = 'Lưu';
+            }
+        }
+    }
+}
+
+function setButtonSuccess(button) {
+    button.classList.remove('loading');
+    button.classList.add('success');
+    button.disabled = true;
+    const icon = button.querySelector('i');
+    if (icon) {
+        icon.className = 'fas fa-check';
+    }
+    const span = button.querySelector('span');
+    if (span) {
+        span.textContent = 'Thành công!';
     }
 }
