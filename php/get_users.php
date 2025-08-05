@@ -16,10 +16,10 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 }
 
 // Database configuration
-$host = '127.0.0.1';
+$host = '127.0.0.1';  // Using IP instead of localhost
 $dbname = 'viegrand_admin';
 $username = 'root';
-$password = '';
+$password = '';      // Empty password for root
 $charset = 'utf8mb4';
 
 try {
@@ -104,13 +104,24 @@ try {
                 'has_next' => $page < $totalPages,
                 'has_prev' => $page > 1
             ]
+        ],
+        'debug' => [
+            'total_users' => $totalUsers,
+            'current_page' => $page,
+            'limit' => $limit,
+            'offset' => $offset
         ]
     ]);
     
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Database error: ' . $e->getMessage(),
+        'debug' => [
+            'host' => $host,
+            'dbname' => $dbname,
+            'username' => $username
+        ]
     ]);
 }
 

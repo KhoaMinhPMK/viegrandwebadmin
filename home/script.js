@@ -226,9 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             showLoading(true);
             
-            const url = `../php/get_users.php?page=${currentPage}&limit=${currentLimit}`;
+            const url = `https://viegrand.site/viegrandwebadmin/php/get_users.php?page=${currentPage}&limit=${currentLimit}`;
+            console.log('Fetching users from:', url);
+            
             const response = await fetch(url);
             const result = await response.json();
+            
+            console.log('API Response:', result);
             
             if (result.success) {
                 displayUsers(result.data.users);
@@ -236,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateDatabaseInfo();
                 showNoData(false);
             } else {
+                console.error('API Error:', result.message);
                 showNotification(result.message || 'Không thể tải danh sách người dùng', 'error');
                 showNoData(true);
             }
