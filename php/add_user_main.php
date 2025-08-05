@@ -47,9 +47,13 @@ try {
     $blood_pressure_diastolic = !empty($_POST['blood_pressure_diastolic']) ? (int)$_POST['blood_pressure_diastolic'] : null;
     $heart_rate = !empty($_POST['heart_rate']) ? (int)$_POST['heart_rate'] : null;
     
-    // Validate required fields
-    if (empty($username) || empty($email) || empty($full_name) || empty($password)) {
-        echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+    // For main database, use full_name if provided, otherwise use username
+    // Since the database only has userName field, we'll store the display name there
+    $display_name = !empty($full_name) ? $full_name : $username;
+    
+    // Validate required fields - we need a display name, email, and password
+    if (empty($display_name) || empty($email) || empty($password)) {
+        echo json_encode(['success' => false, 'message' => 'Missing required fields: name, email, and password are required']);
         exit;
     }
     
@@ -65,7 +69,7 @@ try {
     // Check if username or email already exists
     $checkSql = "SELECT userId FROM user WHERE userName = :username OR email = :email";
     $checkStmt = $pdo->prepare($checkSql);
-    $checkStmt->bindParam(':username', $full_name, PDO::PARAM_STR);  // Use full_name for userName field check
+    $checkStmt->bindParam(':username', $display_name, PDO::PARAM_STR);  // Check display name
     $checkStmt->bindParam(':email', $email, PDO::PARAM_STR);
     $checkStmt->execute();
     
@@ -74,14 +78,14 @@ try {
         exit;
     }
     
-    // Insert new user (note: userName field stores what we call full_name in the frontend)
+    // Insert new user (userName field stores the display name)
     $sql = "INSERT INTO user (userName, email, phone, password, age, gender, blood, premium_status, 
                               height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, created_at) 
             VALUES (:username, :email, :phone, :password, :age, :gender, :blood, :premium_status,
                     :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate, NOW())";
     
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':username', $full_name, PDO::PARAM_STR);  // Store full_name in userName field
+    $stmt->bindParam(':username', $display_name, PDO::PARAM_STR);  // Store display name in userName field
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
     $stmt->bindParam(':password', $hashed_password, PDO::PARAM_STR);

@@ -900,6 +900,9 @@ function openAddModal(database) {
         // Set required attributes for admin fields
         document.getElementById('addRole').required = true;
         document.getElementById('addStatus').required = true;
+        document.getElementById('addFullName').required = true;  // Required for admin
+        document.getElementById('addFullNameRequired').style.display = 'inline';  // Show required indicator
+        document.getElementById('addFullName').placeholder = 'Nhập họ và tên đầy đủ';
         
         // Remove required attributes for main fields
         document.getElementById('addAge').required = false;
@@ -913,6 +916,9 @@ function openAddModal(database) {
         // Remove required attributes for admin fields
         document.getElementById('addRole').required = false;
         document.getElementById('addStatus').required = false;
+        document.getElementById('addFullName').required = false;  // Not required for main DB
+        document.getElementById('addFullNameRequired').style.display = 'none';  // Hide required indicator
+        document.getElementById('addFullName').placeholder = 'Nhập tên hiển thị (tùy chọn, sẽ dùng tên đăng nhập nếu để trống)';
         
         // Set appropriate attributes for main fields (none are required except basic info)
         document.getElementById('addAge').required = false;
@@ -950,17 +956,25 @@ async function saveNewUser() {
     const fullName = document.getElementById('addFullName').value.trim();
     const password = document.getElementById('addPassword').value;
     
-    if (!username || !email || !fullName || !password) {
-        alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Email, Họ và tên, Mật khẩu)');
-        return;
-    }
-    
-    // Additional validation for admin
+    // For admin database: need username, email, full_name, password
+    // For main database: need (username OR full_name), email, password (since DB only has userName field)
     if (database === 'admin') {
+        if (!username || !email || !fullName || !password) {
+            alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Email, Họ và tên, Mật khẩu)');
+            return;
+        }
+        
         const role = document.getElementById('addRole').value;
         const status = document.getElementById('addStatus').value;
         if (!role || !status) {
             alert('Vui lòng chọn Vai trò và Trạng thái cho Admin');
+            return;
+        }
+    } else {
+        // Main database validation - need either username or fullName as display name
+        const displayName = fullName || username;
+        if (!displayName || !email || !password) {
+            alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên hiển thị, Email, Mật khẩu)');
             return;
         }
     }
