@@ -52,9 +52,11 @@ try {
             last_login 
         FROM users 
         ORDER BY created_at DESC 
-        LIMIT ? OFFSET ?
+        LIMIT :limit OFFSET :offset
     ");
-    $stmt->execute([$limit, $offset]);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $users = $stmt->fetchAll();
     
     // Format user data for frontend
