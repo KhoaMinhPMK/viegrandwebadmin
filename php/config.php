@@ -62,7 +62,7 @@ class Database {
                 $user = MAIN_DB_USER;
                 $pass = MAIN_DB_PASS;
             } else {
-                // Kết nối database admin (viegrandwebadmin)
+                // Kết nối database admin (viegrand_admin)
                 $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
                 $user = DB_USER;
                 $pass = DB_PASS;

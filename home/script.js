@@ -330,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error loading users:', error);
+            console.log(error);
             showNotification('Có lỗi xảy ra khi tải danh sách người dùng', 'error');
             showNoData(true);
         } finally {

@@ -660,7 +660,7 @@ switch ($method) {
                         'PUT /users.php?id=1&db=main' => 'Cập nhật thông tin user trong Main DB'
                     ],
                     'databases' => [
-                        'admin' => 'viegrandwebadmin.users (Web Admin Login)',
+                        'admin' => 'viegrand_admin.users (Web Admin Login)',
                         'main' => 'viegrand.user (Main Production Data)'
                     ]
                 ]);
