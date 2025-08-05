@@ -657,13 +657,14 @@ body {
 
 .modal-content {
     background-color: white;
-    margin: 5% auto;
+    margin: 3% auto;
     border-radius: 20px;
-    width: 90%;
-    max-width: 600px;
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 20px 60px rgba(46, 134, 171, 0.3);
     animation: slideIn 0.3s ease-in-out;
-    overflow: hidden;
 }
 
 .modal-header {
@@ -708,8 +709,161 @@ body {
 
 .user-detail-container {
     display: flex;
+    flex-direction: column;
     gap: 2rem;
-    align-items: flex-start;
+}
+
+.user-profile-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fdff 0%, #e6f3ff 100%);
+    border-radius: 15px;
+    border: 1px solid rgba(46, 134, 171, 0.1);
+}
+
+.user-basic-info {
+    flex: 1;
+}
+
+.user-display-name {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2E86AB;
+    margin: 0 0 0.5rem 0;
+}
+
+.database-type {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+}
+
+.user-status-indicators {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.user-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.detail-section {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.detail-section h4 {
+    color: #2E86AB;
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 140px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-item label i {
+    color: #2E86AB;
+    width: 16px;
+    text-align: center;
+}
+
+.detail-value {
+    color: #333;
+    font-size: 0.9rem;
+    font-weight: 500;
+    word-break: break-word;
+    flex: 1;
+}
+
+.health-section {
+    grid-column: 1 / -1;
+}
+
+.health-info-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.health-info-display .health-tag {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.health-info-display .health-tag strong {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.health-info-display .health-tag.premium {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.health-info-display .health-tag.condition {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.health-info-display .health-tag.measurement {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+.premium-badge.active {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
 }
 
 .user-avatar-large {
@@ -818,39 +972,82 @@ body {
     }
 }
 
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detail-section {
+    animation: slideInUp 0.3s ease-in-out;
+}
+
+.detail-section:nth-child(1) { animation-delay: 0.1s; }
+.detail-section:nth-child(2) { animation-delay: 0.2s; }
+.detail-section:nth-child(3) { animation-delay: 0.3s; }
+.detail-section:nth-child(4) { animation-delay: 0.4s; }
+
+.health-info-display .health-tag {
+    animation: slideInUp 0.4s ease-in-out;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.health-info-display .health-tag:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.user-profile-section {
+    animation: slideInUp 0.2s ease-in-out;
+}
+
 /* Responsive Modal */
 @media (max-width: 768px) {
     .modal-content {
-        margin: 10% auto;
-        width: 95%;
+        margin: 2% auto;
+        width: 98%;
+        max-height: 95vh;
     }
     
-    .user-detail-container {
+    .user-profile-section {
         flex-direction: column;
-        align-items: center;
         text-align: center;
-        gap: 1.5rem;
+        gap: 1rem;
+        padding: 1rem;
     }
     
-    .user-avatar-large {
-        width: 100px;
-        height: 100px;
-        font-size: 2rem;
+    .user-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
     
-    .detail-row {
+    .detail-section {
+        padding: 1rem;
+    }
+    
+    .detail-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.3rem;
+        gap: 0.25rem;
     }
     
-    .detail-row label {
+    .detail-item label {
         min-width: auto;
-        font-weight: 700;
+        font-size: 0.8rem;
     }
     
+    .health-info-display {
+        grid-template-columns: 1fr;
+    }
+
     .modal-footer {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .btn {
@@ -858,6 +1055,7 @@ body {
         justify-content: center;
     }
 }
+
 @media (max-width: 768px) {
     .main-header {
         flex-direction: column;

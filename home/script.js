@@ -321,17 +321,36 @@ function displayMainUsers(users) {
 
 function formatHealthInfoHtml(healthInfo) {
     if (!healthInfo || Object.keys(healthInfo).length === 0) {
-        return '<span class="health-tag">Chưa có thông tin</span>';
+        return '<div class="health-tag">Chưa có thông tin sức khỏe</div>';
     }
 
     let html = '';
     Object.entries(healthInfo).forEach(([key, value]) => {
         let className = 'health-tag';
-        if (key.includes('premium') || key.includes('blood')) className += ' premium';
-        else if (key.includes('hypertension') || key.includes('heart') || key.includes('stroke')) className += ' condition';
-        else if (key.includes('height') || key.includes('weight') || key.includes('bmi') || key.includes('pressure')) className += ' measurement';
+        let displayKey = key;
         
-        html += `<span class="${className}">${value}</span>`;
+        // Customize display based on key type
+        if (key.includes('premium') || key.includes('blood_type')) {
+            className += ' premium';
+        } else if (key.includes('hypertension') || key.includes('heart') || key.includes('stroke')) {
+            className += ' condition';
+        } else if (key.includes('height') || key.includes('weight') || key.includes('bmi') || key.includes('pressure')) {
+            className += ' measurement';
+        }
+        
+        // Format display key
+        displayKey = displayKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        // Format the value
+        let displayValue = value;
+        if (key.includes('height')) displayValue += ' cm';
+        else if (key.includes('weight')) displayValue += ' kg';
+        else if (key.includes('pressure')) displayValue += ' mmHg';
+        else if (key.includes('heart_rate')) displayValue += ' BPM';
+        
+        html += `<div class="${className}">
+            <strong>${displayKey}:</strong> ${displayValue}
+        </div>`;
     });
     
     return html;
@@ -394,32 +413,76 @@ function viewMainUser(userId) {
 function showViewModal(user, database) {
     currentUserData = { ...user, database };
     
-    // Set modal content
+    // Set basic user info
     document.getElementById('viewUserAvatar').textContent = user.avatar;
+    document.getElementById('viewUserDisplayName').textContent = user.full_name || user.username;
+    document.getElementById('viewUserDatabaseType').textContent = database === 'admin' ? 'Admin Database' : 'Main Database';
+    
+    // Set detail values
     document.getElementById('viewUserId').textContent = user.id;
-    document.getElementById('viewUserFullName').textContent = user.full_name;
+    document.getElementById('viewUserFullName').textContent = user.full_name || 'N/A';
     document.getElementById('viewUserUsername').textContent = user.username;
     document.getElementById('viewUserEmail').textContent = user.email || 'N/A';
     document.getElementById('viewUserPhone').textContent = user.phone || 'N/A';
-    document.getElementById('viewUserRole').textContent = user.role_display;
-    document.getElementById('viewUserStatus').textContent = user.status_display;
     document.getElementById('viewUserCreated').textContent = user.created_at_formatted;
     
-    // Show/hide database-specific fields
+    // Set badges
+    const roleElement = document.getElementById('viewUserRole');
+    roleElement.textContent = user.role_display;
+    roleElement.className = `role-badge ${user.role}`;
+    
+    const statusElement = document.getElementById('viewUserStatus');
+    statusElement.textContent = user.status_display;
+    statusElement.className = `status-badge ${user.status}`;
+    
+    // Show/hide database-specific sections
     if (database === 'admin') {
+        // Admin database specific
         document.getElementById('viewUserLastLoginRow').style.display = 'flex';
-        document.getElementById('viewUserLastLogin').textContent = user.last_login_formatted;
-        document.getElementById('viewUserPremiumRow').style.display = 'none';
-        document.getElementById('viewUserHealthRow').style.display = 'none';
+        document.getElementById('viewUserLastLogin').textContent = user.last_login_formatted || 'Chưa đăng nhập';
+        document.getElementById('viewUserUpdatedRow').style.display = user.updated_at_formatted ? 'flex' : 'none';
+        document.getElementById('viewUserUpdated').textContent = user.updated_at_formatted || 'N/A';
+        
+        // Hide main database sections
+        document.getElementById('viewUserMainDataSection').style.display = 'none';
+        document.getElementById('viewUserHealthSection').style.display = 'none';
+        document.getElementById('viewUserPremiumBadge').style.display = 'none';
     } else {
+        // Main database specific
         document.getElementById('viewUserLastLoginRow').style.display = 'none';
-        document.getElementById('viewUserPremiumRow').style.display = 'flex';
+        document.getElementById('viewUserUpdatedRow').style.display = 'none';
+        
+        // Show main database sections
+        document.getElementById('viewUserMainDataSection').style.display = 'block';
+        document.getElementById('viewUserHealthSection').style.display = 'block';
+        
+        // Set main database specific data
+        document.getElementById('viewUserAge').textContent = user.age || 'N/A';
+        document.getElementById('viewUserGender').textContent = getGenderDisplay(user.gender) || 'N/A';
+        document.getElementById('viewUserBlood').textContent = user.blood || 'N/A';
         document.getElementById('viewUserPremium').textContent = user.premium_status ? 'Premium' : 'Regular';
-        document.getElementById('viewUserHealthRow').style.display = 'flex';
+        
+        // Show premium badge if applicable
+        if (user.premium_status) {
+            document.getElementById('viewUserPremiumBadge').style.display = 'flex';
+        } else {
+            document.getElementById('viewUserPremiumBadge').style.display = 'none';
+        }
+        
+        // Set health information
         document.getElementById('viewUserHealth').innerHTML = formatHealthInfoHtml(user.health_info);
     }
     
     viewModal.style.display = 'block';
+}
+
+function getGenderDisplay(gender) {
+    switch (gender) {
+        case 'male': return 'Nam';
+        case 'female': return 'Nữ';
+        case 'other': return 'Khác';
+        default: return gender;
+    }
 }
 
 // Edit Functions

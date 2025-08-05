@@ -198,53 +198,95 @@
             </div>
             <div class="modal-body">
                 <div class="user-detail-container">
-                    <div class="user-avatar-large">
-                        <span id="viewUserAvatar">U</span>
+                    <div class="user-profile-section">
+                        <div class="user-avatar-large">
+                            <span id="viewUserAvatar">U</span>
+                        </div>
+                        <div class="user-basic-info">
+                            <h3 id="viewUserDisplayName" class="user-display-name">-</h3>
+                            <p id="viewUserDatabaseType" class="database-type">-</p>
+                            <div class="user-status-indicators">
+                                <span id="viewUserRole" class="role-badge">-</span>
+                                <span id="viewUserStatus" class="status-badge">-</span>
+                                <span id="viewUserPremiumBadge" class="premium-badge" style="display: none;">
+                                    <i class="fas fa-crown"></i> Premium
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="user-detail-info">
-                        <div class="detail-row">
-                            <label>ID:</label>
-                            <span id="viewUserId">-</span>
+                    
+                    <div class="user-detail-grid">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-user-circle"></i> Thông tin cơ bản</h4>
+                            <div class="detail-group">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-hashtag"></i> ID:</label>
+                                    <span id="viewUserId" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-signature"></i> Tên đầy đủ:</label>
+                                    <span id="viewUserFullName" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-at"></i> Tên đăng nhập:</label>
+                                    <span id="viewUserUsername" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-envelope"></i> Email:</label>
+                                    <span id="viewUserEmail" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-phone"></i> Số điện thoại:</label>
+                                    <span id="viewUserPhone" class="detail-value">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <label>Tên đầy đủ:</label>
-                            <span id="viewUserFullName">-</span>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-calendar-alt"></i> Thông tin thời gian</h4>
+                            <div class="detail-group">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-calendar-plus"></i> Ngày tạo:</label>
+                                    <span id="viewUserCreated" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item" id="viewUserLastLoginRow">
+                                    <label><i class="fas fa-sign-in-alt"></i> Đăng nhập cuối:</label>
+                                    <span id="viewUserLastLogin" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item" id="viewUserUpdatedRow" style="display: none;">
+                                    <label><i class="fas fa-edit"></i> Cập nhật cuối:</label>
+                                    <span id="viewUserUpdated" class="detail-value">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <label>Tên đăng nhập:</label>
-                            <span id="viewUserUsername">-</span>
+
+                        <div class="detail-section" id="viewUserMainDataSection" style="display: none;">
+                            <h4><i class="fas fa-user-plus"></i> Thông tin bổ sung</h4>
+                            <div class="detail-group">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-birthday-cake"></i> Tuổi:</label>
+                                    <span id="viewUserAge" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-venus-mars"></i> Giới tính:</label>
+                                    <span id="viewUserGender" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-tint"></i> Nhóm máu:</label>
+                                    <span id="viewUserBlood" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-crown"></i> Trạng thái Premium:</label>
+                                    <span id="viewUserPremium" class="detail-value">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <label>Email:</label>
-                            <span id="viewUserEmail">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Số điện thoại:</label>
-                            <span id="viewUserPhone">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Vai trò:</label>
-                            <span id="viewUserRole" class="role-badge">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Trạng thái:</label>
-                            <span id="viewUserStatus" class="status-badge">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Ngày tạo:</label>
-                            <span id="viewUserCreated">-</span>
-                        </div>
-                        <div class="detail-row" id="viewUserLastLoginRow">
-                            <label>Đăng nhập cuối:</label>
-                            <span id="viewUserLastLogin">-</span>
-                        </div>
-                        <div class="detail-row" id="viewUserPremiumRow" style="display: none;">
-                            <label>Premium:</label>
-                            <span id="viewUserPremium">-</span>
-                        </div>
-                        <div class="detail-row" id="viewUserHealthRow" style="display: none;">
-                            <label>Thông tin sức khỏe:</label>
-                            <div id="viewUserHealth" class="health-info"></div>
+
+                        <div class="detail-section health-section" id="viewUserHealthSection" style="display: none;">
+                            <h4><i class="fas fa-heartbeat"></i> Thông tin sức khỏe</h4>
+                            <div id="viewUserHealth" class="health-info-display">
+                                <!-- Health info will be populated here -->
+                            </div>
                         </div>
                     </div>
                 </div>
