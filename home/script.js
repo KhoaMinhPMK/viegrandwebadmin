@@ -77,12 +77,18 @@ function setupEventListeners() {
 
     // Add user buttons
     document.getElementById('addAdminBtn').addEventListener('click', () => openAddModal('admin'));
-    document.getElementById('addUserBtn').addEventListener('click', () => openAddModal('main'));
+    document.getElementById('addMainBtn').addEventListener('click', () => openAddModal('main'));
 
     // Add modal buttons
     document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
     document.getElementById('saveAddBtn').addEventListener('click', saveNewUser);
     document.getElementById('cancelAddBtn').addEventListener('click', closeAddModal);
+    
+    // Add form submit event handler to prevent default submission
+    document.getElementById('addUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveNewUser();
+    });
 
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
@@ -863,12 +869,20 @@ function showNotification(message, type = 'info') {
 
 // Add User Modal Functions
 function openAddModal(database) {
+    console.log('Opening add modal for database:', database); // Debug log
+    
     const addModal = document.getElementById('addUserModal');
     const addModalTitle = document.getElementById('addModalTitle');
     const addUserDatabase = document.getElementById('addUserDatabase');
     const addAdminFields = document.getElementById('addAdminFields');
     const addMainFields = document.getElementById('addMainFields');
     const addHealthFields = document.getElementById('addHealthFields');
+    
+    // Check if elements exist
+    if (!addModal) {
+        console.error('Add modal element not found');
+        return;
+    }
     
     // Clear form
     document.getElementById('addUserForm').reset();
@@ -906,18 +920,50 @@ function openAddModal(database) {
     }
     
     addModal.style.display = 'block';
+    console.log('Add modal opened successfully'); // Debug log
 }
 
 function closeAddModal() {
+    console.log('Closing add modal'); // Debug log
     const addModal = document.getElementById('addUserModal');
-    addModal.style.display = 'none';
-    document.getElementById('addUserForm').reset();
+    if (addModal) {
+        addModal.style.display = 'none';
+        document.getElementById('addUserForm').reset();
+        console.log('Add modal closed successfully'); // Debug log
+    } else {
+        console.error('Add modal element not found when trying to close');
+    }
 }
 
 async function saveNewUser() {
+    console.log('saveNewUser function called'); // Debug log
+    
     const database = document.getElementById('addUserDatabase').value;
     const loadingIndicator = document.getElementById('addLoadingIndicator');
     const saveBtn = document.getElementById('saveAddBtn');
+    
+    console.log('Database type:', database); // Debug log
+    
+    // Basic form validation
+    const username = document.getElementById('addUsername').value.trim();
+    const email = document.getElementById('addEmail').value.trim();
+    const fullName = document.getElementById('addFullName').value.trim();
+    const password = document.getElementById('addPassword').value;
+    
+    if (!username || !email || !fullName || !password) {
+        alert('Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Email, Họ và tên, Mật khẩu)');
+        return;
+    }
+    
+    // Additional validation for admin
+    if (database === 'admin') {
+        const role = document.getElementById('addRole').value;
+        const status = document.getElementById('addStatus').value;
+        if (!role || !status) {
+            alert('Vui lòng chọn Vai trò và Trạng thái cho Admin');
+            return;
+        }
+    }
     
     // Show loading
     loadingIndicator.style.display = 'flex';
@@ -928,11 +974,11 @@ async function saveNewUser() {
         const formData = new FormData();
         
         // Basic fields for both databases
-        formData.append('username', document.getElementById('addUsername').value);
-        formData.append('email', document.getElementById('addEmail').value);
-        formData.append('full_name', document.getElementById('addFullName').value);
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('full_name', fullName);
         formData.append('phone', document.getElementById('addPhone').value || '');
-        formData.append('password', document.getElementById('addPassword').value);
+        formData.append('password', password);
         
         if (database === 'admin') {
             // Admin specific fields
@@ -958,25 +1004,31 @@ async function saveNewUser() {
             ? 'https://viegrand.site/viegrandwebadmin/php/add_user_admin.php'
             : 'https://viegrand.site/viegrandwebadmin/php/add_user_main.php';
         
+        console.log('Sending request to:', apiUrl); // Debug log
+        
         const response = await fetch(apiUrl, {
             method: 'POST',
             body: formData
         });
         
         const result = await response.json();
+        console.log('API response:', result); // Debug log
         
         if (result.success) {
+            console.log('User added successfully');
             closeAddModal();
             // Refresh the page
             window.location.reload();
         } else {
             console.error('Add failed:', result.message);
+            alert('Lỗi: ' + result.message);
             // Still refresh the page even if there's an error
             window.location.reload();
         }
         
     } catch (error) {
         console.error('Error adding user:', error);
+        alert('Có lỗi xảy ra khi thêm người dùng: ' + error.message);
         // Refresh the page even if there's an error
         window.location.reload();
     } finally {
