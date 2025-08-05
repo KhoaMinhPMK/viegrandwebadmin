@@ -1,7 +1,7 @@
 <?php
 /**
- * Get Users API - viegrand_admin database
- * Fetches users from viegrand_admin.users table
+ * Get Users API - viegrand database
+ * Fetches users from viegrand.user table
  */
 
 header('Content-Type: application/json');
@@ -35,7 +35,7 @@ try {
     $offset = ($page - 1) * $limit;
     
     // Count total users
-    $countStmt = $pdo->query("SELECT COUNT(*) as total FROM users");
+    $countStmt = $pdo->query("SELECT COUNT(*) as total FROM user");
     $totalUsers = $countStmt->fetch()['total'];
     
     // Get users with pagination
@@ -50,18 +50,18 @@ try {
             status, 
             created_at, 
             last_login 
-        FROM users 
+        FROM user 
         ORDER BY created_at DESC 
         LIMIT :limit OFFSET :offset
     ");
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    $users = $stmt->fetchAll();
+    $user = $stmt->fetchAll();
     
     // Format user data for frontend
     $formattedUsers = [];
-    foreach ($users as $user) {
+    foreach ($user as $user) {
         // Generate avatar from name
         $avatar = generateAvatar($user['full_name'] ?: $user['username']);
         
@@ -97,7 +97,7 @@ try {
     echo json_encode([
         'success' => true,
         'data' => [
-            'users' => $formattedUsers,
+            'user' => $formattedUser,
             'pagination' => [
                 'current_page' => $page,
                 'total_pages' => $totalPages,
