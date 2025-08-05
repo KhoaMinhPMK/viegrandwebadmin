@@ -54,7 +54,7 @@ try {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
     // Check if username or email already exists
-    $checkSql = "SELECT id FROM admin_users WHERE username = :username OR email = :email";
+    $checkSql = "SELECT id FROM users WHERE username = :username OR email = :email";
     $checkStmt = $pdo->prepare($checkSql);
     $checkStmt->bindParam(':username', $username, PDO::PARAM_STR);
     $checkStmt->bindParam(':email', $email, PDO::PARAM_STR);
@@ -66,7 +66,7 @@ try {
     }
     
     // Insert new admin user
-    $sql = "INSERT INTO admin_users (username, email, full_name, phone, password, role, status, created_at) 
+    $sql = "INSERT INTO users (username, email, full_name, phone, password, role, status, created_at) 
             VALUES (:username, :email, :full_name, :phone, :password, :role, :status, NOW())";
     
     $stmt = $pdo->prepare($sql);
