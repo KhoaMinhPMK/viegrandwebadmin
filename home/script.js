@@ -75,11 +75,21 @@ function setupEventListeners() {
     document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
     document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
 
+    // Add user buttons
+    document.getElementById('addAdminBtn').addEventListener('click', () => openAddModal('admin'));
+    document.getElementById('addUserBtn').addEventListener('click', () => openAddModal('main'));
+
+    // Add modal buttons
+    document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
+    document.getElementById('saveAddBtn').addEventListener('click', saveNewUser);
+    document.getElementById('cancelAddBtn').addEventListener('click', closeAddModal);
+
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
         if (e.target === viewModal) closeViewModal();
         if (e.target === editModal) closeEditModal();
         if (e.target === deleteModal) closeDeleteModal();
+        if (e.target === document.getElementById('addUserModal')) closeAddModal();
     });
 }
 
@@ -849,6 +859,130 @@ function showNotification(message, type = 'info') {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
     }, 5000);
+}
+
+// Add User Modal Functions
+function openAddModal(database) {
+    const addModal = document.getElementById('addUserModal');
+    const addModalTitle = document.getElementById('addModalTitle');
+    const addUserDatabase = document.getElementById('addUserDatabase');
+    const addAdminFields = document.getElementById('addAdminFields');
+    const addMainFields = document.getElementById('addMainFields');
+    const addHealthFields = document.getElementById('addHealthFields');
+    
+    // Clear form
+    document.getElementById('addUserForm').reset();
+    
+    // Set database type
+    addUserDatabase.value = database;
+    
+    // Update modal title and show appropriate fields
+    if (database === 'admin') {
+        addModalTitle.textContent = 'Thêm Admin mới';
+        addAdminFields.style.display = 'flex';
+        addMainFields.style.display = 'none';
+        addHealthFields.style.display = 'none';
+        
+        // Set required attributes for admin fields
+        document.getElementById('addRole').required = true;
+        document.getElementById('addStatus').required = true;
+        
+        // Remove required attributes for main fields
+        document.getElementById('addAge').required = false;
+        document.getElementById('addGender').required = false;
+    } else {
+        addModalTitle.textContent = 'Thêm User mới';
+        addAdminFields.style.display = 'none';
+        addMainFields.style.display = 'flex';
+        addHealthFields.style.display = 'flex';
+        
+        // Remove required attributes for admin fields
+        document.getElementById('addRole').required = false;
+        document.getElementById('addStatus').required = false;
+        
+        // Set appropriate attributes for main fields (none are required except basic info)
+        document.getElementById('addAge').required = false;
+        document.getElementById('addGender').required = false;
+    }
+    
+    addModal.style.display = 'block';
+}
+
+function closeAddModal() {
+    const addModal = document.getElementById('addUserModal');
+    addModal.style.display = 'none';
+    document.getElementById('addUserForm').reset();
+}
+
+async function saveNewUser() {
+    const database = document.getElementById('addUserDatabase').value;
+    const loadingIndicator = document.getElementById('addLoadingIndicator');
+    const saveBtn = document.getElementById('saveAddBtn');
+    
+    // Show loading
+    loadingIndicator.style.display = 'flex';
+    saveBtn.disabled = true;
+    
+    try {
+        // Collect form data
+        const formData = new FormData();
+        
+        // Basic fields for both databases
+        formData.append('username', document.getElementById('addUsername').value);
+        formData.append('email', document.getElementById('addEmail').value);
+        formData.append('full_name', document.getElementById('addFullName').value);
+        formData.append('phone', document.getElementById('addPhone').value || '');
+        formData.append('password', document.getElementById('addPassword').value);
+        
+        if (database === 'admin') {
+            // Admin specific fields
+            formData.append('role', document.getElementById('addRole').value);
+            formData.append('status', document.getElementById('addStatus').value);
+        } else {
+            // Main database specific fields
+            formData.append('age', document.getElementById('addAge').value || null);
+            formData.append('gender', document.getElementById('addGender').value || '');
+            formData.append('blood', document.getElementById('addBlood').value || '');
+            formData.append('premium_status', document.getElementById('addPremiumStatus').value || '0');
+            
+            // Health fields
+            formData.append('height', document.getElementById('addHeight').value || null);
+            formData.append('weight', document.getElementById('addWeight').value || null);
+            formData.append('blood_pressure_systolic', document.getElementById('addSystolic').value || null);
+            formData.append('blood_pressure_diastolic', document.getElementById('addDiastolic').value || null);
+            formData.append('heart_rate', document.getElementById('addHeartRate').value || null);
+        }
+        
+        // API URL
+        const apiUrl = database === 'admin' 
+            ? 'https://viegrand.site/viegrandwebadmin/php/add_user_admin.php'
+            : 'https://viegrand.site/viegrandwebadmin/php/add_user_main.php';
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeAddModal();
+            // Refresh the page
+            window.location.reload();
+        } else {
+            console.error('Add failed:', result.message);
+            // Still refresh the page even if there's an error
+            window.location.reload();
+        }
+        
+    } catch (error) {
+        console.error('Error adding user:', error);
+        // Refresh the page even if there's an error
+        window.location.reload();
+    } finally {
+        loadingIndicator.style.display = 'none';
+        saveBtn.disabled = false;
+    }
 }
 
 function logout() {
