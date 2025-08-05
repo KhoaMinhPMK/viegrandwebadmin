@@ -1,10 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const API_BASE_URL = 'https://viegrand.site/viegrandwebadmin/php/';
-    
     let currentPage = 1;
     let currentLimit = 10;
-    let currentSearchQuery = '';
-    let currentDatabase = 'admin';
     
     initializePage();
     
@@ -13,9 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeDateTime();
         initializeNewsTicker();
         setupLogoutHandler();
-        initializeUsersManagement();
-        initializeDatabaseSelector();
-        loadUsers();
+        initializeEmptyTable();
     }
     
     function setDefaultUser() {
@@ -98,75 +92,27 @@ document.addEventListener('DOMContentLoaded', function() {
             '<i class="fas fa-star"></i> Cảm ơn bạn đã sử dụng VieGrand!'
         ];
         
-        // Random thứ tự tin tức
-        const shuffledNews = newsItems.sort(() => Math.random() - 0.5);
-        ticker.innerHTML = shuffledNews.join(' • ');
+        let currentIndex = 0;
         
-        // Cập nhật tin tức mỗi 30 giây
-        setInterval(() => {
-            const reshuffled = newsItems.sort(() => Math.random() - 0.5);
-            ticker.innerHTML = reshuffled.join(' • ');
-        }, 30000);
+        function updateTicker() {
+            ticker.innerHTML = newsItems[currentIndex];
+            currentIndex = (currentIndex + 1) % newsItems.length;
+        }
+        
+        updateTicker();
+        setInterval(updateTicker, 5000);
     }
     
     function setupLogoutHandler() {
         const logoutBtn = document.getElementById('logoutBtn');
-        
-        logoutBtn.addEventListener('click', async function() {
-            // Hiển thị confirm dialog
-            if (!confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
-                return;
-            }
-            
-            // Disable button
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang đăng xuất...</span>';
-            
-            try {
-                // Gọi API logout (nếu có token)
-                const token = localStorage.getItem('viegrand_token');
-                if (token) {
-                    await fetch(API_BASE_URL + 'login.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'logout',
-                            session_token: token
-                        })
-                    });
-                }
-            } catch (error) {
-                console.error('Logout API error:', error);
-            } finally {
-                // Xóa dữ liệu local
-                localStorage.clear();
-                sessionStorage.clear();
-                
-                // Hiển thị thông báo
-                showNotification('Đã đăng xuất thành công!', 'success');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                showNotification('Đang đăng xuất...', 'info');
                 
                 // Chuyển hướng về trang đăng nhập sau 1 giây
                 setTimeout(() => {
                     window.location.href = '../login/';
                 }, 1000);
-            }
-        });
-    }
-    
-    // Khởi tạo database selector
-    function initializeDatabaseSelector() {
-        const databaseSelector = document.getElementById('databaseSelector');
-        if (databaseSelector) {
-            databaseSelector.addEventListener('change', function() {
-                currentDatabase = this.value;
-                currentPage = 1; // Reset về trang đầu
-                loadUsers(); // Reload dữ liệu
-                
-                // Cập nhật thông báo
-                const dbName = this.value === 'admin' ? 'Admin Database (Login Web)' : 'Main Database (VieGrand Chính)';
-                showNotification(`Đã chuyển sang ${dbName}`, 'info');
             });
         }
     }
@@ -256,775 +202,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
     
-    // Xử lý responsive cho ticker
     function handleResponsive() {
-        const ticker = document.querySelector('.ticker-content');
-        if (window.innerWidth <= 768) {
-            ticker.style.animationDuration = '20s';
-        } else {
-            ticker.style.animationDuration = '30s';
-        }
+        const isMobile = window.innerWidth <= 768;
+        // Add responsive handling if needed
     }
     
-    window.addEventListener('resize', handleResponsive);
-    handleResponsive();
-    
-    // Users Management Functions
-    function initializeUsersManagement() {
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const refreshBtn = document.getElementById('refreshBtn');
-        
-        // Search on Enter key
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
-        
-        // Search button click
-        searchBtn.addEventListener('click', performSearch);
-        
-        // Refresh button click
-        refreshBtn.addEventListener('click', function() {
-            currentSearchQuery = '';
-            searchInput.value = '';
-            currentPage = 1;
-            loadUsers();
-        });
-        
-        function performSearch() {
-            const query = searchInput.value.trim();
-            if (query.length >= 2 || query.length === 0) {
-                currentSearchQuery = query;
-                currentPage = 1;
-                loadUsers();
-            } else {
-                showNotification('Vui lòng nhập ít nhất 2 ký tự để tìm kiếm', 'warning');
-            }
-        }
-    }
-    
-    async function loadUsers() {
-        try {
-            showLoading(true);
-            
-            let url = `${API_BASE_URL}users.php?action=list&db=${currentDatabase}&page=${currentPage}&limit=${currentLimit}`;
-            
-            if (currentSearchQuery) {
-                url = `${API_BASE_URL}users.php?action=search&db=${currentDatabase}&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
-            }
-            
-            const response = await fetch(url);
-            const result = await response.json();
-            
-            if (result.success) {
-                displayUsers(result.data.users);
-                displayPagination(result.data.pagination);
-                updateDatabaseInfo(result.data);
-                showNoData(false);
-            } else {
-                showNotification(result.message || 'Không thể tải danh sách người dùng', 'error');
-                showNoData(true);
-            }
-        } catch (error) {
-            console.error('Error loading users:', error);
-            console.log(error);
-            showNotification('Có lỗi xảy ra khi tải danh sách người dùng', 'error');
-            showNoData(true);
-        } finally {
-            showLoading(false);
-        }
-    }
-    
-    // Function để cập nhật thông tin database hiện tại
-    function updateDatabaseInfo(data) {
-        const header = document.querySelector('.section-header h2');
-        if (header && data.database && data.table) {
-            const dbInfo = currentDatabase === 'admin' ? 
-                '<span style="font-size: 0.7rem; background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 10px;">Admin DB</span>' :
-                '<span style="font-size: 0.7rem; background: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 10px;">Main DB</span>';
-            
-            header.innerHTML = `<i class="fas fa-users"></i> Quản lý người dùng ${dbInfo}`;
-        }
-    }
-    
-    function displayUsers(users) {
+    function initializeEmptyTable() {
+        // Show empty table with placeholder message
         const tbody = document.getElementById('usersTableBody');
         const table = document.getElementById('usersTable');
+        const loadingSpinner = document.getElementById('loadingSpinner');
         
-        if (!users || users.length === 0) {
-            showNoData(true);
-            table.style.display = 'none';
-            return;
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'none';
         }
         
-        tbody.innerHTML = users.map(user => `
-            <tr data-user-id="${user.id}">
-                <td>
-                    <div class="user-avatar-cell">${user.avatar}</div>
-                </td>
-                <td>
-                    <div class="user-info">
-                        <div class="user-name clickable" onclick="showUserDetail(${user.id}, '${user.database_source || currentDatabase}')" 
-                             title="Click để xem chi tiết">
-                            ${user.full_name || 'Chưa cập nhật'}
-                        </div>
-                        <div class="user-username">@${user.username}</div>
-                        ${user.database_source ? `<div style="font-size: 0.7rem; color: #666; margin-top: 2px;">
-                            <i class="fas fa-database"></i> ${user.database_source === 'admin' ? 'Admin DB' : 'Main DB'}
-                        </div>` : ''}
-                    </div>
-                </td>
-                <td>${user.email || 'Chưa có'}</td>
-                <td>
-                    <span class="role-badge role-${user.role}">${user.role_display}</span>
-                </td>
-                <td>
-                    <span class="status-badge status-${user.status}">${user.status_display}</span>
-                </td>
-                <td>${user.created_at_formatted}</td>
-                <td>${user.last_login_formatted}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn btn-view" onclick="showUserDetail(${user.id}, '${user.database_source || currentDatabase}')" title="Xem chi tiết">
-                            <i class="fas fa-eye"></i> <span>Xem</span>
-                        </button>
-                        <button class="action-btn btn-edit" onclick="openEditUserModal(${user.id}, '${user.database_source || currentDatabase}')" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i> <span>Sửa</span>
-                        </button>
-                        <button class="action-btn btn-delete" onclick="deleteUser(${user.id}, '${user.database_source || currentDatabase}')" title="Xóa">
-                            <i class="fas fa-trash"></i> <span>Xóa</span>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        table.style.display = 'table';
-        showNoData(false);
-    }
-    
-    function displayPagination(pagination) {
-        const container = document.getElementById('paginationContainer');
-        
-        if (!pagination || pagination.total_pages <= 1) {
-            container.style.display = 'none';
-            return;
-        }
-        
-        let paginationHtml = '';
-        
-        // Previous button
-        paginationHtml += `
-            <button ${pagination.current_page <= 1 ? 'disabled' : ''} 
-                    onclick="changePage(${pagination.current_page - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `;
-        
-        // Page numbers
-        const startPage = Math.max(1, pagination.current_page - 2);
-        const endPage = Math.min(pagination.total_pages, pagination.current_page + 2);
-        
-        if (startPage > 1) {
-            paginationHtml += `<button onclick="changePage(1)">1</button>`;
-            if (startPage > 2) {
-                paginationHtml += `<span>...</span>`;
-            }
-        }
-        
-        for (let i = startPage; i <= endPage; i++) {
-            paginationHtml += `
-                <button ${i === pagination.current_page ? 'class="active"' : ''} 
-                        onclick="changePage(${i})">${i}</button>
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-database" style="font-size: 3rem; color: #ddd; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 10px 0; color: #999;">Database Connection Required</h3>
+                        <p style="color: #999; margin: 0;">Database connection will be implemented later.</p>
+                    </td>
+                </tr>
             `;
         }
         
-        if (endPage < pagination.total_pages) {
-            if (endPage < pagination.total_pages - 1) {
-                paginationHtml += `<span>...</span>`;
-            }
-            paginationHtml += `<button onclick="changePage(${pagination.total_pages})">${pagination.total_pages}</button>`;
+        if (table) {
+            table.style.display = 'table';
         }
         
-        // Next button
-        paginationHtml += `
-            <button ${pagination.current_page >= pagination.total_pages ? 'disabled' : ''} 
-                    onclick="changePage(${pagination.current_page + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `;
-        
-        // Pagination info
-        paginationHtml += `
-            <div class="pagination-info">
-                Trang ${pagination.current_page} / ${pagination.total_pages} 
-                (${pagination.total_users} người dùng)
-            </div>
-        `;
-        
-        container.innerHTML = paginationHtml;
-        container.style.display = 'flex';
-    }
-    
-    function showLoading(show) {
-        const spinner = document.getElementById('loadingSpinner');
-        const table = document.getElementById('usersTable');
-        const pagination = document.getElementById('paginationContainer');
-        
-        if (show) {
-            spinner.style.display = 'flex';
-            table.style.display = 'none';
-            pagination.style.display = 'none';
-        } else {
-            spinner.style.display = 'none';
-        }
-    }
-    
-    function updateDatabaseInfo(data) {
-        // Cập nhật thông tin database trong header
-        const sectionHeader = document.querySelector('.section-header h2');
-        if (sectionHeader && data) {
-            const dbInfo = data.database === 'admin' ? 'Admin DB' : 'Main DB';
-            const tableName = data.table || 'unknown';
-            sectionHeader.innerHTML = `
-                <i class="fas fa-users"></i> Quản lý người dùng 
-                <small style="font-size: 0.7em; color: #666; font-weight: normal;">
-                    (${dbInfo}: ${tableName})
-                </small>
-            `;
-        }
-    }
-    
-    function showNoData(show) {
-        const noDataMsg = document.getElementById('noDataMessage');
-        const table = document.getElementById('usersTable');
-        const pagination = document.getElementById('paginationContainer');
-        
-        if (show) {
-            noDataMsg.style.display = 'block';
-            table.style.display = 'none';
-            pagination.style.display = 'none';
-        } else {
-            noDataMsg.style.display = 'none';
-        }
-    }
-    
-    // Global functions for user actions
-    window.changePage = function(page) {
-        currentPage = page;
-        loadUsers();
-    };
-    
-    window.viewUser = function(userId, dbSource = null) {
-        const database = dbSource || currentDatabase;
-        const dbName = database === 'admin' ? 'Admin Database' : 'Main Database';
-        showNotification(`Xem thông tin chi tiết user ID: ${userId} từ ${dbName}`, 'info');
-        // TODO: Implement view user modal with database parameter
-    };
-    
-    window.editUser = function(userId, dbSource = null) {
-        const database = dbSource || currentDatabase;
-        const dbName = database === 'admin' ? 'Admin Database' : 'Main Database';
-        showNotification(`Chỉnh sửa user ID: ${userId} từ ${dbName}`, 'info');
-        // TODO: Implement edit user modal with database parameter
-    };
-    
-    window.deleteUser = function(userId, dbSource = null) {
-        const database = dbSource || currentDatabase;
-        const dbName = database === 'admin' ? 'Admin Database' : 'Main Database';
-        if (confirm(`Bạn có chắc chắn muốn xóa người dùng này từ ${dbName}?`)) {
-            showNotification(`Xóa user ID: ${userId} từ ${dbName}`, 'warning');
-            // TODO: Implement delete user API call with database parameter
-        }
-    };
-
-    // Modal Functions
-    function initializeModal() {
-        const modal = document.getElementById('userDetailModal');
-        const closeBtn = document.querySelector('.close');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        
-        // Close modal events
-        closeBtn.onclick = closeModal;
-        closeModalBtn.onclick = closeModal;
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        };
-        
-        // ESC key to close modal
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && modal.style.display === 'block') {
-                closeModal();
-            }
-        });
-    }
-    
-    function openModal() {
-        const modal = document.getElementById('userDetailModal');
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Prevent background scroll
-    }
-    
-    function closeModal() {
-        const modal = document.getElementById('userDetailModal');
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Restore scroll
-    }
-    
-    function showUserDetail(userId, dbSource = null) {
-        const database = dbSource || currentDatabase;
-        
-        // Show loading in modal
-        openModal();
-        
-        // Find user data from current loaded users or fetch from API
-        const tableRows = document.querySelectorAll('#usersTableBody tr');
-        let userData = null;
-        
-        tableRows.forEach(row => {
-            const userIdCell = row.querySelector('[data-user-id]');
-            if (userIdCell && userIdCell.getAttribute('data-user-id') == userId) {
-                userData = extractUserDataFromRow(row);
-            }
-        });
-        
-        if (userData) {
-            populateModal(userData, database);
-        } else {
-            // Fetch user detail from API if not found in current table
-            fetchUserDetail(userId, database);
-        }
-    }
-    
-    function extractUserDataFromRow(row) {
-        const cells = row.querySelectorAll('td');
-        return {
-            id: row.querySelector('[data-user-id]').getAttribute('data-user-id'),
-            avatar: cells[0].textContent.trim(),
-            username: cells[1].querySelector('.user-username')?.textContent.trim() || '',
-            full_name: cells[1].querySelector('.user-name')?.textContent.trim() || '',
-            email: cells[2].textContent.trim(),
-            role: cells[3].querySelector('.role-badge')?.textContent.trim() || '',
-            status: cells[4].querySelector('.status-badge')?.textContent.trim() || '',
-            created_at: cells[5].textContent.trim(),
-            last_login: cells[6].textContent.trim(),
-            phone: 'N/A' // Will be fetched from API if needed
-        };
-    }
-    
-    async function fetchUserDetail(userId, database) {
-        try {
-            const response = await fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`);
-            const responseText = await response.text();
-            
-            let result;
-            try {
-                result = JSON.parse(responseText);
-            } catch (parseError) {
-                throw new Error('Server trả về dữ liệu không hợp lệ');
-            }
-            
-            if (result.success) {
-                populateModal(result.data, database);
-            } else {
-                showNotification(result.message || 'Không thể tải thông tin chi tiết người dùng', 'error');
-                closeModal();
-            }
-        } catch (error) {
-            showNotification(`Có lỗi xảy ra khi tải thông tin người dùng: ${error.message}`, 'error');
-            closeModal();
-        }
-    }
-    
-    function populateModal(userData, database) {
-        // Update avatar
-        const avatar = userData.full_name ? userData.full_name.charAt(0).toUpperCase() : 
-                     userData.username ? userData.username.charAt(0).toUpperCase() : 'U';
-        document.getElementById('modalUserAvatar').textContent = avatar;
-        
-        // Update user info
-        document.getElementById('modalUserId').textContent = userData.id || '-';
-        document.getElementById('modalUserFullName').textContent = userData.full_name || userData.username || '-';
-        document.getElementById('modalUserUsername').textContent = userData.username || '-';
-        document.getElementById('modalUserEmail').textContent = userData.email || '-';
-        document.getElementById('modalUserPhone').textContent = userData.phone || '-';
-        document.getElementById('modalUserCreated').textContent = formatDate(userData.created_at) || '-';
-        document.getElementById('modalUserLastLogin').textContent = formatDate(userData.last_login) || 'Chưa đăng nhập';
-        
-        // Update role badge
-        const roleElement = document.getElementById('modalUserRole');
-        roleElement.textContent = userData.role || '-';
-        roleElement.className = `role-badge role-${userData.role}`;
-        
-        // Update status badge
-        const statusElement = document.getElementById('modalUserStatus');
-        statusElement.textContent = userData.status || '-';
-        statusElement.className = `status-badge status-${userData.status}`;
-        
-        // Show/hide premium info for main database
-        const premiumRow = document.getElementById('modalPremiumRow');
-        if (database === 'main' && userData.premium_status !== undefined) {
-            premiumRow.style.display = 'flex';
-            document.getElementById('modalUserPremium').textContent = userData.premium_status ? 'Premium' : 'Thường';
-        } else {
-            premiumRow.style.display = 'none';
+        // Hide pagination
+        const paginationContainer = document.getElementById('paginationContainer');
+        if (paginationContainer) {
+            paginationContainer.style.display = 'none';
         }
         
-        // Update edit button
-        const editBtn = document.getElementById('editUserBtn');
-        editBtn.onclick = () => openEditUserModal(userData.id, database);
-    }
-    
-    function formatDate(dateString) {
-        if (!dateString || dateString === '0000-00-00 00:00:00') return null;
+        // Update header
+        const header = document.querySelector('.section-header h2');
+        if (header) {
+            header.innerHTML = `<i class="fas fa-users"></i> Quản lý người dùng <span style="font-size: 0.7rem; background: #ffc107; color: #333; padding: 2px 8px; border-radius: 10px; margin-left: 10px;">Database Disconnected</span>`;
+        }
         
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleString('vi-VN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
+        // Setup refresh button
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                showNotification('Database connection will be implemented later.', 'info');
             });
-        } catch (error) {
-            return dateString;
         }
     }
-
-    // Edit User Functionality
-    let currentEditUser = null;
-    let originalUserData = null;
     
-    function openEditUserModal(userId, database) {
-        currentDatabase = database;
-        
-        showNotification('Đang tải thông tin người dùng...', 'info');
-        
-        fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.data) {
-                    currentEditUser = result.data;
-                    originalUserData = { ...result.data };
-                    
-                    populateEditForm(result.data, database);
-                    showEditModal();
-                } else {
-                    showNotification(result.message || 'Không thể tải thông tin người dùng', 'error');
-                }
-            })
-            .catch(error => {
-                showNotification('Lỗi kết nối khi tải thông tin người dùng', 'error');
-            });
-    }
-    
-    function populateEditForm(userData, database) {
-        document.getElementById('editUsername').value = userData.username || '';
-        document.getElementById('editEmail').value = userData.email || '';
-        document.getElementById('editFullName').value = userData.full_name || '';
-        document.getElementById('editPhone').value = userData.phone || '';
-        
-        const adminFields = document.getElementById('adminOnlyFields');
-        if (database === 'admin') {
-            adminFields.style.display = 'block';
-            document.getElementById('editRole').value = userData.role || '';
-            document.getElementById('editStatus').value = userData.status || '';
-        } else {
-            adminFields.style.display = 'none';
-        }
-        
-        document.getElementById('currentUserId').textContent = userData.id || '-';
-        document.getElementById('currentDatabase').textContent = database === 'admin' ? 'Admin DB' : 'Main DB';
-        document.getElementById('currentDatabase').className = `db-badge ${database}`;
-        document.getElementById('currentCreated').textContent = formatDate(userData.created_at) || '-';
-        document.getElementById('currentUpdated').textContent = formatDate(userData.updated_at) || 'Chưa cập nhật';
-        
-        hideWarnings();
-        hideChangesPreview();
-    }
-    
-    function showEditModal() {
-        const modal = document.getElementById('editUserModal');
-        modal.style.display = 'flex';
-        
-        setupEditModalEvents();
-        
-        setTimeout(() => {
-            document.getElementById('editUsername').focus();
-        }, 100);
-    }
-    
-    function hideEditModal() {
-        const modal = document.getElementById('editUserModal');
-        modal.style.display = 'none';
-        
-        document.getElementById('editUserForm').reset();
-        hideWarnings();
-        hideChangesPreview();
-        hideLoadingIndicator();
-        
-        currentEditUser = null;
-        originalUserData = null;
-    }
-    
-    function setupEditModalEvents() {
-        document.getElementById('closeEditModalBtn').onclick = hideEditModal;
-        document.getElementById('cancelEditBtn').onclick = hideEditModal;
-        document.getElementById('previewChangesBtn').onclick = previewChanges;
-        
-        document.getElementById('editUserForm').onsubmit = function(e) {
-            e.preventDefault();
-            saveUserChanges();
-        };
-        
-        const inputs = ['editUsername', 'editEmail', 'editFullName', 'editPhone'];
-        inputs.forEach(inputId => {
-            document.getElementById(inputId).addEventListener('input', validateField);
-        });
-        
-        document.getElementById('editUserModal').onclick = function(e) {
-            if (e.target === this) {
-                hideEditModal();
-            }
-        };
-    }
-    
-    function validateField(event) {
-        const field = event.target;
-        const value = field.value.trim();
-        
-        field.style.borderColor = '';
-        hideWarnings();
-        
-        // Bỏ qua validation cho email vì nó là readonly
-        if (field.id === 'editEmail') {
-            return true; // Email là readonly, luôn valid
-        }
-        
-        if (field.id === 'editPhone' && value) {
-            const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-            if (!phoneRegex.test(value)) {
-                field.style.borderColor = '#dc3545';
-                showWarning('Số điện thoại không hợp lệ');
-                return false;
-            }
-        }
-        
-        if (value) {
-            field.style.borderColor = '#28a745';
-        }
-        
-        return true;
-    }
-    
-    function previewChanges() {
-        const changes = getFormChanges();
-        
-        if (Object.keys(changes).length === 0) {
-            showWarning('Không có thay đổi nào để xem trước');
-            return;
-        }
-        
-        displayChangesPreview(changes);
-    }
-    
-    function getFormChanges() {
-        const changes = {};
-        const currentData = getCurrentFormData();
-        
-        // Bỏ qua email vì nó không được phép thay đổi
-        const fieldsToCheck = ['username', 'full_name', 'phone'];
-        if (currentDatabase === 'admin') {
-            fieldsToCheck.push('role', 'status');
-        }
-        
-        fieldsToCheck.forEach(field => {
-            const originalValue = originalUserData[field] || '';
-            const currentValue = currentData[field] || '';
-            
-            if (originalValue !== currentValue) {
-                changes[field] = {
-                    old: originalValue,
-                    new: currentValue
-                };
-            }
-        });
-        
-        return changes;
-    }
-    
-    function getCurrentFormData() {
-        const data = {
-            username: document.getElementById('editUsername').value.trim(),
-            email: document.getElementById('editEmail').value.trim(),
-            full_name: document.getElementById('editFullName').value.trim(),
-            phone: document.getElementById('editPhone').value.trim()
-        };
-        
-        if (currentDatabase === 'admin') {
-            data.role = document.getElementById('editRole').value;
-            data.status = document.getElementById('editStatus').value;
-        }
-        
-        return data;
-    }
-    
-    function displayChangesPreview(changes) {
-        const previewDiv = document.getElementById('changesPreview');
-        const changesList = document.getElementById('changesList');
-        
-        changesList.innerHTML = '';
-        
-        const fieldNames = {
-            username: 'Tên đăng nhập',
-            email: 'Email',
-            full_name: 'Họ và tên',
-            phone: 'Số điện thoại',
-            role: 'Vai trò',
-            status: 'Trạng thái'
-        };
-        
-        Object.keys(changes).forEach(field => {
-            const change = changes[field];
-            const changeItem = document.createElement('div');
-            changeItem.className = 'change-item';
-            
-            changeItem.innerHTML = `
-                <div class="change-field">${fieldNames[field] || field}</div>
-                <div class="change-values">
-                    <span class="old-value">${change.old || '(trống)'}</span>
-                    <span class="change-arrow">→</span>
-                    <span class="new-value">${change.new || '(trống)'}</span>
-                </div>
-            `;
-            
-            changesList.appendChild(changeItem);
-        });
-        
-        previewDiv.style.display = 'block';
-    }
-    
-    function saveUserChanges() {
-        const changes = getFormChanges();
-        
-        if (Object.keys(changes).length === 0) {
-            showWarning('Không có thay đổi nào để lưu');
-            return;
-        }
-        
-        const isValid = validateAllFields();
-        if (!isValid) {
-            return;
-        }
-        
-        showLoadingIndicator();
-        
-        const updateData = {};
-        Object.keys(changes).forEach(field => {
-            updateData[field] = changes[field].new;
-        });
-        
-        // Loại bỏ email khỏi dữ liệu cập nhật vì email không được thay đổi
-        if (updateData.email) {
-            delete updateData.email;
-        }
-        
-        if (Object.keys(updateData).length === 0) {
-            hideLoadingIndicator();
-            showWarning('Không có dữ liệu nào được phép thay đổi (email là định danh và không thể sửa)');
-            return;
-        }
-        
-        fetch(`${API_BASE_URL}users.php?email=${encodeURIComponent(currentEditUser.email)}&db=${currentDatabase}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updateData)
-        })
-        .then(response => response.json())
-        .then(result => {
-            hideLoadingIndicator();
-            
-            if (result.success) {
-                showNotification('Cập nhật thông tin người dùng thành công!', 'success');
-                loadUsers();
-                
-                setTimeout(() => {
-                    hideEditModal();
-                }, 1500);
-                
-            } else {
-                showNotification(result.message || 'Cập nhật thất bại', 'error');
-            }
-        })
-        .catch(error => {
-            hideLoadingIndicator();
-            showNotification('Lỗi kết nối khi cập nhật', 'error');
-        });
-    }
-    
-    function validateAllFields() {
-        let isValid = true;
-        // Bỏ qua email vì nó là readonly và không thể thay đổi
-        const inputs = ['editUsername', 'editFullName', 'editPhone'];
-        
-        inputs.forEach(inputId => {
-            const input = document.getElementById(inputId);
-            if (!validateField({ target: input })) {
-                isValid = false;
-            }
-        });
-        
-        const username = document.getElementById('editUsername').value.trim();
-        
-        if (!username) {
-            showWarning('Tên đăng nhập không được để trống');
-            document.getElementById('editUsername').style.borderColor = '#dc3545';
-            isValid = false;
-        }
-        
-        return isValid;
-    }
-    
-    function showWarning(message) {
-        const warningBox = document.getElementById('editWarnings');
-        const warningText = document.getElementById('warningText');
-        
-        warningText.textContent = message;
-        warningBox.style.display = 'flex';
-        
-        setTimeout(hideWarnings, 5000);
-    }
-    
-    function hideWarnings() {
-        document.getElementById('editWarnings').style.display = 'none';
-    }
-    
-    function hideChangesPreview() {
-        document.getElementById('changesPreview').style.display = 'none';
-    }
-    
-    function showLoadingIndicator() {
-        document.getElementById('editLoadingIndicator').style.display = 'flex';
-        document.getElementById('saveChangesBtn').disabled = true;
-    }
-    
-    function hideLoadingIndicator() {
-        document.getElementById('editLoadingIndicator').style.display = 'none';
-        document.getElementById('saveChangesBtn').disabled = false;
-    }
-    
-    initializeModal();
-    
-    window.showUserDetail = showUserDetail;
-    window.openEditUserModal = openEditUserModal;
+    // Initialize responsive handling
+    window.addEventListener('resize', handleResponsive);
+    handleResponsive();
 });

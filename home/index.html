@@ -56,16 +56,6 @@
                 <div class="section-header">
                     <h2><i class="fas fa-users"></i> Quản lý người dùng</h2>
                     <div class="section-controls">
-                        <!-- Database Selector -->
-                        <select id="databaseSelector" class="database-selector">
-                            <option value="admin">Admin Database (Login Web)</option>
-                            <option value="main">Main Database (VieGrand Chính)</option>
-                        </select>
-                        
-                        <div class="search-box">
-                            <input type="text" id="searchInput" placeholder="Tìm kiếm người dùng...">
-                            <button id="searchBtn"><i class="fas fa-search"></i></button>
-                        </div>
                         <button class="refresh-btn" id="refreshBtn">
                             <i class="fas fa-sync-alt"></i> Làm mới
                         </button>
@@ -101,9 +91,9 @@
                     </div>
                     
                     <div class="no-data" id="noDataMessage" style="display: none;">
-                        <i class="fas fa-users-slash"></i>
-                        <h3>Không tìm thấy người dùng</h3>
-                        <p>Không có dữ liệu để hiển thị</p>
+                        <i class="fas fa-database"></i>
+                        <h3>Không có dữ liệu</h3>
+                        <p>Chưa có dữ liệu người dùng nào.</p>
                     </div>
                 </div>
             </div>

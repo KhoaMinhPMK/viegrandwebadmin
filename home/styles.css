@@ -232,63 +232,6 @@ body {
     flex-wrap: wrap;
 }
 
-.database-selector {
-    padding: 0.75rem 1rem;
-    border: 2px solid #2E86AB;
-    border-radius: 25px;
-    background: white;
-    color: #2E86AB;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    outline: none;
-    min-width: 200px;
-}
-
-.database-selector:hover, .database-selector:focus {
-    background: #2E86AB;
-    color: white;
-}
-
-.database-selector option {
-    background: white;
-    color: #333;
-    padding: 10px;
-}
-
-.search-box {
-    display: flex;
-    align-items: center;
-    background: white;
-    border: 2px solid #2E86AB;
-    border-radius: 25px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(46, 134, 171, 0.1);
-}
-
-.search-box input {
-    border: none;
-    outline: none;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    width: 250px;
-    background: transparent;
-}
-
-.search-box button {
-    background: #2E86AB;
-    border: none;
-    color: white;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.search-box button:hover {
-    background: #1B5E7A;
-}
-
 .refresh-btn {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
@@ -949,10 +892,6 @@ body {
     .section-controls {
         flex-direction: column;
         align-items: stretch;
-    }
-    
-    .search-box input {
-        width: 100%;
     }
     
     .users-table-container {
