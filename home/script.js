@@ -1011,7 +1011,24 @@ async function saveNewUser() {
             body: formData
         });
         
-        const result = await response.json();
+        console.log('Response status:', response.status); // Debug log
+        console.log('Response headers:', response.headers); // Debug log
+        
+        // Get response text first to see what we're actually receiving
+        const responseText = await response.text();
+        console.log('Raw response:', responseText); // Debug log
+        
+        // Try to parse as JSON
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.error('Response was:', responseText);
+            alert('Lỗi: Server trả về phản hồi không hợp lệ. Chi tiết: ' + responseText.substring(0, 200));
+            return;
+        }
+        
         console.log('API response:', result); // Debug log
         
         if (result.success) {

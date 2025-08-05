@@ -200,4 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Create global PDO instances for backward compatibility
+$admin_pdo = Database::getAdminInstance()->getConnection();
+$main_pdo = Database::getMainInstance()->getConnection();
 ?>

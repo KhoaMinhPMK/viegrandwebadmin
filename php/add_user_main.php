@@ -16,9 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-require_once 'config_multi.php';
+// Database configuration
+$host = '127.0.0.1';  // Using IP instead of localhost
+$dbname = 'viegrand';
+$username = 'root';
+$password = '';      // Empty password for root
+$charset = 'utf8mb4';
 
 try {
+    // Create PDO connection
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     // Get form data
     $username = $_POST['username'] ?? '';
     $email = $_POST['email'] ?? '';
@@ -53,8 +63,8 @@ try {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
     // Check if username or email already exists
-    $checkSql = "SELECT id FROM users WHERE userName = :username OR email = :email";
-    $checkStmt = $main_pdo->prepare($checkSql);
+    $checkSql = "SELECT userId FROM user WHERE userName = :username OR email = :email";
+    $checkStmt = $pdo->prepare($checkSql);
     $checkStmt->bindParam(':username', $username, PDO::PARAM_STR);
     $checkStmt->bindParam(':email', $email, PDO::PARAM_STR);
     $checkStmt->execute();
@@ -65,12 +75,12 @@ try {
     }
     
     // Insert new user
-    $sql = "INSERT INTO users (userName, email, full_name, phone, password, age, gender, blood, premium_status, 
+    $sql = "INSERT INTO user (userName, email, full_name, phone, password, age, gender, blood, premium_status, 
                               height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, created_at) 
             VALUES (:username, :email, :full_name, :phone, :password, :age, :gender, :blood, :premium_status,
                     :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate, NOW())";
     
-    $stmt = $main_pdo->prepare($sql);
+    $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->bindParam(':full_name', $full_name, PDO::PARAM_STR);
@@ -87,7 +97,7 @@ try {
     $stmt->bindParam(':heart_rate', $heart_rate, PDO::PARAM_INT);
     
     if ($stmt->execute()) {
-        $newUserId = $main_pdo->lastInsertId();
+        $newUserId = $pdo->lastInsertId();
         echo json_encode([
             'success' => true, 
             'message' => 'User added successfully',

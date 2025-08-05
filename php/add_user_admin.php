@@ -16,9 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-require_once 'config_multi.php';
+// Database configuration
+$host = '127.0.0.1';  // Using IP instead of localhost
+$dbname = 'viegrand_admin';
+$username = 'root';
+$password = '';      // Empty password for root
+$charset = 'utf8mb4';
 
 try {
+    // Create PDO connection
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     // Get form data
     $username = $_POST['username'] ?? '';
     $email = $_POST['email'] ?? '';
@@ -45,7 +55,7 @@ try {
     
     // Check if username or email already exists
     $checkSql = "SELECT id FROM admin_users WHERE username = :username OR email = :email";
-    $checkStmt = $admin_pdo->prepare($checkSql);
+    $checkStmt = $pdo->prepare($checkSql);
     $checkStmt->bindParam(':username', $username, PDO::PARAM_STR);
     $checkStmt->bindParam(':email', $email, PDO::PARAM_STR);
     $checkStmt->execute();
@@ -59,7 +69,7 @@ try {
     $sql = "INSERT INTO admin_users (username, email, full_name, phone, password, role, status, created_at) 
             VALUES (:username, :email, :full_name, :phone, :password, :role, :status, NOW())";
     
-    $stmt = $admin_pdo->prepare($sql);
+    $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->bindParam(':full_name', $full_name, PDO::PARAM_STR);
@@ -69,7 +79,7 @@ try {
     $stmt->bindParam(':status', $status, PDO::PARAM_STR);
     
     if ($stmt->execute()) {
-        $newUserId = $admin_pdo->lastInsertId();
+        $newUserId = $pdo->lastInsertId();
         echo json_encode([
             'success' => true, 
             'message' => 'Admin user added successfully',
