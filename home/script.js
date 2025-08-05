@@ -629,43 +629,17 @@ async function saveChanges() {
         const result = await response.json();
         console.log('API Response:', result);
         
-        if (result.success) {
-            showNotification('Cập nhật người dùng thành công!', 'success');
-            closeEditModal();
-            
-            // Update the local data with new information
-            if (currentUserData.database === 'admin') {
-                // Update admin users array
-                const userIndex = adminUsersData.findIndex(u => u.id === currentUserData.id);
-                if (userIndex !== -1) {
-                    // Merge updated data with existing user data
-                    adminUsersData[userIndex] = {
-                        ...adminUsersData[userIndex],
-                        ...data,
-                        updated_at_formatted: new Date().toLocaleString('vi-VN')
-                    };
-                }
-                loadAdminUsers(); // Refresh admin table
-            } else {
-                // Update main users array
-                const userIndex = mainUsersData.findIndex(u => u.id === currentUserData.id);
-                if (userIndex !== -1) {
-                    // Merge updated data with existing user data
-                    mainUsersData[userIndex] = {
-                        ...mainUsersData[userIndex],
-                        ...data,
-                        updated_at_formatted: new Date().toLocaleString('vi-VN')
-                    };
-                }
-                loadMainUsers(); // Refresh main table
-            }
-        } else {
-            showNotification(result.message || 'Có lỗi xảy ra khi cập nhật', 'error');
-            console.error('Update failed:', result);
-        }
+        console.log('Edit operation completed:', result.success ? 'success' : 'failed');
+        closeEditModal();
+        
+        // Always refresh the page after edit operation
+        window.location.reload();
     } catch (error) {
         console.error('Error updating user:', error);
-        showNotification('Có lỗi kết nối. Vui lòng thử lại sau.', 'error');
+        closeEditModal();
+        
+        // Always refresh the page after edit operation
+        window.location.reload();
     } finally {
         document.getElementById('editLoadingIndicator').style.display = 'none';
         document.getElementById('saveChangesBtn').disabled = false;
@@ -692,25 +666,17 @@ async function confirmDelete() {
         const result = await response.json();
         console.log('Delete API Response:', result);
         
-        if (result.success) {
-            showNotification('Xóa người dùng thành công!', 'success');
-            closeDeleteModal();
-            
-            // Remove from local data arrays
-            if (currentUserData.database === 'admin') {
-                adminUsersData = adminUsersData.filter(u => u.id !== currentUserData.id);
-                loadAdminUsers(); // Refresh admin table
-            } else {
-                mainUsersData = mainUsersData.filter(u => u.id !== currentUserData.id);
-                loadMainUsers(); // Refresh main table
-            }
-        } else {
-            showNotification(result.message || 'Có lỗi xảy ra khi xóa', 'error');
-            console.error('Delete failed:', result);
-        }
+        console.log('Delete operation completed:', result.success ? 'success' : 'failed');
+        closeDeleteModal();
+        
+        // Always refresh the page after delete operation
+        window.location.reload();
     } catch (error) {
         console.error('Error deleting user:', error);
-        showNotification('Có lỗi kết nối. Vui lòng thử lại sau.', 'error');
+        closeDeleteModal();
+        
+        // Always refresh the page after delete operation
+        window.location.reload();
     } finally {
         document.getElementById('deleteLoadingIndicator').style.display = 'none';
         document.getElementById('confirmDeleteBtn').disabled = false;
