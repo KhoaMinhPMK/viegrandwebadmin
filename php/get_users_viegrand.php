@@ -42,12 +42,9 @@ try {
     $stmt = $pdo->prepare("
         SELECT 
             userId, 
-            username, 
+            userName as username, 
             email, 
-            full_name, 
             phone, 
-            role, 
-            status, 
             created_at, 
             last_login 
         FROM user 
@@ -77,17 +74,11 @@ try {
             'userId' => $user['userId'],
             'username' => $user['username'],
             'email' => $user['email'],
-            'full_name' => $user['full_name'],
             'phone' => $user['phone'],
-            'role' => $user['role'],
-            'role_display' => $roleDisplay,
-            'status' => $user['status'],
-            'status_display' => $statusDisplay,
             'created_at' => $user['created_at'],
             'created_at_formatted' => $createdAt,
             'last_login' => $user['last_login'],
             'last_login_formatted' => $lastLogin,
-            'avatar' => $avatar
         ];
     }
     
