@@ -5,6 +5,8 @@ let mainCurrentPage = 1;
 let adminCurrentLimit = 10;
 let mainCurrentLimit = 10;
 let currentUserData = null;
+let adminUsersData = []; // Store admin users data
+let mainUsersData = []; // Store main users data
 
 // API URLs
 const ADMIN_API_URL = 'https://viegrand.site/viegrandwebadmin/php/get_users_viegrand_admin.php';
@@ -124,6 +126,7 @@ async function loadAdminUsers() {
         console.log('Admin API Response:', result);
         
         if (result.success) {
+            adminUsersData = result.data.users; // Store the data
             displayAdminUsers(result.data.users);
             displayAdminPagination(result.data.pagination);
             showAdminNoData(false);
@@ -236,6 +239,7 @@ async function loadMainUsers() {
         console.log('Main API Response:', result);
         
         if (result.success) {
+            mainUsersData = result.data.users; // Store the data
             displayMainUsers(result.data.users);
             displayMainPagination(result.data.pagination);
             showMainNoData(false);
@@ -368,20 +372,22 @@ function changeMainPage(page) {
 
 // View Functions
 function viewAdminUser(userId) {
-    // Find user data from current admin users
-    const users = getCurrentAdminUsers();
-    const user = users.find(u => u.id === userId);
+    // Find user data from stored admin users
+    const user = adminUsersData.find(u => u.id === userId);
     if (user) {
         showViewModal(user, 'admin');
+    } else {
+        showNotification('Không tìm thấy thông tin người dùng', 'error');
     }
 }
 
 function viewMainUser(userId) {
-    // Find user data from current main users
-    const users = getCurrentMainUsers();
-    const user = users.find(u => u.id === userId);
+    // Find user data from stored main users
+    const user = mainUsersData.find(u => u.id === userId);
     if (user) {
         showViewModal(user, 'main');
+    } else {
+        showNotification('Không tìm thấy thông tin người dùng', 'error');
     }
 }
 
@@ -418,18 +424,20 @@ function showViewModal(user, database) {
 
 // Edit Functions
 function editAdminUser(userId) {
-    const users = getCurrentAdminUsers();
-    const user = users.find(u => u.id === userId);
+    const user = adminUsersData.find(u => u.id === userId);
     if (user) {
         showEditModal(user, 'admin');
+    } else {
+        showNotification('Không tìm thấy thông tin người dùng', 'error');
     }
 }
 
 function editMainUser(userId) {
-    const users = getCurrentMainUsers();
-    const user = users.find(u => u.id === userId);
+    const user = mainUsersData.find(u => u.id === userId);
     if (user) {
         showEditModal(user, 'main');
+    } else {
+        showNotification('Không tìm thấy thông tin người dùng', 'error');
     }
 }
 
@@ -486,18 +494,20 @@ function showEditModal(user, database) {
 
 // Delete Functions
 function deleteAdminUser(userId) {
-    const users = getCurrentAdminUsers();
-    const user = users.find(u => u.id === userId);
+    const user = adminUsersData.find(u => u.id === userId);
     if (user) {
         showDeleteModal(user, 'admin');
+    } else {
+        showNotification('Không tìm thấy thông tin người dùng', 'error');
     }
 }
 
 function deleteMainUser(userId) {
-    const users = getCurrentMainUsers();
-    const user = users.find(u => u.id === userId);
+    const user = mainUsersData.find(u => u.id === userId);
     if (user) {
         showDeleteModal(user, 'main');
+    } else {
+        showNotification('Không tìm thấy thông tin người dùng', 'error');
     }
 }
 
@@ -664,19 +674,6 @@ function closeEditModal() {
 function closeDeleteModal() {
     deleteModal.style.display = 'none';
     currentUserData = null;
-}
-
-// Helper Functions
-function getCurrentAdminUsers() {
-    // This would need to be implemented to get current admin users from the table
-    // For now, we'll return an empty array
-    return [];
-}
-
-function getCurrentMainUsers() {
-    // This would need to be implemented to get current main users from the table
-    // For now, we'll return an empty array
-    return [];
 }
 
 // Loading and No Data Functions
