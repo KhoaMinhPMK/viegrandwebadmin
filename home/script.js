@@ -1521,6 +1521,7 @@ async function showPremiumDetails(userId, startDate = null, endDate = null, prem
         console.error('Error fetching premium details:', error);
         alert('Có lỗi xảy ra khi tải thông tin Premium: ' + error.message);
         showPremiumModalLoading(false);
+    }
 }
 
 // Helper function to show/hide loading state in premium modal
@@ -1852,7 +1853,6 @@ async function removeElderlyUser(elderlyPrivateKey) {
         console.error('Error removing elderly user:', error);
         alert('Có lỗi xảy ra khi xóa người cao tuổi: ' + error.message);
     }
-}
 }
 
 async function loadElderlyList() {
