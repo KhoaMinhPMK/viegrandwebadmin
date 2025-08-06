@@ -16,8 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Include database configuration
-require_once 'config.php';
+// Database configuration
+$host = '127.0.0.1';  // Using IP instead of localhost
+$dbname = 'viegrand';
+$username = 'root';
+$password = '';
 
 try {
     // Get JSON input

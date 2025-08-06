@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Database configuration
-$host = '127.0.0.1';  // Using IP instead of localhost
+$host = '127.0.0.1';
 $dbname = 'viegrand';
 $username = 'root';
 $password = '';
@@ -49,7 +49,7 @@ try {
     $pdo->beginTransaction();
     
     // 1. Verify that the relative user exists and has role 'relative'
-    $stmt = $pdo->prepare("SELECT id, role FROM viegrand.user WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT userId, role FROM user WHERE userId = ?");
     $stmt->execute([$relativeUserId]);
     $relativeUser = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -62,7 +62,7 @@ try {
     }
     
     // 2. Find elderly user by private_key
-    $stmt = $pdo->prepare("SELECT id, full_name, phone, status FROM viegrand.user WHERE private_key = ?");
+    $stmt = $pdo->prepare("SELECT userId, userName, phone, premium_status FROM user WHERE private_key = ?");
     $stmt->execute([$elderlyPrivateKey]);
     $elderlyUser = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -73,7 +73,7 @@ try {
     // 3. Check if relative user has an active premium subscription
     $stmt = $pdo->prepare("
         SELECT id, start_date, end_date, elderly_keys 
-        FROM viegrand.premium_subscriptions_json 
+        FROM premium_subscriptions_json 
         WHERE user_id = ? AND end_date > NOW()
         ORDER BY end_date DESC 
         LIMIT 1
@@ -104,15 +104,15 @@ try {
     
     // 7. Update the premium subscription with new elderly_keys
     $stmt = $pdo->prepare("
-        UPDATE viegrand.premium_subscriptions_json 
+        UPDATE premium_subscriptions_json 
         SET elderly_keys = ? 
         WHERE id = ?
     ");
     $stmt->execute([json_encode($elderlyKeys), $subscription['id']]);
     
     // 8. Update elderly user status to premium
-    $stmt = $pdo->prepare("UPDATE viegrand.user SET status = 'premium' WHERE id = ?");
-    $stmt->execute([$elderlyUser['id']]);
+    $stmt = $pdo->prepare("UPDATE user SET premium_status = 1 WHERE userId = ?");
+    $stmt->execute([$elderlyUser['userId']]);
     
     // Commit transaction
     $pdo->commit();
@@ -122,8 +122,8 @@ try {
         'message' => 'Thêm người cao tuổi vào gói Premium thành công',
         'data' => [
             'elderly_user' => [
-                'id' => $elderlyUser['id'],
-                'full_name' => $elderlyUser['full_name'],
+                'id' => $elderlyUser['userId'],
+                'full_name' => $elderlyUser['userName'],
                 'phone' => $elderlyUser['phone'],
                 'private_key' => $elderlyPrivateKey
             ],

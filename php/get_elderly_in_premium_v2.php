@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // Database configuration
-$host = '127.0.0.1';  // Using IP instead of localhost
+$host = '127.0.0.1';
 $dbname = 'viegrand';
 $username = 'root';
 $password = '';
@@ -34,7 +34,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // 1. Verify that the user exists and has role 'relative'
-    $stmt = $pdo->prepare("SELECT id, role FROM viegrand.user WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT userId, role FROM user WHERE userId = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -49,7 +49,7 @@ try {
     // 2. Get the premium subscription and elderly_keys
     $stmt = $pdo->prepare("
         SELECT id, start_date, end_date, elderly_keys 
-        FROM viegrand.premium_subscriptions_json 
+        FROM premium_subscriptions_json 
         WHERE user_id = ? AND end_date > NOW()
         ORDER BY end_date DESC 
         LIMIT 1
@@ -90,8 +90,8 @@ try {
     $elderlyUsers = [];
     foreach ($elderlyKeys as $privateKey) {
         $stmt = $pdo->prepare("
-            SELECT id, full_name, phone, status, private_key
-            FROM viegrand.user 
+            SELECT userId, userName, phone, premium_status, private_key
+            FROM user 
             WHERE private_key = ?
         ");
         $stmt->execute([$privateKey]);
@@ -99,10 +99,10 @@ try {
         
         if ($elderlyUser) {
             $elderlyUsers[] = [
-                'id' => $elderlyUser['id'],
-                'full_name' => $elderlyUser['full_name'],
+                'id' => $elderlyUser['userId'],
+                'full_name' => $elderlyUser['userName'],
                 'phone' => $elderlyUser['phone'],
-                'status' => $elderlyUser['status'],
+                'status' => $elderlyUser['premium_status'] ? 'premium' : 'regular',
                 'private_key' => $elderlyUser['private_key']
             ];
         } else {

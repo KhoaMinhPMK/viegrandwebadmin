@@ -1712,7 +1712,7 @@ async function addElderlyUser() {
             addButton.textContent = 'Đang thêm...';
         }
         
-        const response = await fetch('../php/add_elderly_to_premium.php', {
+        const response = await fetch('https://viegrand.site/viegrandwebadmin/php/add_elderly_to_premium_v2.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1759,7 +1759,7 @@ async function removeElderlyUser(elderlyPrivateKey) {
     }
     
     try {
-        const response = await fetch('../php/remove_elderly_from_premium.php', {
+        const response = await fetch('https://viegrand.site/viegrandwebadmin/php/remove_elderly_from_premium_v2.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1794,7 +1794,7 @@ async function loadElderlyList() {
     }
     
     try {
-        const response = await fetch(`../php/get_elderly_in_premium.php?user_id=${currentPremiumUserId}`);
+        const response = await fetch(`https://viegrand.site/viegrandwebadmin/php/get_elderly_in_premium_v2.php?user_id=${currentPremiumUserId}`);
         const result = await response.json();
         
         const elderlyList = document.getElementById('elderlyList');
