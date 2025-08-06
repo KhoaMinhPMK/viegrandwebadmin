@@ -65,6 +65,18 @@ try {
     // Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
+    // Handle premium dates if user is premium
+    $premium_start_date = null;
+    $premium_end_date = null;
+    if ($premium_status === '1') {
+        $now = new DateTime();
+        $endDate = clone $now;
+        $endDate->add(new DateInterval('P30D')); // Add 30 days
+        
+        $premium_start_date = $now->format('Y-m-d H:i:s');
+        $premium_end_date = $endDate->format('Y-m-d H:i:s');
+    }
+    
     // Check if username or email already exists
     $checkSql = "SELECT userId FROM user WHERE userName = :username OR email = :email";
     $checkStmt = $pdo->prepare($checkSql);
@@ -79,9 +91,11 @@ try {
     
     // Insert new user (userName field stores the username value)
     $sql = "INSERT INTO user (userName, email, phone, password, age, gender, blood, premium_status, 
-                              height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, created_at) 
+                              height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, 
+                              premium_start_date, premium_end_date, created_at) 
             VALUES (:username, :email, :phone, :password, :age, :gender, :blood, :premium_status,
-                    :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate, NOW())";
+                    :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate,
+                    :premium_start_date, :premium_end_date, NOW())";
     
     $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);  // Store username in userName field
@@ -97,6 +111,8 @@ try {
     $stmt->bindParam(':blood_pressure_systolic', $blood_pressure_systolic, PDO::PARAM_INT);
     $stmt->bindParam(':blood_pressure_diastolic', $blood_pressure_diastolic, PDO::PARAM_INT);
     $stmt->bindParam(':heart_rate', $heart_rate, PDO::PARAM_INT);
+    $stmt->bindParam(':premium_start_date', $premium_start_date, PDO::PARAM_STR);
+    $stmt->bindParam(':premium_end_date', $premium_end_date, PDO::PARAM_STR);
     
     if ($stmt->execute()) {
         $newUserId = $pdo->lastInsertId();
