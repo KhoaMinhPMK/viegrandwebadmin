@@ -102,7 +102,15 @@ function setupEventListeners() {
         if (e.target === editModal) closeEditModal();
         if (e.target === deleteModal) closeDeleteModal();
         if (e.target === document.getElementById('addUserModal')) closeAddModal();
+        if (e.target === document.getElementById('premiumDetailsModal')) closePremiumModal();
     });
+    
+    // Premium modal event listeners
+    document.getElementById('closePremiumModal').addEventListener('click', closePremiumModal);
+    document.getElementById('closePremiumModalBtn').addEventListener('click', closePremiumModal);
+    document.getElementById('editEndDateBtn').addEventListener('click', showEditEndDateForm);
+    document.getElementById('saveEndDateBtn').addEventListener('click', saveNewEndDate);
+    document.getElementById('cancelEndDateBtn').addEventListener('click', hideEditEndDateForm);
 }
 
 function switchDatabase(database) {
@@ -290,9 +298,11 @@ function displayMainUsers(users) {
         // Format health info
         const healthInfoHtml = formatHealthInfoHtml(user.health_info);
         
-        // Format premium status
+        // Format premium status with clickable functionality for premium users
         const premiumStatus = user.premium_status ? 
-            '<span class="premium-badge active"><i class="fas fa-crown"></i> Premium</span>' :
+            `<span class="premium-badge active clickable" onclick="showPremiumDetails('${user.userId}', '${user.premium_start_date || ''}', '${user.premium_end_date || ''}')">
+                <i class="fas fa-crown"></i> Premium
+            </span>` :
             '<span class="premium-badge inactive"><i class="fas fa-user"></i> Regular</span>';
 
         row.innerHTML = `
@@ -1138,5 +1148,167 @@ function setButtonSuccess(button) {
     const span = button.querySelector('span');
     if (span) {
         span.textContent = 'Thành công!';
+    }
+}
+
+// Premium Details Modal Functions
+let currentPremiumUserId = null;
+
+function showPremiumDetails(userId, startDate, endDate) {
+    console.log('Opening premium details for user:', userId);
+    console.log('Start date:', startDate);
+    console.log('End date:', endDate);
+    
+    // Store current user ID for editing
+    currentPremiumUserId = userId;
+    
+    const modal = document.getElementById('premiumDetailsModal');
+    
+    // Reset edit form visibility
+    hideEditEndDateForm();
+    
+    // Format and display dates
+    const startDateElement = document.getElementById('premiumStartDate');
+    const endDateElement = document.getElementById('premiumEndDate');
+    const timeRemainingElement = document.getElementById('premiumTimeRemaining');
+    const statusElement = document.getElementById('premiumStatusText');
+    
+    // Format dates or show "Chưa có thông tin"
+    startDateElement.textContent = startDate && startDate !== 'null' && startDate !== '' ? 
+        formatDate(startDate) : 'Chưa có thông tin';
+    
+    endDateElement.textContent = endDate && endDate !== 'null' && endDate !== '' ? 
+        formatDate(endDate) : 'Chưa có thông tin';
+    
+    // Store original end date for editing
+    if (endDate && endDate !== 'null' && endDate !== '') {
+        const dateInput = document.getElementById('newEndDate');
+        // Convert to local datetime format for input
+        const date = new Date(endDate);
+        const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        dateInput.value = localDateTime;
+    }
+    
+    // Calculate time remaining and status
+    updatePremiumStatus(endDate);
+    
+    modal.style.display = 'block';
+}
+
+function closePremiumModal() {
+    const modal = document.getElementById('premiumDetailsModal');
+    modal.style.display = 'none';
+    hideEditEndDateForm();
+    currentPremiumUserId = null;
+}
+
+function updatePremiumStatus(endDate) {
+    const timeRemainingElement = document.getElementById('premiumTimeRemaining');
+    const statusElement = document.getElementById('premiumStatusText');
+    
+    if (endDate && endDate !== 'null' && endDate !== '') {
+        const now = new Date();
+        const end = new Date(endDate);
+        const timeDiff = end.getTime() - now.getTime();
+        
+        if (timeDiff > 0) {
+            const days = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            timeRemainingElement.textContent = `${days} ngày`;
+            statusElement.textContent = 'Đang hoạt động';
+            statusElement.className = 'status-active';
+        } else {
+            timeRemainingElement.textContent = 'Đã hết hạn';
+            statusElement.textContent = 'Đã hết hạn';
+            statusElement.className = 'status-expired';
+        }
+    } else {
+        timeRemainingElement.textContent = 'Chưa có thông tin';
+        statusElement.textContent = 'Không xác định';
+        statusElement.className = '';
+    }
+}
+
+function showEditEndDateForm() {
+    document.getElementById('editEndDateForm').style.display = 'block';
+    document.getElementById('editEndDateBtn').style.display = 'none';
+}
+
+function hideEditEndDateForm() {
+    document.getElementById('editEndDateForm').style.display = 'none';
+    document.getElementById('editEndDateBtn').style.display = 'inline-block';
+}
+
+async function saveNewEndDate() {
+    if (!currentPremiumUserId) {
+        alert('Lỗi: Không tìm thấy thông tin người dùng');
+        return;
+    }
+    
+    const newEndDate = document.getElementById('newEndDate').value;
+    if (!newEndDate) {
+        alert('Vui lòng chọn ngày kết thúc mới');
+        return;
+    }
+    
+    const saveBtn = document.getElementById('saveEndDateBtn');
+    const editForm = document.getElementById('editEndDateForm');
+    
+    // Show loading state
+    editForm.classList.add('loading-date-update');
+    saveBtn.disabled = true;
+    
+    try {
+        const formData = new FormData();
+        formData.append('userId', currentPremiumUserId);
+        formData.append('newEndDate', newEndDate);
+        
+        const response = await fetch('https://viegrand.site/viegrandwebadmin/php/update_premium_date.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update the display with new date
+            document.getElementById('premiumEndDate').textContent = formatDate(result.data.premium_end_date);
+            
+            // Update status and time remaining
+            updatePremiumStatus(result.data.premium_end_date);
+            
+            // Hide edit form
+            hideEditEndDateForm();
+            
+            // Show success message
+            alert('Cập nhật ngày kết thúc Premium thành công!');
+            
+        } else {
+            alert('Lỗi: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('Error updating premium end date:', error);
+        alert('Có lỗi xảy ra khi cập nhật ngày kết thúc: ' + error.message);
+    } finally {
+        // Remove loading state
+        editForm.classList.remove('loading-date-update');
+        saveBtn.disabled = false;
+    }
+}
+
+function formatDate(dateString) {
+    if (!dateString || dateString === 'null') return 'Chưa có thông tin';
+    
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (error) {
+        return 'Ngày không hợp lệ';
     }
 }

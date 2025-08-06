@@ -782,6 +782,72 @@
         </div>
     </div>
 
+    <!-- Premium Details Modal -->
+    <div id="premiumDetailsModal" class="modal">
+        <div class="modal-content premium-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-crown"></i>
+                    <span>Thông tin Premium</span>
+                </h2>
+                <span class="close" id="closePremiumModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="premium-info">
+                    <div class="premium-status-header">
+                        <div class="premium-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="premium-title">
+                            <h3>Tài khoản Premium</h3>
+                            <p>Thông tin chi tiết về gói Premium</p>
+                        </div>
+                    </div>
+                    
+                    <div class="premium-details">
+                        <div class="detail-row">
+                            <label><i class="fas fa-calendar-alt"></i> Ngày bắt đầu:</label>
+                            <span id="premiumStartDate">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-calendar-check"></i> Ngày kết thúc:</label>
+                            <div class="premium-end-date-container">
+                                <span id="premiumEndDate">--</span>
+                                <button class="edit-end-date-btn" id="editEndDateBtn" title="Chỉnh sửa ngày kết thúc">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <div class="edit-end-date-form" id="editEndDateForm" style="display: none;">
+                                <input type="datetime-local" id="newEndDate" class="date-input">
+                                <div class="edit-buttons">
+                                    <button class="save-date-btn" id="saveEndDateBtn">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button class="cancel-date-btn" id="cancelEndDateBtn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-clock"></i> Thời gian còn lại:</label>
+                            <span id="premiumTimeRemaining">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-info-circle"></i> Trạng thái:</label>
+                            <span id="premiumStatusText" class="status-active">Đang hoạt động</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closePremiumModalBtn">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

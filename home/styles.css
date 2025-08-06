@@ -1154,6 +1154,47 @@ body {
         justify-content: center;
         padding: 0.875rem 1.5rem;
     }
+    
+    /* Premium modal responsive */
+    .premium-modal {
+        width: 95%;
+        max-width: none;
+        margin: 1rem auto;
+    }
+    
+    .premium-status-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .premium-details .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .premium-details .detail-row label {
+        min-width: auto;
+        font-size: 0.9rem;
+    }
+    
+    /* Mobile responsive for premium edit form */
+    .premium-end-date-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .edit-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .save-date-btn, .cancel-date-btn {
+        flex: 1;
+        max-width: 120px;
+    }
 }
 
 .detail-row label {
@@ -1896,11 +1937,29 @@ body {
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .premium-badge.active {
     background: #fff3e0;
     color: #f57c00;
+}
+
+.premium-badge.active.clickable {
+    cursor: pointer;
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    box-shadow: 0 2px 8px rgba(245, 124, 0, 0.2);
+}
+
+.premium-badge.active.clickable:hover {
+    background: linear-gradient(135deg, #ffe0b2, #ffcc02);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
+}
+
+.premium-badge.active.clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(245, 124, 0, 0.2);
 }
 
 .premium-badge.inactive {
@@ -1910,6 +1969,203 @@ body {
 
 .premium-badge i {
     font-size: 0.7rem;
+}
+
+/* Premium Details Modal */
+.premium-modal {
+    max-width: 500px;
+    margin: 2rem auto;
+}
+
+.premium-info {
+    padding: 0;
+}
+
+.premium-status-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.premium-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #f57c00, #ff9800);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(245, 124, 0, 0.3);
+}
+
+.premium-title h3 {
+    margin: 0;
+    color: #f57c00;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.premium-title p {
+    margin: 0.25rem 0 0 0;
+    color: #8d6e63;
+    font-size: 0.9rem;
+}
+
+.premium-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.premium-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #f57c00;
+}
+
+.premium-details .detail-row label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #555;
+    min-width: 140px;
+}
+
+.premium-details .detail-row label i {
+    color: #f57c00;
+    width: 16px;
+}
+
+.premium-details .detail-row span {
+    font-weight: 500;
+    color: #333;
+}
+
+.status-active {
+    color: #28a745 !important;
+    font-weight: 600 !important;
+}
+
+.status-expired {
+    color: #dc3545 !important;
+    font-weight: 600 !important;
+}
+
+/* Premium End Date Edit Functionality */
+.premium-end-date-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.edit-end-date-btn {
+    background: #f57c00;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.edit-end-date-btn:hover {
+    opacity: 1;
+    background: #e65100;
+    transform: scale(1.1);
+}
+
+.edit-end-date-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.date-input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #f57c00;
+    box-shadow: 0 0 0 2px rgba(245, 124, 0, 0.2);
+}
+
+.edit-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.save-date-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.save-date-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.save-date-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.cancel-date-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.cancel-date-btn:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.loading-date-update {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading-date-update .save-date-btn i {
+    animation: spin 1s linear infinite;
 }
 
 /* Notifications */
