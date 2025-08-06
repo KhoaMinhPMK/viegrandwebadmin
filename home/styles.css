@@ -2122,6 +2122,25 @@ body {
     color: #333;
 }
 
+/* Premium Key Display */
+.premium-key-display {
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.9rem !important;
+    background-color: #e9ecef !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 6px !important;
+    border: 1px solid #dee2e6 !important;
+    color: #495057 !important;
+    letter-spacing: 1px !important;
+    user-select: all !important;
+    cursor: text !important;
+}
+
+.premium-key-display:hover {
+    background-color: #fff3cd !important;
+    border-color: #ffc107 !important;
+}
+
 .status-active {
     color: #28a745 !important;
     font-weight: 600 !important;

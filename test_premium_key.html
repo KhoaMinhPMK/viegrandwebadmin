@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Premium Key Display - VieGrand Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            max-width: 300px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .premium-key-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            background-color: #e9ecef;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            letter-spacing: 1px;
+            user-select: all;
+            cursor: pointer;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .premium-key-display:hover {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .premium-badge {
+            background-color: #f57c00;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-block;
+            margin: 5px;
+        }
+        .premium-badge:hover {
+            background-color: #e65100;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 5px 0;
+            border-left: 4px solid #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Test Premium Key Display</h1>
+        <p>This tool tests the premium key display functionality in the premium details modal.</p>
+        
+        <div class="test-section">
+            <h3>📊 Test API Response with Premium Key</h3>
+            <p>Test loading users with premium keys from the API.</p>
+            
+            <button onclick="testLoadUsers()">Load Users with Premium Keys</button>
+            <button onclick="testSpecificUser()">Test Specific User</button>
+            
+            <div class="form-group">
+                <label for="testUserId">Specific User ID:</label>
+                <input type="number" id="testUserId" placeholder="Enter user ID" value="1">
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎨 Premium Key Display Simulation</h3>
+            <p>Test the premium key display styling and functionality.</p>
+            
+            <div class="form-group">
+                <label for="sampleKey">Sample Premium Key:</label>
+                <input type="text" id="sampleKey" placeholder="Enter a sample key" value="0600000000010825">
+            </div>
+            
+            <button onclick="showSampleKey()">Show Premium Key Display</button>
+            <button onclick="testCopyFunctionality()">Test Copy Functionality</button>
+            
+            <div id="sampleKeyDisplay"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 Premium Badge Click Simulation</h3>
+            <p>Test premium badge clicks that should open modal with premium key.</p>
+            
+            <div class="premium-badges-demo">
+                <span class="premium-badge" data-user-id="1" data-start-date="2025-08-06 06:49:08" data-end-date="2025-09-06 06:49:08" data-premium-key="0600000000010825">
+                    👑 Premium User 1
+                </span>
+                <span class="premium-badge" data-user-id="2" data-start-date="2025-08-06 06:56:26" data-end-date="2025-09-05 06:56:26" data-premium-key="0600000000020825">
+                    👑 Premium User 2
+                </span>
+                <span class="premium-badge" data-user-id="3" data-start-date="" data-end-date="" data-premium-key="">
+                    👤 Regular User (No Key)
+                </span>
+            </div>
+            
+            <p><small>Click on the premium badges above to test the functionality.</small></p>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Test Results</h3>
+            <div id="testResults" class="log">Ready to test premium key functionality...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://viegrand.site/viegrandwebadmin/php/';
+        
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            resultsDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        async function testLoadUsers() {
+            log('🔍 Testing API loading with premium keys...');
+            
+            try {
+                const response = await fetch(`${API_BASE}get_users_viegrand.php`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ API Success: Loaded ${result.users.length} users`, 'success');
+                    
+                    // Check which users have premium keys
+                    const usersWithKeys = result.users.filter(user => user.premium_key);
+                    const premiumUsers = result.users.filter(user => user.premium_status);
+                    
+                    log(`📊 Premium users: ${premiumUsers.length}`, 'success');
+                    log(`🔑 Users with premium keys: ${usersWithKeys.length}`, 'success');
+                    
+                    if (usersWithKeys.length > 0) {
+                        usersWithKeys.forEach(user => {
+                            log(`   User ID ${user.id}: Key = ${user.premium_key}`, 'success');
+                        });
+                    } else {
+                        log('❌ No users found with premium keys', 'error');
+                    }
+                    
+                    if (premiumUsers.length > 0) {
+                        log('📋 Premium users data:');
+                        premiumUsers.forEach(user => {
+                            log(`   ID: ${user.id}, Premium: ${user.premium_status}, Key: ${user.premium_key || 'No key'}`);
+                        });
+                    }
+                    
+                } else {
+                    log(`❌ API Error: ${result.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Request Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSpecificUser() {
+            const userId = document.getElementById('testUserId').value;
+            if (!userId) {
+                log('❌ Please enter a user ID', 'error');
+                return;
+            }
+            
+            log(`🔍 Testing specific user ID: ${userId}`);
+            
+            try {
+                const response = await fetch(`${API_BASE}get_users_viegrand.php`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const user = result.users.find(u => u.id == userId);
+                    if (user) {
+                        log(`✅ Found User ID ${userId}:`, 'success');
+                        log(`   Premium Status: ${user.premium_status ? 'Premium' : 'Regular'}`);
+                        log(`   Premium Key: ${user.premium_key || 'No key'}`);
+                        log(`   Start Date: ${user.premium_start_date || 'No date'}`);
+                        log(`   End Date: ${user.premium_end_date || 'No date'}`);
+                        
+                        if (user.premium_status && user.premium_key) {
+                            log('🎯 This user should show premium key in modal!', 'success');
+                        } else if (user.premium_status && !user.premium_key) {
+                            log('⚠️ Premium user but no key found', 'error');
+                        }
+                    } else {
+                        log(`❌ User ID ${userId} not found`, 'error');
+                    }
+                } else {
+                    log(`❌ API Error: ${result.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Request Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function showSampleKey() {
+            const key = document.getElementById('sampleKey').value;
+            const displayDiv = document.getElementById('sampleKeyDisplay');
+            
+            if (!key) {
+                log('❌ Please enter a sample key', 'error');
+                return;
+            }
+            
+            displayDiv.innerHTML = `
+                <div class="detail-row">
+                    <label>🔑 Premium Key:</label>
+                    <span class="premium-key-display" onclick="copyKey('${key}')">${key}</span>
+                </div>
+            `;
+            
+            log(`✅ Sample key displayed: ${key}`, 'success');
+        }
+        
+        function copyKey(key) {
+            navigator.clipboard.writeText(key).then(function() {
+                log(`📋 Premium key copied to clipboard: ${key}`, 'success');
+                
+                // Visual feedback
+                const keyElements = document.querySelectorAll('.premium-key-display');
+                keyElements.forEach(el => {
+                    if (el.textContent === key) {
+                        const originalBg = el.style.backgroundColor;
+                        el.style.backgroundColor = '#d4edda';
+                        el.style.color = '#155724';
+                        el.textContent = 'Đã sao chép!';
+                        
+                        setTimeout(() => {
+                            el.style.backgroundColor = originalBg;
+                            el.style.color = '';
+                            el.textContent = key;
+                        }, 1500);
+                    }
+                });
+            }).catch(function(err) {
+                log(`❌ Failed to copy key: ${err.message}`, 'error');
+            });
+        }
+        
+        function testCopyFunctionality() {
+            const key = document.getElementById('sampleKey').value;
+            if (!key) {
+                log('❌ Please enter a sample key first', 'error');
+                return;
+            }
+            
+            copyKey(key);
+        }
+        
+        // Add click handlers for demo premium badges
+        document.addEventListener('DOMContentLoaded', function() {
+            const badges = document.querySelectorAll('.premium-badge');
+            badges.forEach(badge => {
+                badge.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const startDate = this.getAttribute('data-start-date');
+                    const endDate = this.getAttribute('data-end-date');
+                    const premiumKey = this.getAttribute('data-premium-key');
+                    
+                    log(`🎯 Premium badge clicked:`, 'success');
+                    log(`   User ID: ${userId}`);
+                    log(`   Start Date: ${startDate || 'No date'}`);
+                    log(`   End Date: ${endDate || 'No date'}`);
+                    log(`   Premium Key: ${premiumKey || 'No key'}`);
+                    
+                    if (premiumKey) {
+                        log(`✅ Premium key would be displayed in modal!`, 'success');
+                    } else {
+                        log(`⚠️ No premium key to display`, 'error');
+                    }
+                });
+            });
+        });
+        
+        // Initialize
+        log('🚀 Premium Key Test Tool Initialized');
+        log('💡 Click "Load Users with Premium Keys" to test API integration');
+        log('💡 Use the sample key display to test styling');
+        log('💡 Click the demo premium badges to test click functionality');
+    </script>
+</body>
+</html>

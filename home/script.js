@@ -156,11 +156,12 @@ function setupEventListeners() {
             const userId = premiumBadge.getAttribute('data-user-id');
             const startDate = premiumBadge.getAttribute('data-start-date');
             const endDate = premiumBadge.getAttribute('data-end-date');
+            const premiumKey = premiumBadge.getAttribute('data-premium-key');
             
-            console.log('Premium badge clicked with data:', { userId, startDate, endDate });
+            console.log('Premium badge clicked with data:', { userId, startDate, endDate, premiumKey });
             
             if (userId) {
-                showPremiumDetails(userId, startDate, endDate);
+                showPremiumDetails(userId, startDate, endDate, premiumKey);
             } else {
                 console.error('No user ID found in premium badge');
                 alert('Lỗi: Không tìm thấy ID người dùng');
@@ -176,13 +177,14 @@ function setupEventListeners() {
                 const userId = badge.getAttribute('data-user-id');
                 const startDate = badge.getAttribute('data-start-date');
                 const endDate = badge.getAttribute('data-end-date');
+                const premiumKey = badge.getAttribute('data-premium-key');
                 
-                console.log('Fallback click with data:', { userId, startDate, endDate });
+                console.log('Fallback click with data:', { userId, startDate, endDate, premiumKey });
                 
                 if (userId) {
                     e.preventDefault();
                     e.stopPropagation();
-                    showPremiumDetails(userId, startDate, endDate);
+                    showPremiumDetails(userId, startDate, endDate, premiumKey);
                 }
             }
         }
@@ -429,7 +431,7 @@ function displayMainUsers(users) {
         
         // Format premium status with clickable functionality for premium users
         const premiumStatus = user.premium_status ? 
-            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}">
+            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}" data-premium-key="${user.premium_key || ''}">
                 <i class="fas fa-crown"></i> Premium
             </span>` :
             '<span class="premium-badge inactive"><i class="fas fa-user"></i> Regular</span>';
@@ -483,7 +485,7 @@ function displayMainUsers(users) {
                     console.log('Direct premium badge click for user:', user.id);
                     e.preventDefault();
                     e.stopPropagation();
-                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date);
+                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date, user.premium_key);
                 });
                 
                 // Also add a visual indicator that it's clickable
@@ -1381,10 +1383,11 @@ function setButtonSuccess(button) {
 // Premium Details Modal Functions
 let currentPremiumUserId = null;
 
-function showPremiumDetails(userId, startDate, endDate) {
+function showPremiumDetails(userId, startDate, endDate, premiumKey = null) {
     console.log('Opening premium details for user:', userId);
     console.log('Start date:', startDate);
     console.log('End date:', endDate);
+    console.log('Premium key:', premiumKey);
     
     // Validate inputs
     if (!userId) {
@@ -1405,6 +1408,39 @@ function showPremiumDetails(userId, startDate, endDate) {
     
     // Reset edit form visibility
     hideEditEndDateForm();
+    
+    // Display premium key
+    const premiumKeyElement = document.getElementById('premiumKey');
+    if (premiumKeyElement) {
+        premiumKeyElement.textContent = premiumKey || 'Chưa có thông tin';
+        premiumKeyElement.title = premiumKey ? 'Click để sao chép Premium Key' : '';
+        
+        // Add click-to-copy functionality for premium key
+        if (premiumKey) {
+            premiumKeyElement.style.cursor = 'pointer';
+            premiumKeyElement.onclick = function() {
+                navigator.clipboard.writeText(premiumKey).then(function() {
+                    // Show temporary feedback
+                    const originalText = premiumKeyElement.textContent;
+                    premiumKeyElement.textContent = 'Đã sao chép!';
+                    premiumKeyElement.style.backgroundColor = '#d4edda';
+                    premiumKeyElement.style.color = '#155724';
+                    
+                    setTimeout(function() {
+                        premiumKeyElement.textContent = originalText;
+                        premiumKeyElement.style.backgroundColor = '';
+                        premiumKeyElement.style.color = '';
+                    }, 1500);
+                }).catch(function(err) {
+                    console.error('Could not copy premium key: ', err);
+                    alert('Không thể sao chép Premium Key');
+                });
+            };
+        } else {
+            premiumKeyElement.style.cursor = 'default';
+            premiumKeyElement.onclick = null;
+        }
+    }
     
     // Format and display dates
     const startDateElement = document.getElementById('premiumStartDate');
