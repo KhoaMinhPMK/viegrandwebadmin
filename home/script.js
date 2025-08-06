@@ -85,6 +85,22 @@ function setupEventListeners() {
         setTimeout(() => openAddModal('main'), 150);
     });
 
+    // Search functionality
+    document.getElementById('adminSearchInput').addEventListener('input', (e) => {
+        filterTable('admin', e.target.value);
+    });
+    document.getElementById('mainSearchInput').addEventListener('input', (e) => {
+        filterTable('main', e.target.value);
+    });
+
+    // Delete all buttons
+    document.getElementById('deleteAllAdminBtn').addEventListener('click', () => {
+        deleteAllUsers('admin');
+    });
+    document.getElementById('deleteAllMainBtn').addEventListener('click', () => {
+        deleteAllUsers('main');
+    });
+
     // Add modal buttons
     document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
     document.getElementById('saveAddBtn').addEventListener('click', saveNewUser);
@@ -1908,5 +1924,158 @@ async function loadElderlyList() {
                 </div>
             `;
         }
+    }
+}
+
+// Search functionality for tables
+function filterTable(database, searchTerm) {
+    const tableId = database === 'admin' ? 'adminUsersTable' : 'mainUsersTable';
+    const table = document.getElementById(tableId);
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    const searchTermLower = searchTerm.toLowerCase().trim();
+    let visibleCount = 0;
+    
+    if (!searchTermLower) {
+        // Show all rows if search is empty
+        rows.forEach(row => {
+            row.style.display = '';
+            visibleCount++;
+        });
+        updateSearchResults(database, visibleCount, rows.length);
+        return;
+    }
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        let found = false;
+        
+        // Search in specific columns (skip avatar and action columns)
+        for (let i = 1; i < cells.length - 1; i++) {
+            const cellText = cells[i].textContent.toLowerCase();
+            if (cellText.includes(searchTermLower)) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (found) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    updateSearchResults(database, visibleCount, rows.length);
+}
+
+// Update search results counter
+function updateSearchResults(database, visible, total) {
+    const searchInput = document.getElementById(database === 'admin' ? 'adminSearchInput' : 'mainSearchInput');
+    
+    if (visible === total) {
+        searchInput.style.borderColor = '#e0e6ed';
+        searchInput.title = '';
+    } else {
+        searchInput.style.borderColor = '#2E86AB';
+        searchInput.title = `Hiển thị ${visible} trong tổng số ${total} người dùng`;
+    }
+}
+
+// Delete all users functionality
+async function deleteAllUsers(database) {
+    const databaseName = database === 'admin' ? 'Admin Database' : 'Main Database';
+    const tableId = database === 'admin' ? 'adminUsersTable' : 'mainUsersTable';
+    const table = document.getElementById(tableId);
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    if (rows.length === 0) {
+        alert(`Không có người dùng nào trong ${databaseName} để xóa.`);
+        return;
+    }
+    
+    const confirmed = confirm(
+        `⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa TẤT CẢ ${rows.length} người dùng trong ${databaseName}?\n\n` +
+        `Hành động này KHÔNG THỂ HOÀN TÁC!\n\n` +
+        `Nhấn OK để tiếp tục hoặc Cancel để hủy bỏ.`
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    // Second confirmation for extra safety
+    const doubleConfirmed = confirm(
+        `🔥 XÁC NHẬN LẦN CUỐI: Bạn thực sự muốn xóa TẤT CẢ người dùng trong ${databaseName}?\n\n` +
+        `Đây là cơ hội cuối cùng để hủy bỏ!`
+    );
+    
+    if (!doubleConfirmed) {
+        return;
+    }
+    
+    const button = document.getElementById(database === 'admin' ? 'deleteAllAdminBtn' : 'deleteAllMainBtn');
+    const originalText = button.innerHTML;
+    
+    try {
+        // Show loading state
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang xóa...</span>';
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
+        // Delete users one by one
+        for (const row of rows) {
+            const userId = row.getAttribute('data-user-id');
+            
+            try {
+                const response = await fetch(`../php/delete_user_${database}.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: userId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successCount++;
+                    row.remove(); // Remove row from table immediately
+                } else {
+                    errorCount++;
+                    console.error(`Failed to delete user ${userId}:`, result.message);
+                }
+            } catch (error) {
+                errorCount++;
+                console.error(`Error deleting user ${userId}:`, error);
+            }
+        }
+        
+        // Show results
+        if (errorCount === 0) {
+            alert(`✅ Đã xóa thành công tất cả ${successCount} người dùng trong ${databaseName}!`);
+        } else {
+            alert(`⚠️ Kết quả xóa:\n• Thành công: ${successCount} người dùng\n• Thất bại: ${errorCount} người dùng\n\nVui lòng kiểm tra console để biết chi tiết lỗi.`);
+        }
+        
+        // Reload the table to ensure consistency
+        if (database === 'admin') {
+            loadAdminUsers();
+        } else {
+            loadMainUsers();
+        }
+        
+    } catch (error) {
+        console.error('Error in delete all operation:', error);
+        alert(`❌ Có lỗi xảy ra trong quá trình xóa: ${error.message}`);
+    } finally {
+        // Reset button state
+        button.disabled = false;
+        button.innerHTML = originalText;
     }
 }

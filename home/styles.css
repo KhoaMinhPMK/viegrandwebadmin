@@ -319,6 +319,116 @@ body {
     box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
 }
 
+/* Search Container Styling */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.search-input {
+    background: white;
+    border: 2px solid #e0e6ed;
+    border-radius: 25px;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    font-size: 0.9rem;
+    width: 250px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #2E86AB;
+    box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
+    transform: scale(1.02);
+}
+
+.search-input::placeholder {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.search-icon {
+    position: absolute;
+    right: 1rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+    pointer-events: none;
+    transition: color 0.3s ease;
+}
+
+.search-input:focus + .search-icon {
+    color: #2E86AB;
+}
+
+/* Delete All Button Styling */
+.delete-all-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    padding: 0.875rem 1.5rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.delete-all-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.delete-all-btn:hover::before {
+    left: 100%;
+}
+
+.delete-all-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.delete-all-btn:active {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.delete-all-btn i {
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.delete-all-btn:hover i {
+    transform: scale(1.1);
+}
+
+.delete-all-btn span {
+    transition: all 0.3s ease;
+}
+
+.delete-all-btn:hover span {
+    transform: translateX(2px);
+}
+
 #addAdminBtn:hover {
     background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
     box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
@@ -1183,19 +1293,32 @@ body {
         width: 100%;
     }
     
-    .add-btn {
+    .search-container {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 1rem 2.5rem 1rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .add-btn, .delete-all-btn {
         width: 100%;
         justify-content: center;
         padding: 1rem 1.5rem;
         font-size: 1rem;
         border-radius: 25px;
+        min-width: unset;
     }
     
-    .add-btn span {
+    .add-btn span, .delete-all-btn span {
         display: block;
     }
     
-    .add-btn i {
+    .add-btn i, .delete-all-btn i {
         font-size: 1.2rem;
     }
     
