@@ -690,6 +690,7 @@ function showEditModal(user, database) {
         document.getElementById('editGender').value = user.gender || '';
         document.getElementById('editBlood').value = user.blood || '';
         document.getElementById('editUserRole').value = user.user_role || 'relative';  // Set user role, default to 'relative'
+        console.log('Setting role field value:', user.user_role || 'relative', 'from user data:', user.user_role);
         document.getElementById('editPremiumStatus').value = user.premium_status ? '1' : '0';
         document.getElementById('editHeight').value = user.height || '';
         document.getElementById('editWeight').value = user.weight || '';
@@ -746,6 +747,10 @@ async function saveChanges() {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     
+    // Debug: Log all form data
+    console.log('All form data from FormData:', data);
+    console.log('Form data keys:', Object.keys(data));
+    
     // Add user ID and handle field mapping based on database
     data.id = currentUserData.id;
     
@@ -753,6 +758,24 @@ async function saveChanges() {
     if (currentUserData.database === 'main' && data.username) {
         data.userName = data.username;
         delete data.username;
+    }
+    
+    // Ensure role field is included for main database users
+    if (currentUserData.database === 'main') {
+        const roleField = document.getElementById('editUserRole');
+        const roleGroup = document.getElementById('editRoleGroup');
+        console.log('Role group visibility:', roleGroup ? roleGroup.style.display : 'group not found');
+        console.log('Role field element:', roleField);
+        console.log('Role field value:', roleField ? roleField.value : 'field not found');
+        console.log('Role field in form data:', data.role);
+        
+        if (roleField && roleField.value) {
+            data.role = roleField.value;
+        } else if (roleField) {
+            // If no value is selected, default to 'relative'
+            data.role = 'relative';
+        }
+        console.log('Role being sent to API:', data.role);
     }
     
     try {

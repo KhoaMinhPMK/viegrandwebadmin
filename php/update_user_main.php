@@ -112,6 +112,11 @@ try {
     
     foreach ($allowedFields as $field) {
         if (isset($input[$field])) {
+            // Debug: Log role field specifically
+            if ($field === 'role') {
+                error_log("Processing role field - Value: '{$input[$field]}', Type: " . gettype($input[$field]));
+            }
+            
             // Additional validation for specific fields
             if ($field === 'email' && $input[$field] !== '' && !filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
                 echo json_encode([
@@ -274,11 +279,20 @@ try {
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute($params);
     
+    // Debug: Log the execution result and affected rows
+    error_log("SQL execution result: " . ($result ? 'success' : 'failed'));
+    error_log("Affected rows: " . $stmt->rowCount());
+    
     if ($result) {
         // Get updated user data
         $getUserStmt = $pdo->prepare("SELECT * FROM user WHERE userId = ?");
         $getUserStmt->execute([$userId]);
         $updatedUser = $getUserStmt->fetch();
+        
+        // Debug: Log the role field specifically after update
+        if ($updatedUser) {
+            error_log("Updated user role field: '{$updatedUser['role']}'");
+        }
         
         if ($updatedUser) {
             echo json_encode([
@@ -290,6 +304,7 @@ try {
                     'email' => $updatedUser['email'],
                     'phone' => $updatedUser['phone'],
                     'role' => $updatedUser['role'],
+                    'user_role' => $updatedUser['role'], // Add user_role for consistency with frontend
                     'age' => $updatedUser['age'],
                     'gender' => $updatedUser['gender'],
                     'blood' => $updatedUser['blood'],
