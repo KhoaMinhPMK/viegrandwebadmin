@@ -4,7 +4,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Handle preflight OPTIONS request
+// Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
@@ -27,6 +27,7 @@ try {
     $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
     $pdo = new PDO($dsn, $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
     
@@ -64,58 +65,41 @@ try {
         exit;
     }
     
-    // Verify that the elderly user exists and has the correct role
-    $elderlyStmt = $pdo->prepare("SELECT userId, userName FROM user WHERE private_key = ? AND role = 'elderly'");
-    $elderlyStmt->execute([$elderlyPrivateKey]);
-    $elderly = $elderlyStmt->fetch();
-    
-    if (!$elderly) {
-        echo json_encode(['success' => false, 'message' => 'Elderly user not found or does not have elderly role']);
-        exit;
-    }
-    
     // Parse existing elderly_keys array
     $elderlyKeys = json_decode($premium['elderly_keys'], true) ?: [];
     
-    // Check if this elderly user is already added
-    if (in_array($elderlyPrivateKey, $elderlyKeys)) {
-        echo json_encode(['success' => false, 'message' => 'This elderly user is already in the premium subscription']);
+    // Check if this elderly user is in the list
+    $keyIndex = array_search($elderlyPrivateKey, $elderlyKeys);
+    if ($keyIndex === false) {
+        echo json_encode(['success' => false, 'message' => 'This elderly user is not in the premium subscription']);
         exit;
     }
     
-    // Add the elderly private key to the array
-    $elderlyKeys[] = $elderlyPrivateKey;
+    // Remove the elderly private key from the array
+    array_splice($elderlyKeys, $keyIndex, 1);
     
     // Update the premium_subscriptions_json table
+    $updateStmt = $pdo->prepare("UPDATE premium_subscriptions_json SET elderly_keys = ? WHERE premium_key = ?");
+    $updateStmt->execute([json_encode($elderlyKeys), $premium['premium_key']]);
+    
+    // Update the elderly user's premium status to 0 (remove premium)
+    $updateElderlyStmt = $pdo->prepare("UPDATE user SET premium_status = 0 WHERE private_key = ?");
+    $updateElderlyStmt->execute([$elderlyPrivateKey]);
+    
     echo json_encode([
         'success' => true,
-        'message' => 'Elderly user added to premium subscription successfully',
+        'message' => 'Elderly user removed from premium subscription successfully',
         'data' => [
             'premium_key' => $premium['premium_key'],
-            'elderly_user' => $elderly['userName'],
             'elderly_count' => count($elderlyKeys)
         ]
     ]);
     
 } catch (PDOException $e) {
-    error_log("Database error in add_elderly_to_premium.php: " . $e->getMessage());
+    error_log("Database error in remove_elderly_from_premium.php: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
-    error_log("General error in add_elderly_to_premium.php: " . $e->getMessage());
+    error_log("General error in remove_elderly_from_premium.php: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
-}
-?>
-
-} catch (Exception $e) {
-    // Rollback transaction if it was started
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollback();
-    }
-    
-    error_log("Add elderly to premium error: " . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
 }
 ?>

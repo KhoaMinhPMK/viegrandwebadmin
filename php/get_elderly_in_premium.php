@@ -17,94 +17,89 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // Database configuration
-$host = '127.0.0.1';  // Using IP instead of localhost
+$host = '127.0.0.1';
 $dbname = 'viegrand';
 $username = 'root';
 $password = '';
+$charset = 'utf8mb4';
 
 try {
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
     $userId = $_GET['user_id'] ?? null;
     
     if (!$userId) {
-        throw new Exception('Thiếu user_id');
+        echo json_encode(['success' => false, 'message' => 'Missing user_id parameter']);
+        exit;
     }
     
-    // Connect to database
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // 1. Verify that the user exists and has role 'relative'
-    $stmt = $pdo->prepare("SELECT id, role FROM viegrand.user WHERE id = ?");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    // First, verify that the user exists and has premium status
+    $userStmt = $pdo->prepare("SELECT userId, private_key, role, premium_status FROM user WHERE userId = ? AND role = 'relative' AND premium_status = 1");
+    $userStmt->execute([$userId]);
+    $user = $userStmt->fetch();
     
     if (!$user) {
-        throw new Exception('Không tìm thấy người dùng');
-    }
-    
-    if ($user['role'] !== 'relative') {
-        throw new Exception('Chỉ người dùng có vai trò "relative" mới có thể xem danh sách người cao tuổi');
-    }
-    
-    // 2. Get the premium subscription and elderly_keys
-    $stmt = $pdo->prepare("
-        SELECT id, start_date, end_date, elderly_keys 
-        FROM viegrand.premium_subscriptions_json 
-        WHERE user_id = ? AND end_date > NOW()
-        ORDER BY end_date DESC 
-        LIMIT 1
-    ");
-    $stmt->execute([$userId]);
-    $subscription = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$subscription) {
-        // No active premium subscription
-        echo json_encode([
-            'success' => true,
-            'message' => 'Không có gói Premium đang hoạt động',
-            'data' => []
-        ]);
+        echo json_encode(['success' => false, 'message' => 'User not found or does not have premium status']);
         exit;
     }
     
-    // 3. Parse elderly_keys
-    $elderlyKeys = [];
-    if (!empty($subscription['elderly_keys'])) {
-        $elderlyKeys = json_decode($subscription['elderly_keys'], true);
-        if (!is_array($elderlyKeys)) {
-            $elderlyKeys = [];
-        }
+    // Find the premium subscription for this user
+    $premiumStmt = $pdo->prepare("SELECT premium_key, elderly_keys FROM premium_subscriptions_json WHERE young_person_key = ?");
+    $premiumStmt->execute([$user['private_key']]);
+    $premium = $premiumStmt->fetch();
+    
+    if (!$premium) {
+        echo json_encode(['success' => false, 'message' => 'Premium subscription not found for this user']);
+        exit;
     }
+    
+    // Parse elderly_keys array
+    $elderlyKeys = json_decode($premium['elderly_keys'], true) ?: [];
     
     if (empty($elderlyKeys)) {
-        // No elderly users in subscription
         echo json_encode([
             'success' => true,
-            'message' => 'Chưa có người cao tuổi nào trong gói Premium',
+            'message' => 'No elderly users in this premium subscription',
             'data' => []
         ]);
         exit;
     }
     
-    // 4. Get details of elderly users
+    // Get details for each elderly user
     $elderlyUsers = [];
-    foreach ($elderlyKeys as $privateKey) {
-        $stmt = $pdo->prepare("
-            SELECT id, full_name, phone, status, private_key
-            FROM viegrand.user 
-            WHERE private_key = ?
-        ");
-        $stmt->execute([$privateKey]);
-        $elderlyUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    foreach ($elderlyKeys as $key) {
+        $elderlyStmt = $pdo->prepare("SELECT userId, userName, email, phone, age, gender FROM user WHERE private_key = ? AND role = 'elderly'");
+        $elderlyStmt->execute([$key]);
+        $elderly = $elderlyStmt->fetch();
         
-        if ($elderlyUser) {
+        if ($elderly) {
             $elderlyUsers[] = [
-                'id' => $elderlyUser['id'],
-                'full_name' => $elderlyUser['full_name'],
-                'phone' => $elderlyUser['phone'],
-                'status' => $elderlyUser['status'],
-                'private_key' => $elderlyUser['private_key']
+                'userId' => $elderly['userId'],
+                'userName' => $elderly['userName'],
+                'email' => $elderly['email'],
+                'phone' => $elderly['phone'],
+                'age' => $elderly['age'],
+                'gender' => $elderly['gender'],
+                'private_key' => $key
             ];
+        }
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Elderly users retrieved successfully',
+        'data' => $elderlyUsers
+    ]);
+    
+} catch (PDOException $e) {
+    error_log("Database error in get_elderly_in_premium.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    error_log("General error in get_elderly_in_premium.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+}
+?>
         } else {
             // Private key exists in elderly_keys but user not found
             // This could happen if user was deleted

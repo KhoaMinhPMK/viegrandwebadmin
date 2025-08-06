@@ -17,17 +17,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Database configuration
-$host = '127.0.0.1';  // Using IP instead of localhost
+$host = '127.0.0.1';
 $dbname = 'viegrand';
 $username = 'root';
 $password = '';
+$charset = 'utf8mb4';
 
 try {
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
     
     if (!$input) {
-        throw new Exception('Invalid JSON input');
+        echo json_encode(['success' => false, 'message' => 'Invalid JSON input']);
+        exit;
     }
     
     $relativeUserId = $input['relative_user_id'] ?? null;
@@ -35,25 +40,59 @@ try {
     
     // Validate inputs
     if (!$relativeUserId || !$elderlyPrivateKey) {
-        throw new Exception('Thiếu thông tin bắt buộc: relative_user_id và elderly_private_key');
+        echo json_encode(['success' => false, 'message' => 'Missing required fields: relative_user_id and elderly_private_key']);
+        exit;
     }
     
-    // Trim the private key
-    $elderlyPrivateKey = trim($elderlyPrivateKey);
+    // First, verify that the relative user exists and has premium status
+    $relativeStmt = $pdo->prepare("SELECT userId, private_key, role, premium_status FROM user WHERE userId = ? AND role = 'relative' AND premium_status = 1");
+    $relativeStmt->execute([$relativeUserId]);
+    $relative = $relativeStmt->fetch();
     
-    // Connect to database
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    if (!$relative) {
+        echo json_encode(['success' => false, 'message' => 'Relative user not found or does not have premium status']);
+        exit;
+    }
     
-    // Start transaction
-    $pdo->beginTransaction();
+    // Find the premium subscription for this relative user
+    $premiumStmt = $pdo->prepare("SELECT premium_key, elderly_keys FROM premium_subscriptions_json WHERE young_person_key = ?");
+    $premiumStmt->execute([$relative['private_key']]);
+    $premium = $premiumStmt->fetch();
     
-    // 1. Verify that the relative user exists and has role 'relative'
-    $stmt = $pdo->prepare("SELECT id, role FROM viegrand.user WHERE id = ?");
-    $stmt->execute([$relativeUserId]);
-    $relativeUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$premium) {
+        echo json_encode(['success' => false, 'message' => 'Premium subscription not found for this user']);
+        exit;
+    }
     
-    if (!$relativeUser) {
+    // Parse existing elderly_keys array
+    $elderlyKeys = json_decode($premium['elderly_keys'], true) ?: [];
+    
+    // Check if this elderly user is in the list
+    $keyIndex = array_search($elderlyPrivateKey, $elderlyKeys);
+    if ($keyIndex === false) {
+        echo json_encode(['success' => false, 'message' => 'This elderly user is not in the premium subscription']);
+        exit;
+    }
+    
+    // Remove the elderly private key from the array
+    array_splice($elderlyKeys, $keyIndex, 1);
+    
+    // Update the premium_subscriptions_json table
+    $updateStmt = $pdo->prepare("UPDATE premium_subscriptions_json SET elderly_keys = ? WHERE premium_key = ?");
+    $updateStmt->execute([json_encode($elderlyKeys), $premium['premium_key']]);
+    
+    // Update the elderly user's premium status to 0 (remove premium)
+    $updateElderlyStmt = $pdo->prepare("UPDATE user SET premium_status = 0 WHERE private_key = ?");
+    $updateElderlyStmt->execute([$elderlyPrivateKey]);
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Elderly user removed from premium subscription successfully',
+        'data' => [
+            'premium_key' => $premium['premium_key'],
+            'elderly_count' => count($elderlyKeys)
+        ]
+    ]);
         throw new Exception('Không tìm thấy người dùng relative');
     }
     

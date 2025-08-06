@@ -6,61 +6,69 @@ $host = '127.0.0.1';
 $dbname = 'viegrand';
 $username = 'root';
 $password = '';
+$charset = 'utf8mb4';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $pdo = new PDO($dsn, $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Create premium_subscriptions_json table
-    $createTableSQL = "
-    CREATE TABLE IF NOT EXISTS `premium_subscriptions_json` (
-      `id` int(11) NOT NULL AUTO_INCREMENT,
-      `user_id` int(11) NOT NULL,
-      `start_date` datetime NOT NULL,
-      `end_date` datetime NOT NULL,
-      `elderly_keys` JSON DEFAULT NULL,
-      `premium_key` VARCHAR(255) DEFAULT NULL,
-      `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (`id`),
-      KEY `user_id` (`user_id`),
-      KEY `start_date` (`start_date`),
-      KEY `end_date` (`end_date`),
-      KEY `premium_key` (`premium_key`),
-      FOREIGN KEY (`user_id`) REFERENCES `user` (`userId`) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ";
-    
-    $pdo->exec($createTableSQL);
-    
-    // Check if table was created successfully
+    // Check if premium_subscriptions_json table exists
     $stmt = $pdo->prepare("SHOW TABLES LIKE 'premium_subscriptions_json'");
     $stmt->execute();
     $tableExists = $stmt->rowCount() > 0;
     
-    if ($tableExists) {
-        // Get table structure
-        $stmt = $pdo->prepare("DESCRIBE premium_subscriptions_json");
-        $stmt->execute();
-        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!$tableExists) {
+        // Create the table
+        $createTableSQL = "
+            CREATE TABLE `premium_subscriptions_json` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `premium_key` varchar(255) NOT NULL UNIQUE,
+                `young_person_key` varchar(255) NOT NULL,
+                `elderly_keys` JSON DEFAULT NULL,
+                `start_date` datetime DEFAULT NULL,
+                `end_date` datetime DEFAULT NULL,
+                `note` text DEFAULT NULL,
+                `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                INDEX `idx_premium_key` (`premium_key`),
+                INDEX `idx_young_person_key` (`young_person_key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ";
+        
+        $pdo->exec($createTableSQL);
         
         echo json_encode([
             'success' => true,
             'message' => 'premium_subscriptions_json table created successfully',
-            'table_exists' => true,
-            'columns' => $columns
+            'action' => 'created'
         ]);
     } else {
+        // Table exists, check its structure
+        $stmt = $pdo->prepare("DESCRIBE premium_subscriptions_json");
+        $stmt->execute();
+        $structure = $stmt->fetchAll();
+        
+        $columns = array_column($structure, 'Field');
+        
         echo json_encode([
-            'success' => false,
-            'message' => 'Failed to create premium_subscriptions_json table'
+            'success' => true,
+            'message' => 'premium_subscriptions_json table already exists',
+            'action' => 'exists',
+            'columns' => $columns
         ]);
     }
     
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage()
+    ]);
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => 'Error: ' . $e->getMessage()
     ]);
 }
 ?>

@@ -126,19 +126,19 @@ try {
         // Insert into premium_subscriptions_json if user is premium
         if ($premium_status === '1') {
             try {
-                // Generate premium_key in format: dd + 10-digit auto-increment ID + mmyy
+                // Generate premium_key in format: dd + 10-digit sequence + mmyy
                 $now = new DateTime();
                 
-                // Get the next auto-increment value for premium_subscriptions_json table
-                $countStmt = $pdo->prepare("SELECT COUNT(*) + 1 as next_id FROM premium_subscriptions_json");
+                // Get the next sequence number based on existing premium keys
+                $countStmt = $pdo->prepare("SELECT COUNT(*) + 1 as next_sequence FROM premium_subscriptions_json");
                 $countStmt->execute();
-                $nextId = $countStmt->fetch()['next_id'];
+                $nextSequence = $countStmt->fetch()['next_sequence'];
                 
-                // Format the premium_key: dd + 10-digit zero-padded ID + mmyy
+                // Format the premium_key: dd + 10-digit zero-padded sequence + mmyy
                 $dayStr = $now->format('d'); // dd format (day)
                 $monthYearStr = $now->format('my'); // mmyy format (month + year)
-                $idStr = str_pad($nextId, 10, '0', STR_PAD_LEFT); // 10-digit zero-padded
-                $premiumKey = $dayStr . $idStr . $monthYearStr;
+                $sequenceStr = str_pad($nextSequence, 10, '0', STR_PAD_LEFT); // 10-digit zero-padded
+                $premiumKey = $dayStr . $sequenceStr . $monthYearStr;
                 
                 // Insert into premium_subscriptions_json
                 $premiumInsertStmt = $pdo->prepare("
