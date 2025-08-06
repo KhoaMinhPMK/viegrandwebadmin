@@ -446,7 +446,7 @@ function displayMainUsers(users) {
         
         // Format premium status with clickable functionality for premium users
         const premiumStatus = user.premium_status ? 
-            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}" data-premium-key="${user.premium_key || ''}" data-role="${user.role || ''}">
+            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}" data-premium-key="${user.premium_key || ''}" data-role="${user.user_role || ''}">
                 <i class="fas fa-crown"></i> Premium
             </span>` :
             '<span class="premium-badge inactive"><i class="fas fa-user"></i> Regular</span>';
@@ -500,7 +500,7 @@ function displayMainUsers(users) {
                     console.log('Direct premium badge click for user:', user.id);
                     e.preventDefault();
                     e.stopPropagation();
-                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date, user.premium_key, user.role);
+                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date, user.premium_key, user.user_role);
                 });
                 
                 // Also add a visual indicator that it's clickable
@@ -1424,12 +1424,19 @@ function showPremiumDetails(userId, startDate, endDate, premiumKey = null, userR
     
     // Show/hide elderly management section based on user role
     const elderlySection = document.getElementById('elderlyManagementSection');
+    console.log('Elderly section element:', elderlySection);
+    console.log('User role for elderly management:', userRole);
+    
     if (elderlySection) {
         if (userRole === 'relative') {
+            console.log('Showing elderly management section for relative user');
             elderlySection.style.display = 'flex';
         } else {
+            console.log('Hiding elderly management section for non-relative user');
             elderlySection.style.display = 'none';
         }
+    } else {
+        console.error('Elderly management section not found in DOM');
     }
     
     // Reset edit form visibility
