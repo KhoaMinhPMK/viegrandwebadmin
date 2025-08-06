@@ -142,6 +142,25 @@ try {
                 exit();
             }
             
+            // Check if trying to update premium status for elderly user
+            if ($field === 'premium_status') {
+                // Get current user role and check if role is being updated in the same request
+                $currentRoleStmt = $pdo->prepare("SELECT role FROM user WHERE userId = ?");
+                $currentRoleStmt->execute([$userId]);
+                $currentUserRole = $currentRoleStmt->fetchColumn();
+                
+                // If role is being updated, use the new role; otherwise use current role
+                $effectiveRole = isset($input['role']) ? $input['role'] : $currentUserRole;
+                
+                if ($effectiveRole === 'elderly') {
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'Không thể thay đổi trạng thái Premium cho người cao tuổi. Chỉ người thân mới có thể thay đổi trạng thái Premium.'
+                    ]);
+                    exit();
+                }
+            }
+            
             $updateFields[] = "$field = ?";
             $params[] = $input[$field];
         }

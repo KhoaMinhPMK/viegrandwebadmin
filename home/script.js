@@ -96,6 +96,40 @@ function setupEventListeners() {
         saveNewUser();
     });
 
+    // Role change handler for edit modal - dynamically enable/disable premium status field
+    document.getElementById('editUserRole').addEventListener('change', function(e) {
+        const selectedRole = e.target.value;
+        const premiumStatusField = document.getElementById('editPremiumStatus');
+        const premiumStatusNote = document.getElementById('premiumStatusNote');
+        
+        if (selectedRole === 'elderly') {
+            // Disable premium status editing for elderly users
+            premiumStatusField.disabled = true;
+            premiumStatusField.title = 'Người cao tuổi không thể thay đổi trạng thái Premium';
+            
+            // Add visual indication that the field is disabled
+            premiumStatusField.style.backgroundColor = '#f8f9fa';
+            premiumStatusField.style.color = '#6c757d';
+            
+            // Show the informational note
+            premiumStatusNote.style.display = 'block';
+            
+            // If currently premium, keep it; if regular, keep it regular
+            // Don't change the current value when disabling
+        } else {
+            // Enable premium status editing for relative users
+            premiumStatusField.disabled = false;
+            premiumStatusField.title = '';
+            
+            // Reset visual styling
+            premiumStatusField.style.backgroundColor = '';
+            premiumStatusField.style.color = '';
+            
+            // Hide the informational note
+            premiumStatusNote.style.display = 'none';
+        }
+    });
+
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
         if (e.target === viewModal) closeViewModal();
@@ -691,7 +725,38 @@ function showEditModal(user, database) {
         document.getElementById('editBlood').value = user.blood || '';
         document.getElementById('editUserRole').value = user.user_role || 'relative';  // Set user role, default to 'relative'
         console.log('Setting role field value:', user.user_role || 'relative', 'from user data:', user.user_role);
-        document.getElementById('editPremiumStatus').value = user.premium_status ? '1' : '0';
+        
+        // Handle premium status based on user role
+        const premiumStatusField = document.getElementById('editPremiumStatus');
+        const premiumStatusNote = document.getElementById('premiumStatusNote');
+        const userRole = user.user_role || 'relative';
+        
+        if (userRole === 'elderly') {
+            // Disable premium status editing for elderly users
+            premiumStatusField.disabled = true;
+            premiumStatusField.value = user.premium_status ? '1' : '0';
+            premiumStatusField.title = 'Người cao tuổi không thể thay đổi trạng thái Premium';
+            
+            // Add visual indication that the field is disabled
+            premiumStatusField.style.backgroundColor = '#f8f9fa';
+            premiumStatusField.style.color = '#6c757d';
+            
+            // Show the informational note
+            premiumStatusNote.style.display = 'block';
+        } else {
+            // Enable premium status editing for relative users
+            premiumStatusField.disabled = false;
+            premiumStatusField.value = user.premium_status ? '1' : '0';
+            premiumStatusField.title = '';
+            
+            // Reset visual styling
+            premiumStatusField.style.backgroundColor = '';
+            premiumStatusField.style.color = '';
+            
+            // Hide the informational note
+            premiumStatusNote.style.display = 'none';
+        }
+        
         document.getElementById('editHeight').value = user.height || '';
         document.getElementById('editWeight').value = user.weight || '';
         document.getElementById('editSystolic').value = user.blood_pressure_systolic || '';
