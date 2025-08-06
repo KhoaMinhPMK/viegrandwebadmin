@@ -55,9 +55,21 @@ try {
         exit;
     }
     
-    // Find the premium subscription using the user's private_key as young_person_key
-    $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note FROM premium_subscriptions_json WHERE young_person_key = ?");
-    $premiumStmt->execute([$user['private_key']]);
+    $premium = null;
+    $isElderly = false;
+    
+    if ($user['role'] === 'relative') {
+        // For relative users, find subscription where they are the young_person_key
+        $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note FROM premium_subscriptions_json WHERE young_person_key = ?");
+        $premiumStmt->execute([$user['private_key']]);
+        $premium = $premiumStmt->fetch();
+    } else if ($user['role'] === 'elderly') {
+        // For elderly users, find subscription where their private_key is in elderly_keys JSON array
+        $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note FROM premium_subscriptions_json WHERE JSON_CONTAINS(elderly_keys, JSON_QUOTE(?))");
+        $premiumStmt->execute([$user['private_key']]);
+        $premium = $premiumStmt->fetch();
+        $isElderly = true;
+    }
     $premium = $premiumStmt->fetch();
     
     if (!$premium) {
@@ -102,7 +114,8 @@ try {
             'elderly_keys' => $elderlyKeys,
             'time_remaining_days' => $timeRemaining,
             'status' => $status,
-            'note' => $premium['note']
+            'note' => $premium['note'],
+            'is_elderly' => $isElderly
         ]
     ]);
     

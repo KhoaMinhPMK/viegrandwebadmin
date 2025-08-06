@@ -1437,14 +1437,15 @@ async function showPremiumDetails(userId, startDate = null, endDate = null, prem
         // Show/hide elderly management section based on user role
         const elderlySection = document.getElementById('elderlyManagementSection');
         if (elderlySection) {
-            if (premiumData.user_role === 'relative') {
+            // Show elderly management only for relative users (not for elderly users viewing their own premium)
+            if (premiumData.user_role === 'relative' && !premiumData.is_elderly) {
                 console.log('Showing elderly management section for relative user');
                 elderlySection.style.display = 'flex';
                 
                 // Load elderly list
                 loadElderlyList();
             } else {
-                console.log('Hiding elderly management section for non-relative user');
+                console.log('Hiding elderly management section - user is elderly or not a relative');
                 elderlySection.style.display = 'none';
             }
         }

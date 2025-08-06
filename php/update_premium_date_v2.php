@@ -52,8 +52,8 @@ try {
     // Convert to MySQL datetime format
     $formattedEndDate = $dateTime->format('Y-m-d H:i:s');
     
-    // First, get user's private_key
-    $userStmt = $pdo->prepare("SELECT private_key FROM user WHERE userId = ?");
+    // First, get user's private_key and role
+    $userStmt = $pdo->prepare("SELECT private_key, role FROM user WHERE userId = ?");
     $userStmt->execute([$userId]);
     $user = $userStmt->fetch();
     
@@ -62,9 +62,28 @@ try {
         exit;
     }
     
-    // Update the premium subscription end_date
-    $updateStmt = $pdo->prepare("UPDATE premium_subscriptions_json SET end_date = ? WHERE young_person_key = ?");
-    $success = $updateStmt->execute([$formattedEndDate, $user['private_key']]);
+    // Find the subscription - different logic for relative vs elderly users
+    $subscription = null;
+    if ($user['role'] === 'relative') {
+        // For relative users, find subscription where they are the young_person_key
+        $findStmt = $pdo->prepare("SELECT premium_key FROM premium_subscriptions_json WHERE young_person_key = ?");
+        $findStmt->execute([$user['private_key']]);
+        $subscription = $findStmt->fetch();
+    } else if ($user['role'] === 'elderly') {
+        // For elderly users, find subscription where their private_key is in elderly_keys
+        $findStmt = $pdo->prepare("SELECT premium_key FROM premium_subscriptions_json WHERE JSON_CONTAINS(elderly_keys, JSON_QUOTE(?))");
+        $findStmt->execute([$user['private_key']]);
+        $subscription = $findStmt->fetch();
+    }
+    
+    if (!$subscription) {
+        echo json_encode(['success' => false, 'message' => 'Premium subscription not found for this user']);
+        exit;
+    }
+    
+    // Update the premium subscription end_date using premium_key
+    $updateStmt = $pdo->prepare("UPDATE premium_subscriptions_json SET end_date = ? WHERE premium_key = ?");
+    $success = $updateStmt->execute([$formattedEndDate, $subscription['premium_key']]);
     
     if (!$success) {
         echo json_encode(['success' => false, 'message' => 'Failed to update premium end date']);
@@ -76,8 +95,8 @@ try {
     $updateUserStmt->execute([$formattedEndDate, $userId]);
     
     // Get updated subscription data to return
-    $updatedStmt = $pdo->prepare("SELECT start_date, end_date FROM premium_subscriptions_json WHERE young_person_key = ?");
-    $updatedStmt->execute([$user['private_key']]);
+    $updatedStmt = $pdo->prepare("SELECT start_date, end_date FROM premium_subscriptions_json WHERE premium_key = ?");
+    $updatedStmt->execute([$subscription['premium_key']]);
     $updatedData = $updatedStmt->fetch();
     
     echo json_encode([
