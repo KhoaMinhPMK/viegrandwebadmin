@@ -61,6 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
 
+// Debug: Log the received input
+error_log("Update user input received: " . json_encode($input));
+
 if (!$input || !isset($input['id'])) {
     echo json_encode([
         'success' => false, 
@@ -246,6 +249,10 @@ try {
     }
     
     if (empty($updateFields)) {
+        // Debug: Log what fields were processed
+        error_log("No update fields found. Input keys: " . json_encode(array_keys($input)));
+        error_log("Allowed fields: " . json_encode($allowedFields));
+        
         echo json_encode([
             'success' => false, 
             'message' => 'No fields to update. Please provide at least one field to modify.',
@@ -259,6 +266,10 @@ try {
     $params[] = $userId;
     
     $sql = "UPDATE user SET " . implode(', ', $updateFields) . ", updated_at = CURRENT_TIMESTAMP WHERE userId = ?";
+    
+    // Debug: Log the SQL and parameters
+    error_log("Update SQL: " . $sql);
+    error_log("Update params: " . json_encode($params));
     
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute($params);
@@ -278,6 +289,10 @@ try {
                     'username' => $updatedUser['userName'],
                     'email' => $updatedUser['email'],
                     'phone' => $updatedUser['phone'],
+                    'role' => $updatedUser['role'],
+                    'age' => $updatedUser['age'],
+                    'gender' => $updatedUser['gender'],
+                    'blood' => $updatedUser['blood'],
                     'premium_status' => $updatedUser['premium_status'],
                     'premium_start_date' => $updatedUser['premium_start_date'],
                     'premium_end_date' => $updatedUser['premium_end_date'],

@@ -147,6 +147,14 @@
                 <input type="text" id="mainPhone" placeholder="Số điện thoại mới">
             </div>
             <div class="form-group">
+                <label>Role:</label>
+                <select id="mainRole">
+                    <option value="">-- Chọn vai trò --</option>
+                    <option value="relative">Người thân</option>
+                    <option value="elderly">Người cao tuổi</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Age:</label>
                 <input type="number" id="mainAge" placeholder="Tuổi" min="0" max="150">
             </div>
@@ -277,6 +285,7 @@
                 userName: document.getElementById('mainUsername').value, // Note: userName for main DB
                 email: document.getElementById('mainEmail').value,
                 phone: document.getElementById('mainPhone').value,
+                role: document.getElementById('mainRole').value,
                 age: document.getElementById('mainAge').value,
                 gender: document.getElementById('mainGender').value,
                 blood: document.getElementById('mainBlood').value,
