@@ -1949,12 +1949,32 @@ body {
     cursor: pointer;
     background: linear-gradient(135deg, #fff3e0, #ffe0b2);
     box-shadow: 0 2px 8px rgba(245, 124, 0, 0.2);
+    position: relative;
+}
+
+.premium-badge.active.clickable::after {
+    content: '👆';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 0.6rem;
+    opacity: 0.7;
 }
 
 .premium-badge.active.clickable:hover {
     background: linear-gradient(135deg, #ffe0b2, #ffcc02);
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.05);
     box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
+}
+
+.premium-badge.active.clickable:hover::after {
+    opacity: 1;
+    animation: clickHint 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes clickHint {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); }
 }
 
 .premium-badge.active.clickable:active {
