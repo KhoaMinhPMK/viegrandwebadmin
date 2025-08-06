@@ -1266,11 +1266,7 @@ function showPremiumDetails(userId, startDate, endDate) {
     modal.style.display = 'block';
 }
     
-    // Calculate time remaining and status
-    updatePremiumStatus(cleanEndDate);
     
-    modal.style.display = 'block';
-}
 
 function closePremiumModal() {
     const modal = document.getElementById('premiumDetailsModal');
