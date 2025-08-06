@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Elderly Management APIs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Elderly Management APIs</h1>
+    
+    <div class="test-section">
+        <h3>Test Configuration</h3>
+        <label>Relative User ID: <input type="number" id="relativeUserId" value="65" placeholder="Enter relative user ID"></label><br><br>
+        <label>Elderly Private Key: <input type="text" id="elderlyPrivateKey" value="" placeholder="Enter elderly private key"></label><br><br>
+    </div>
+    
+    <div class="test-section">
+        <h3>1. Test Add Elderly to Premium</h3>
+        <button onclick="testAddElderly()">Test Add Elderly API</button>
+        <div id="addResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Get Elderly List</h3>
+        <button onclick="testGetElderly()">Test Get Elderly API</button>
+        <div id="getResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Remove Elderly from Premium</h3>
+        <button onclick="testRemoveElderly()">Test Remove Elderly API</button>
+        <div id="removeResult" class="result"></div>
+    </div>
+
+    <script>
+        async function testAddElderly() {
+            const relativeUserId = document.getElementById('relativeUserId').value;
+            const elderlyPrivateKey = document.getElementById('elderlyPrivateKey').value;
+            const resultDiv = document.getElementById('addResult');
+            
+            if (!relativeUserId || !elderlyPrivateKey) {
+                resultDiv.innerHTML = '<div class="error">Please enter both Relative User ID and Elderly Private Key</div>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="info">Testing Add Elderly API...</div>';
+                
+                const response = await fetch('../php/add_elderly_to_premium.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        relative_user_id: relativeUserId,
+                        elderly_private_key: elderlyPrivateKey
+                    })
+                });
+                
+                const responseText = await response.text();
+                console.log('Add Elderly Raw Response:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    resultDiv.innerHTML = `<div class="error">JSON Parse Error: ${parseError.message}<br><pre>${responseText}</pre></div>`;
+                    return;
+                }
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">✅ ${result.message}<br><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${result.message}<br><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Network Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testGetElderly() {
+            const relativeUserId = document.getElementById('relativeUserId').value;
+            const resultDiv = document.getElementById('getResult');
+            
+            if (!relativeUserId) {
+                resultDiv.innerHTML = '<div class="error">Please enter Relative User ID</div>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="info">Testing Get Elderly API...</div>';
+                
+                const response = await fetch(`../php/get_elderly_in_premium.php?user_id=${relativeUserId}`);
+                const responseText = await response.text();
+                console.log('Get Elderly Raw Response:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    resultDiv.innerHTML = `<div class="error">JSON Parse Error: ${parseError.message}<br><pre>${responseText}</pre></div>`;
+                    return;
+                }
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">✅ ${result.message}<br>Found ${result.data.length} elderly users<br><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${result.message}<br><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Network Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testRemoveElderly() {
+            const relativeUserId = document.getElementById('relativeUserId').value;
+            const elderlyPrivateKey = document.getElementById('elderlyPrivateKey').value;
+            const resultDiv = document.getElementById('removeResult');
+            
+            if (!relativeUserId || !elderlyPrivateKey) {
+                resultDiv.innerHTML = '<div class="error">Please enter both Relative User ID and Elderly Private Key</div>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="info">Testing Remove Elderly API...</div>';
+                
+                const response = await fetch('../php/remove_elderly_from_premium.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        relative_user_id: relativeUserId,
+                        elderly_private_key: elderlyPrivateKey
+                    })
+                });
+                
+                const responseText = await response.text();
+                console.log('Remove Elderly Raw Response:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    resultDiv.innerHTML = `<div class="error">JSON Parse Error: ${parseError.message}<br><pre>${responseText}</pre></div>`;
+                    return;
+                }
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">✅ ${result.message}<br><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${result.message}<br><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Network Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
