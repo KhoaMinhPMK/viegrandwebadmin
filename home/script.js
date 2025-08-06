@@ -157,11 +157,12 @@ function setupEventListeners() {
             const startDate = premiumBadge.getAttribute('data-start-date');
             const endDate = premiumBadge.getAttribute('data-end-date');
             const premiumKey = premiumBadge.getAttribute('data-premium-key');
+            const role = premiumBadge.getAttribute('data-role');
             
-            console.log('Premium badge clicked with data:', { userId, startDate, endDate, premiumKey });
+            console.log('Premium badge clicked with data:', { userId, startDate, endDate, premiumKey, role });
             
             if (userId) {
-                showPremiumDetails(userId, startDate, endDate, premiumKey);
+                showPremiumDetails(userId, startDate, endDate, premiumKey, role);
             } else {
                 console.error('No user ID found in premium badge');
                 alert('Lỗi: Không tìm thấy ID người dùng');
@@ -178,13 +179,14 @@ function setupEventListeners() {
                 const startDate = badge.getAttribute('data-start-date');
                 const endDate = badge.getAttribute('data-end-date');
                 const premiumKey = badge.getAttribute('data-premium-key');
+                const role = badge.getAttribute('data-role');
                 
-                console.log('Fallback click with data:', { userId, startDate, endDate, premiumKey });
+                console.log('Fallback click with data:', { userId, startDate, endDate, premiumKey, role });
                 
                 if (userId) {
                     e.preventDefault();
                     e.stopPropagation();
-                    showPremiumDetails(userId, startDate, endDate, premiumKey);
+                    showPremiumDetails(userId, startDate, endDate, premiumKey, role);
                 }
             }
         }
@@ -431,7 +433,7 @@ function displayMainUsers(users) {
         
         // Format premium status with clickable functionality for premium users
         const premiumStatus = user.premium_status ? 
-            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}" data-premium-key="${user.premium_key || ''}">
+            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}" data-premium-key="${user.premium_key || ''}" data-role="${user.role || ''}">
                 <i class="fas fa-crown"></i> Premium
             </span>` :
             '<span class="premium-badge inactive"><i class="fas fa-user"></i> Regular</span>';
@@ -485,7 +487,7 @@ function displayMainUsers(users) {
                     console.log('Direct premium badge click for user:', user.id);
                     e.preventDefault();
                     e.stopPropagation();
-                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date, user.premium_key);
+                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date, user.premium_key, user.role);
                 });
                 
                 // Also add a visual indicator that it's clickable
@@ -1383,11 +1385,12 @@ function setButtonSuccess(button) {
 // Premium Details Modal Functions
 let currentPremiumUserId = null;
 
-function showPremiumDetails(userId, startDate, endDate, premiumKey = null) {
+function showPremiumDetails(userId, startDate, endDate, premiumKey = null, userRole = null) {
     console.log('Opening premium details for user:', userId);
     console.log('Start date:', startDate);
     console.log('End date:', endDate);
     console.log('Premium key:', premiumKey);
+    console.log('User role:', userRole);
     
     // Validate inputs
     if (!userId) {
@@ -1404,6 +1407,16 @@ function showPremiumDetails(userId, startDate, endDate, premiumKey = null) {
         console.error('Premium details modal not found');
         alert('Lỗi: Không tìm thấy modal thông tin Premium');
         return;
+    }
+    
+    // Show/hide elderly management section based on user role
+    const elderlySection = document.getElementById('elderlyManagementSection');
+    if (elderlySection) {
+        if (userRole === 'relative') {
+            elderlySection.style.display = 'flex';
+        } else {
+            elderlySection.style.display = 'none';
+        }
     }
     
     // Reset edit form visibility
@@ -1617,3 +1630,211 @@ function formatDate(dateString) {
         return 'Ngày không hợp lệ';
     }
 }
+
+// ========== ELDERLY MANAGEMENT FUNCTIONALITY ==========
+
+function showAddElderlyForm() {
+    const addForm = document.getElementById('addElderlyForm');
+    const addButton = document.getElementById('addElderlyButton');
+    
+    if (addForm && addButton) {
+        addForm.style.display = 'block';
+        addButton.style.display = 'none';
+        
+        // Focus on input field
+        const keyInput = document.getElementById('elderlyPrivateKey');
+        if (keyInput) {
+            keyInput.focus();
+        }
+    }
+}
+
+function hideAddElderlyForm() {
+    const addForm = document.getElementById('addElderlyForm');
+    const addButton = document.getElementById('addElderlyButton');
+    
+    if (addForm && addButton) {
+        addForm.style.display = 'none';
+        addButton.style.display = 'block';
+        
+        // Clear input
+        const keyInput = document.getElementById('elderlyPrivateKey');
+        if (keyInput) {
+            keyInput.value = '';
+        }
+    }
+}
+
+async function addElderlyUser() {
+    const keyInput = document.getElementById('elderlyPrivateKey');
+    if (!keyInput) {
+        alert('Lỗi: Không tìm thấy trường nhập private key');
+        return;
+    }
+    
+    const privateKey = keyInput.value.trim();
+    if (!privateKey) {
+        alert('Vui lòng nhập private key của người cao tuổi');
+        keyInput.focus();
+        return;
+    }
+    
+    if (!currentPremiumUserId) {
+        alert('Lỗi: Không tìm thấy thông tin người dùng hiện tại');
+        return;
+    }
+    
+    try {
+        // Show loading state
+        const addButton = document.querySelector('#addElderlyForm .btn-primary');
+        if (addButton) {
+            addButton.disabled = true;
+            addButton.textContent = 'Đang thêm...';
+        }
+        
+        const response = await fetch('../php/add_elderly_to_premium.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                relative_user_id: currentPremiumUserId,
+                elderly_private_key: privateKey
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Thêm người cao tuổi thành công!');
+            hideAddElderlyForm();
+            
+            // Refresh elderly list
+            await loadElderlyList();
+        } else {
+            alert('Lỗi: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('Error adding elderly user:', error);
+        alert('Có lỗi xảy ra khi thêm người cao tuổi: ' + error.message);
+    } finally {
+        // Reset button state
+        const addButton = document.querySelector('#addElderlyForm .btn-primary');
+        if (addButton) {
+            addButton.disabled = false;
+            addButton.textContent = 'Thêm';
+        }
+    }
+}
+
+async function removeElderlyUser(elderlyPrivateKey) {
+    if (!confirm('Bạn có chắc chắn muốn xóa người cao tuổi này khỏi gói Premium?')) {
+        return;
+    }
+    
+    if (!currentPremiumUserId) {
+        alert('Lỗi: Không tìm thấy thông tin người dùng hiện tại');
+        return;
+    }
+    
+    try {
+        const response = await fetch('../php/remove_elderly_from_premium.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                relative_user_id: currentPremiumUserId,
+                elderly_private_key: elderlyPrivateKey
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Đã xóa người cao tuổi khỏi gói Premium');
+            
+            // Refresh elderly list
+            await loadElderlyList();
+        } else {
+            alert('Lỗi: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('Error removing elderly user:', error);
+        alert('Có lỗi xảy ra khi xóa người cao tuổi: ' + error.message);
+    }
+}
+
+async function loadElderlyList() {
+    if (!currentPremiumUserId) {
+        console.error('No current premium user ID');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`../php/get_elderly_in_premium.php?user_id=${currentPremiumUserId}`);
+        const result = await response.json();
+        
+        const elderlyList = document.getElementById('elderlyList');
+        if (!elderlyList) {
+            console.error('Elderly list container not found');
+            return;
+        }
+        
+        if (result.success && result.data && result.data.length > 0) {
+            // Display elderly users
+            elderlyList.innerHTML = result.data.map(elderly => `
+                <div class="elderly-item">
+                    <div class="elderly-info">
+                        <div class="elderly-private-key">${elderly.private_key}</div>
+                        <div class="elderly-user-info">
+                            ${elderly.full_name || 'Chưa có tên'} 
+                            ${elderly.phone ? `• ${elderly.phone}` : ''}
+                        </div>
+                    </div>
+                    <button class="remove-elderly-btn" onclick="removeElderlyUser('${elderly.private_key}')" 
+                            title="Xóa người cao tuổi">
+                        ×
+                    </button>
+                </div>
+            `).join('');
+        } else {
+            // Show empty state
+            elderlyList.innerHTML = `
+                <div class="elderly-empty-state">
+                    Chưa có người cao tuổi nào trong gói Premium này
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Error loading elderly list:', error);
+        const elderlyList = document.getElementById('elderlyList');
+        if (elderlyList) {
+            elderlyList.innerHTML = `
+                <div class="elderly-empty-state">
+                    Lỗi khi tải danh sách người cao tuổi
+                </div>
+            `;
+        }
+    }
+}
+
+// Initialize elderly list when premium details modal is opened
+document.addEventListener('DOMContentLoaded', function() {
+    // Override the showPremiumDetails function to include elderly list loading
+    const originalShowPremiumDetails = window.showPremiumDetails;
+    window.showPremiumDetails = function(userId, startDate, endDate, premiumKey = null, userRole = null) {
+        // Call the original function
+        originalShowPremiumDetails(userId, startDate, endDate, premiumKey, userRole);
+        
+        // Load elderly list after modal is shown (only for relative users)
+        if (userRole === 'relative') {
+            setTimeout(() => {
+                loadElderlyList();
+            }, 100);
+        }
+    };
+});

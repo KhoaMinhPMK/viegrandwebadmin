@@ -867,6 +867,30 @@
                             <label><i class="fas fa-info-circle"></i> Trạng thái:</label>
                             <span id="premiumStatusText" class="status-active">Đang hoạt động</span>
                         </div>
+                        
+                        <!-- Elderly Management Section -->
+                        <div class="detail-row elderly-management-section">
+                            <label><i class="fas fa-users"></i> Quản lý người cao tuổi:</label>
+                            <div class="elderly-management-container">
+                                <div class="elderly-list" id="elderlyList">
+                                    <!-- Elderly users will be populated here -->
+                                </div>
+                                <div class="add-elderly-form" id="addElderlyForm" style="display: none;">
+                                    <input type="text" id="elderlyPrivateKey" placeholder="Nhập Private Key của người cao tuổi" class="elderly-key-input">
+                                    <div class="add-elderly-buttons">
+                                        <button class="btn btn-primary btn-sm" id="confirmAddElderly">
+                                            <i class="fas fa-plus"></i> Thêm
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" id="cancelAddElderly">
+                                            <i class="fas fa-times"></i> Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" id="showAddElderlyBtn">
+                                    <i class="fas fa-user-plus"></i> Thêm người cao tuổi
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

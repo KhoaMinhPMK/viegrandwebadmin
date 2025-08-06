@@ -2158,6 +2158,121 @@ body {
     gap: 0.5rem;
 }
 
+/* Elderly Management Section */
+.elderly-management-section {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+.elderly-management-container {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.elderly-list {
+    margin-bottom: 1rem;
+}
+
+.elderly-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.elderly-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.elderly-private-key {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #1976d2;
+    font-weight: 600;
+}
+
+.elderly-user-info {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.remove-elderly-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.remove-elderly-btn:hover {
+    background-color: #d32f2f;
+    transform: scale(1.1);
+}
+
+.add-elderly-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.elderly-key-input {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.add-elderly-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.btn-outline-primary:hover {
+    background: #007bff;
+    color: white;
+}
+
+.elderly-empty-state {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px dashed #dee2e6;
+}
+
 .edit-end-date-btn {
     background: #f57c00;
     color: white;
