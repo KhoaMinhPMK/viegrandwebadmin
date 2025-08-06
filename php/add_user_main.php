@@ -143,14 +143,15 @@ try {
                 // Insert into premium_subscriptions_json
                 $premiumInsertStmt = $pdo->prepare("
                     INSERT INTO premium_subscriptions_json 
-                    (premium_key, young_person_key, elderly_keys, start_date, end_date) 
-                    VALUES (?, ?, '[]', ?, ?)
+                    (premium_key, young_person_key, elderly_keys, start_date, end_date, note) 
+                    VALUES (?, ?, '[]', ?, ?, ?)
                 ");
                 $premiumInsertStmt->execute([
                     $premiumKey,
                     $private_key,
                     $premium_start_date,
-                    $premium_end_date
+                    $premium_end_date,
+                    'Subscription by admin'
                 ]);
                 
             } catch (Exception $e) {
