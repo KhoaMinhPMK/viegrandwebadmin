@@ -661,6 +661,28 @@ async function saveChanges() {
         const result = await response.json();
         console.log('API Response:', result);
         
+        // Check if this was a premium upgrade or downgrade
+        if (result.success && result.data) {
+            if (result.data.premium_upgraded) {
+                const startDate = result.data.premium_start_date;
+                const endDate = result.data.premium_end_date;
+                
+                // Show premium upgrade notification
+                const message = `🎉 Tài khoản đã được nâng cấp lên Premium!\n\n` +
+                              `📅 Ngày bắt đầu: ${formatDate(startDate)}\n` +
+                              `📅 Ngày kết thúc: ${formatDate(endDate)}\n\n` +
+                              `Gói Premium có hiệu lực trong 30 ngày.`;
+                
+                alert(message);
+            } else if (result.data.premium_downgraded) {
+                // Show premium downgrade notification
+                const message = `⬇️ Tài khoản đã được chuyển từ Premium về Regular.\n\n` +
+                              `Các quyền lợi Premium đã bị hủy bỏ.`;
+                
+                alert(message);
+            }
+        }
+        
         console.log('Edit operation completed:', result.success ? 'success' : 'failed');
         closeEditModal();
         

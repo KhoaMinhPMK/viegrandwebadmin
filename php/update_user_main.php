@@ -139,6 +139,46 @@ try {
         }
     }
     
+    // Check if premium_status is being changed
+    $isPremiumUpgrade = false;
+    $isPremiumDowngrade = false;
+    
+    if (isset($input['premium_status'])) {
+        // Check current premium status to see if this is an upgrade or downgrade
+        $currentStatusStmt = $pdo->prepare("SELECT premium_status FROM user WHERE userId = ?");
+        $currentStatusStmt->execute([$userId]);
+        $currentUser = $currentStatusStmt->fetch();
+        
+        if ($currentUser) {
+            if ($input['premium_status'] == '1' && $currentUser['premium_status'] != '1') {
+                // Upgrading to premium
+                $isPremiumUpgrade = true;
+            } elseif ($input['premium_status'] == '0' && $currentUser['premium_status'] == '1') {
+                // Downgrading from premium
+                $isPremiumDowngrade = true;
+            }
+        }
+    }
+    
+    // Add premium dates if upgrading to premium
+    if ($isPremiumUpgrade) {
+        $now = new DateTime();
+        $endDate = clone $now;
+        $endDate->add(new DateInterval('P30D')); // Add 30 days
+        
+        $updateFields[] = "premium_start_date = ?";
+        $params[] = $now->format('Y-m-d H:i:s');
+        
+        $updateFields[] = "premium_end_date = ?";
+        $params[] = $endDate->format('Y-m-d H:i:s');
+    }
+    
+    // Clear premium dates if downgrading from premium
+    if ($isPremiumDowngrade) {
+        $updateFields[] = "premium_start_date = NULL";
+        $updateFields[] = "premium_end_date = NULL";
+    }
+    
     if (empty($updateFields)) {
         echo json_encode([
             'success' => false, 
@@ -173,7 +213,11 @@ try {
                     'email' => $updatedUser['email'],
                     'phone' => $updatedUser['phone'],
                     'premium_status' => $updatedUser['premium_status'],
-                    'updated_at' => $updatedUser['updated_at']
+                    'premium_start_date' => $updatedUser['premium_start_date'],
+                    'premium_end_date' => $updatedUser['premium_end_date'],
+                    'updated_at' => $updatedUser['updated_at'],
+                    'premium_upgraded' => $isPremiumUpgrade,
+                    'premium_downgraded' => $isPremiumDowngrade
                 ]
             ]);
         } else {
