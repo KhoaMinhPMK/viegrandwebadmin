@@ -80,16 +80,36 @@ try {
         exit;
     }
     
+    // Check if this elderly person is already in another premium subscription (privacy protection)
+    $existingPremiumStmt = $pdo->prepare("SELECT premium_key, young_person_key FROM premium_subscriptions_json WHERE JSON_CONTAINS(elderly_keys, JSON_QUOTE(?))");
+    $existingPremiumStmt->execute([$elderlyPrivateKey]);
+    $existingPremium = $existingPremiumStmt->fetch();
+    
+    if ($existingPremium) {
+        // Check if it's the same premium subscription (trying to add again to same premium)
+        if ($existingPremium['premium_key'] === $premium['premium_key']) {
+            echo json_encode(['success' => false, 'message' => 'Người cao tuổi này đã có trong gói Premium này rồi']);
+            exit;
+        }
+        
+        // Different premium subscription - privacy violation
+        $existingYoungStmt = $pdo->prepare("SELECT userName FROM user WHERE private_key = ?");
+        $existingYoungStmt->execute([$existingPremium['young_person_key']]);
+        $existingYoung = $existingYoungStmt->fetch();
+        
+        $existingYoungName = $existingYoung ? $existingYoung['userName'] : 'Unknown User';
+        
+        echo json_encode([
+            'success' => false, 
+            'message' => "Người cao tuổi này đã được thêm vào gói Premium của '{$existingYoungName}'. Mỗi người cao tuổi chỉ có thể tham gia một gói Premium duy nhất để bảo vệ quyền riêng tư."
+        ]);
+        exit;
+    }
+    
     // Parse existing elderly_keys array
     $elderlyKeys = json_decode($premium['elderly_keys'], true);
     if (!is_array($elderlyKeys)) {
         $elderlyKeys = [];
-    }
-    
-    // Check if this elderly user is already added
-    if (in_array($elderlyPrivateKey, $elderlyKeys)) {
-        echo json_encode(['success' => false, 'message' => 'This elderly user is already in the premium subscription']);
-        exit;
     }
     
     // Add the elderly private key to the array
