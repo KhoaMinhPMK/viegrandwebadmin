@@ -311,6 +311,7 @@ function displayAdminUsers(users) {
 
     users.forEach(user => {
         const row = document.createElement('tr');
+        row.setAttribute('data-user-id', user.id);
         row.innerHTML = `
             <td>
                 <div class="user-avatar" title="${user.full_name}">
@@ -467,6 +468,7 @@ function displayMainUsers(users) {
 
     users.forEach(user => {
         const row = document.createElement('tr');
+        row.setAttribute('data-user-id', user.id);
         
         // Format health info
         const healthInfoHtml = formatHealthInfoHtml(user.health_info);
@@ -2088,12 +2090,11 @@ async function deleteAllUsers(database) {
             button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Đang xóa... ${progress}%</span>`;
             
             try {
-                const response = await fetch(`../php/delete_user_${database}.php`, {
-                    method: 'POST',
+                const response = await fetch(`../php/delete_user_${database}.php?id=${userId}`, {
+                    method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ id: userId })
+                    }
                 });
                 
                 const result = await response.json();
