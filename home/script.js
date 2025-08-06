@@ -108,11 +108,14 @@ function setupEventListeners() {
     // Event delegation for premium badge clicks
     document.addEventListener('click', function(e) {
         console.log('Document click detected on:', e.target);
+        console.log('Target classes:', e.target.className);
+        console.log('Parent elements:', e.target.parentElement);
         
         // Check if clicked element or its parent is a clickable premium badge
         const premiumBadge = e.target.closest('.premium-badge.clickable');
         if (premiumBadge) {
             console.log('Premium badge found:', premiumBadge);
+            console.log('Premium badge classes:', premiumBadge.className);
             e.preventDefault();
             e.stopPropagation();
             
@@ -127,6 +130,26 @@ function setupEventListeners() {
             } else {
                 console.error('No user ID found in premium badge');
                 alert('Lỗi: Không tìm thấy ID người dùng');
+            }
+        }
+        
+        // Additional fallback for direct clicks on premium text or icon
+        if (e.target.closest('.premium-badge.active')) {
+            const badge = e.target.closest('.premium-badge.active');
+            console.log('Fallback premium badge click detected:', badge);
+            
+            if (badge.classList.contains('clickable')) {
+                const userId = badge.getAttribute('data-user-id');
+                const startDate = badge.getAttribute('data-start-date');
+                const endDate = badge.getAttribute('data-end-date');
+                
+                console.log('Fallback click with data:', { userId, startDate, endDate });
+                
+                if (userId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showPremiumDetails(userId, startDate, endDate);
+                }
             }
         }
     });
@@ -326,7 +349,7 @@ function displayMainUsers(users) {
         
         // Format premium status with clickable functionality for premium users
         const premiumStatus = user.premium_status ? 
-            `<span class="premium-badge active clickable" data-user-id="${user.userId}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}">
+            `<span class="premium-badge active clickable" data-user-id="${user.id}" data-start-date="${user.premium_start_date || ''}" data-end-date="${user.premium_end_date || ''}">
                 <i class="fas fa-crown"></i> Premium
             </span>` :
             '<span class="premium-badge inactive"><i class="fas fa-user"></i> Regular</span>';
@@ -372,6 +395,24 @@ function displayMainUsers(users) {
             </td>
         `;
         tbody.appendChild(row);
+        
+        // Add direct click handler to premium badge if it exists
+        if (user.premium_status) {
+            const premiumBadgeElement = row.querySelector('.premium-badge.clickable');
+            if (premiumBadgeElement) {
+                console.log('Adding direct click handler to premium badge for user:', user.id);
+                premiumBadgeElement.addEventListener('click', function(e) {
+                    console.log('Direct premium badge click for user:', user.id);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showPremiumDetails(user.id, user.premium_start_date, user.premium_end_date);
+                });
+                
+                // Also add a visual indicator that it's clickable
+                premiumBadgeElement.style.cursor = 'pointer';
+                premiumBadgeElement.title = 'Nhấp để xem chi tiết Premium';
+            }
+        }
     });
 
     document.getElementById('mainUsersTable').style.display = 'table';
