@@ -93,7 +93,21 @@ function setupEventListeners() {
         filterTable('main', e.target.value);
     });
 
-    // Delete all buttons
+    // Clear search functionality
+    document.getElementById('adminClearSearch').addEventListener('click', () => {
+        const input = document.getElementById('adminSearchInput');
+        input.value = '';
+        filterTable('admin', '');
+        input.focus();
+    });
+    document.getElementById('mainClearSearch').addEventListener('click', () => {
+        const input = document.getElementById('mainSearchInput');
+        input.value = '';
+        filterTable('main', '');
+        input.focus();
+    });
+
+    // Delete all buttons with enhanced UX
     document.getElementById('deleteAllAdminBtn').addEventListener('click', () => {
         deleteAllUsers('admin');
     });
@@ -1933,6 +1947,7 @@ function filterTable(database, searchTerm) {
     const table = document.getElementById(tableId);
     const tbody = table.querySelector('tbody');
     const rows = tbody.querySelectorAll('tr');
+    const searchInput = document.getElementById(database === 'admin' ? 'adminSearchInput' : 'mainSearchInput');
     
     const searchTermLower = searchTerm.toLowerCase().trim();
     let visibleCount = 0;
@@ -1941,65 +1956,96 @@ function filterTable(database, searchTerm) {
         // Show all rows if search is empty
         rows.forEach(row => {
             row.style.display = '';
+            row.style.opacity = '1';
+            row.style.transform = 'translateX(0)';
             visibleCount++;
         });
-        updateSearchResults(database, visibleCount, rows.length);
+        updateSearchResults(database, visibleCount, rows.length, '');
         return;
     }
     
-    rows.forEach(row => {
+    rows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
         let found = false;
+        let matchedText = '';
         
         // Search in specific columns (skip avatar and action columns)
         for (let i = 1; i < cells.length - 1; i++) {
             const cellText = cells[i].textContent.toLowerCase();
             if (cellText.includes(searchTermLower)) {
                 found = true;
+                matchedText = cells[i].textContent;
                 break;
             }
         }
         
         if (found) {
             row.style.display = '';
+            row.style.opacity = '1';
+            row.style.transform = 'translateX(0)';
+            // Add subtle highlight animation
+            setTimeout(() => {
+                row.style.transition = 'all 0.3s ease';
+                row.style.backgroundColor = 'rgba(46, 134, 171, 0.05)';
+                setTimeout(() => {
+                    row.style.backgroundColor = '';
+                }, 300);
+            }, index * 50);
             visibleCount++;
         } else {
-            row.style.display = 'none';
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '0.3';
+            row.style.transform = 'translateX(-10px)';
+            setTimeout(() => {
+                row.style.display = 'none';
+            }, 300);
         }
     });
     
-    updateSearchResults(database, visibleCount, rows.length);
+    updateSearchResults(database, visibleCount, rows.length, searchTerm);
 }
 
-// Update search results counter
-function updateSearchResults(database, visible, total) {
+// Update search results counter with enhanced visual feedback
+function updateSearchResults(database, visible, total, searchTerm) {
     const searchInput = document.getElementById(database === 'admin' ? 'adminSearchInput' : 'mainSearchInput');
+    const searchContainer = searchInput.parentElement;
     
     if (visible === total) {
-        searchInput.style.borderColor = '#e0e6ed';
+        searchInput.style.borderColor = '#e3e8ef';
         searchInput.title = '';
+        searchContainer.classList.remove('search-active', 'search-no-results');
+    } else if (visible === 0 && searchTerm) {
+        searchInput.style.borderColor = '#e74c3c';
+        searchInput.title = `Không tìm thấy kết quả cho "${searchTerm}"`;
+        searchContainer.classList.add('search-no-results');
+        searchContainer.classList.remove('search-active');
     } else {
-        searchInput.style.borderColor = '#2E86AB';
-        searchInput.title = `Hiển thị ${visible} trong tổng số ${total} người dùng`;
+        searchInput.style.borderColor = '#28a745';
+        searchInput.title = `Tìm thấy ${visible} trong tổng số ${total} người dùng`;
+        searchContainer.classList.add('search-active');
+        searchContainer.classList.remove('search-no-results');
     }
 }
 
-// Delete all users functionality
+// Delete all users functionality with enhanced UX
 async function deleteAllUsers(database) {
     const databaseName = database === 'admin' ? 'Admin Database' : 'Main Database';
     const tableId = database === 'admin' ? 'adminUsersTable' : 'mainUsersTable';
     const table = document.getElementById(tableId);
     const tbody = table.querySelector('tbody');
-    const rows = tbody.querySelectorAll('tr');
+    const rows = tbody.querySelectorAll('tr[style=""], tr:not([style*="display: none"])'); // Only visible rows
     
     if (rows.length === 0) {
-        alert(`Không có người dùng nào trong ${databaseName} để xóa.`);
+        // Create custom alert for better UX
+        showCustomAlert('info', `Không có người dùng nào trong ${databaseName} để xóa.`);
         return;
     }
     
     const confirmed = confirm(
-        `⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa TẤT CẢ ${rows.length} người dùng trong ${databaseName}?\n\n` +
-        `Hành động này KHÔNG THỂ HOÀN TÁC!\n\n` +
+        `⚠️ CẢNH BÁO NGHIÊM TRỌNG ⚠️\n\n` +
+        `Bạn có chắc chắn muốn xóa TẤT CẢ ${rows.length} người dùng trong ${databaseName}?\n\n` +
+        `🔥 HÀNH ĐỘNG NÀY KHÔNG THỂ HOÀN TÁC!\n` +
+        `💾 Tất cả dữ liệu sẽ bị xóa vĩnh viễn!\n\n` +
         `Nhấn OK để tiếp tục hoặc Cancel để hủy bỏ.`
     );
     
@@ -2009,8 +2055,10 @@ async function deleteAllUsers(database) {
     
     // Second confirmation for extra safety
     const doubleConfirmed = confirm(
-        `🔥 XÁC NHẬN LẦN CUỐI: Bạn thực sự muốn xóa TẤT CẢ người dùng trong ${databaseName}?\n\n` +
-        `Đây là cơ hội cuối cùng để hủy bỏ!`
+        `� XÁC NHẬN LẦN CUỐI 🚨\n\n` +
+        `Bạn THỰC SỰ muốn xóa TẤT CẢ ${rows.length} người dùng?\n\n` +
+        `⏰ Đây là cơ hội cuối cùng để hủy bỏ!\n` +
+        `🛑 Sau bước này sẽ không thể khôi phục!`
     );
     
     if (!doubleConfirmed) {
@@ -2018,19 +2066,26 @@ async function deleteAllUsers(database) {
     }
     
     const button = document.getElementById(database === 'admin' ? 'deleteAllAdminBtn' : 'deleteAllMainBtn');
-    const originalText = button.innerHTML;
+    const originalHTML = button.innerHTML;
     
     try {
-        // Show loading state
+        // Enhanced loading state
         button.disabled = true;
+        button.classList.add('loading');
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang xóa...</span>';
         
         let successCount = 0;
         let errorCount = 0;
+        const totalRows = rows.length;
         
-        // Delete users one by one
-        for (const row of rows) {
+        // Delete users one by one with progress feedback
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
             const userId = row.getAttribute('data-user-id');
+            
+            // Update progress
+            const progress = Math.round(((i + 1) / totalRows) * 100);
+            button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Đang xóa... ${progress}%</span>`;
             
             try {
                 const response = await fetch(`../php/delete_user_${database}.php`, {
@@ -2045,7 +2100,11 @@ async function deleteAllUsers(database) {
                 
                 if (result.success) {
                     successCount++;
-                    row.remove(); // Remove row from table immediately
+                    // Add fade out animation
+                    row.style.transition = 'all 0.5s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-100%)';
+                    setTimeout(() => row.remove(), 500);
                 } else {
                     errorCount++;
                     console.error(`Failed to delete user ${userId}:`, result.message);
@@ -2054,28 +2113,45 @@ async function deleteAllUsers(database) {
                 errorCount++;
                 console.error(`Error deleting user ${userId}:`, error);
             }
+            
+            // Small delay to show progress
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        // Show results
+        // Show enhanced results
         if (errorCount === 0) {
-            alert(`✅ Đã xóa thành công tất cả ${successCount} người dùng trong ${databaseName}!`);
+            showCustomAlert('success', `✅ Hoàn thành!\n\nĐã xóa thành công tất cả ${successCount} người dùng trong ${databaseName}!`);
         } else {
-            alert(`⚠️ Kết quả xóa:\n• Thành công: ${successCount} người dùng\n• Thất bại: ${errorCount} người dùng\n\nVui lòng kiểm tra console để biết chi tiết lỗi.`);
+            showCustomAlert('warning', 
+                `⚠️ Kết quả xóa:\n\n` +
+                `✅ Thành công: ${successCount} người dùng\n` +
+                `❌ Thất bại: ${errorCount} người dùng\n\n` +
+                `Vui lòng kiểm tra console để biết chi tiết lỗi.`
+            );
         }
         
         // Reload the table to ensure consistency
-        if (database === 'admin') {
-            loadAdminUsers();
-        } else {
-            loadMainUsers();
-        }
+        setTimeout(() => {
+            if (database === 'admin') {
+                loadAdminUsers();
+            } else {
+                loadMainUsers();
+            }
+        }, 1000);
         
     } catch (error) {
         console.error('Error in delete all operation:', error);
-        alert(`❌ Có lỗi xảy ra trong quá trình xóa: ${error.message}`);
+        showCustomAlert('error', `❌ Có lỗi nghiêm trọng xảy ra!\n\n${error.message}`);
     } finally {
         // Reset button state
         button.disabled = false;
-        button.innerHTML = originalText;
+        button.classList.remove('loading');
+        button.innerHTML = originalHTML;
     }
+}
+
+// Custom alert function for better UX
+function showCustomAlert(type, message) {
+    // For now, use regular alert, but this could be enhanced with a custom modal
+    alert(message);
 }

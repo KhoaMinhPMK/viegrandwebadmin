@@ -328,62 +328,167 @@ body {
 }
 
 .search-input {
-    background: white;
-    border: 2px solid #e0e6ed;
-    border-radius: 25px;
-    padding: 0.75rem 2.5rem 0.75rem 1rem;
-    font-size: 0.9rem;
-    width: 250px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e3e8ef;
+    border-radius: 30px;
+    padding: 0.875rem 3rem 0.875rem 1.25rem;
+    font-size: 0.95rem;
+    width: 280px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    font-weight: 500;
+    color: #495057;
+    outline: none;
 }
 
 .search-input:focus {
-    outline: none;
     border-color: #2E86AB;
-    box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
-    transform: scale(1.02);
+    box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 5px 20px rgba(46, 134, 171, 0.2);
+    transform: translateY(-2px);
+    background: #ffffff;
 }
 
 .search-input::placeholder {
-    color: #6c757d;
+    color: #8a9ba8;
     font-style: italic;
+    font-weight: 400;
+    transition: color 0.3s ease;
+}
+
+.search-input:focus::placeholder {
+    color: #c1ccd7;
 }
 
 .search-icon {
     position: absolute;
-    right: 1rem;
-    color: #6c757d;
-    font-size: 0.9rem;
+    right: 3.5rem;
+    color: #8a9ba8;
+    font-size: 1rem;
     pointer-events: none;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    z-index: 1;
 }
 
 .search-input:focus + .search-icon {
     color: #2E86AB;
+    transform: scale(1.1);
+}
+
+/* Clear search button */
+.clear-search-btn {
+    position: absolute;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #8a9ba8;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: scale(0.8);
+    z-index: 2;
+}
+
+.search-input:not(:placeholder-shown) ~ .clear-search-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.clear-search-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    transform: scale(1.1);
+}
+
+/* Search container states */
+.search-container.search-active .search-input {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.15), 0 5px 20px rgba(40, 167, 69, 0.2);
+}
+
+.search-container.search-active .search-icon {
+    color: #28a745 !important;
+}
+
+.search-container.search-no-results .search-input {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.15), 0 5px 20px rgba(231, 76, 60, 0.2);
+    animation: searchShake 0.5s ease-in-out;
+}
+
+.search-container.search-no-results .search-icon {
+    color: #e74c3c !important;
+}
+
+@keyframes searchShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Enhanced delete button states */
+.delete-all-btn:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 35px rgba(231, 76, 60, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Loading state improvements */
+.delete-all-btn.loading {
+    pointer-events: none;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    animation: loadingPulse 1.5s infinite;
+}
+
+.delete-all-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes loadingPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Enhanced search input with active state */
+.search-input:not(:placeholder-shown) {
+    border-color: #28a745;
+    background: linear-gradient(145deg, #f8fff9 0%, #ffffff 100%);
+}
+
+.search-input:not(:placeholder-shown) + .search-icon {
+    color: #28a745;
 }
 
 /* Delete All Button Styling */
 .delete-all-btn {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 50%, #a93226 100%);
     color: white;
     border: none;
-    padding: 0.875rem 1.5rem;
-    border-radius: 30px;
+    padding: 0.875rem 1.75rem;
+    border-radius: 35px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.9rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    gap: 0.625rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
     position: relative;
     overflow: hidden;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    min-width: 140px;
+    letter-spacing: 0.8px;
+    min-width: 155px;
     justify-content: center;
+    border: 2px solid transparent;
 }
 
 .delete-all-btn::before {
@@ -393,40 +498,90 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    transition: left 0.6s ease;
 }
 
 .delete-all-btn:hover::before {
     left: 100%;
 }
 
+.delete-all-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+.delete-all-btn:hover::after {
+    width: 300px;
+    height: 300px;
+}
+
 .delete-all-btn:hover {
-    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 35px rgba(231, 76, 60, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .delete-all-btn:active {
-    transform: translateY(-1px) scale(1.01);
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+}
+
+.delete-all-btn:disabled {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 3px 10px rgba(149, 165, 166, 0.3);
 }
 
 .delete-all-btn i {
-    font-size: 1rem;
-    transition: transform 0.3s ease;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    z-index: 1;
+    position: relative;
 }
 
 .delete-all-btn:hover i {
-    transform: scale(1.1);
+    transform: scale(1.15) rotate(-5deg);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .delete-all-btn span {
     transition: all 0.3s ease;
+    z-index: 1;
+    position: relative;
+    font-weight: 700;
 }
 
 .delete-all-btn:hover span {
-    transform: translateX(2px);
+    transform: translateX(3px);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Pulsing effect for danger state */
+.delete-all-btn.danger-pulse {
+    animation: dangerPulse 2s infinite;
+}
+
+@keyframes dangerPulse {
+    0% {
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    }
+    50% {
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+    }
+    100% {
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    }
 }
 
 #addAdminBtn:hover {
@@ -1301,7 +1456,20 @@ body {
     
     .search-input {
         width: 100%;
-        padding: 1rem 2.5rem 1rem 1rem;
+        padding: 1rem 3.5rem 1rem 1.25rem;
+        font-size: 1rem;
+        border-radius: 25px;
+    }
+    
+    .search-icon {
+        right: 3.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .clear-search-btn {
+        right: 1rem;
+        width: 1.75rem;
+        height: 1.75rem;
         font-size: 1rem;
     }
     
