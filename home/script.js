@@ -1398,12 +1398,8 @@ function setButtonSuccess(button) {
 // Premium Details Modal Functions
 let currentPremiumUserId = null;
 
-function showPremiumDetails(userId, startDate, endDate, premiumKey = null, userRole = null) {
+async function showPremiumDetails(userId, startDate = null, endDate = null, premiumKey = null, userRole = null) {
     console.log('Opening premium details for user:', userId);
-    console.log('Start date:', startDate);
-    console.log('End date:', endDate);
-    console.log('Premium key:', premiumKey);
-    console.log('User role:', userRole);
     
     // Validate inputs
     if (!userId) {
@@ -1422,96 +1418,167 @@ function showPremiumDetails(userId, startDate, endDate, premiumKey = null, userR
         return;
     }
     
-    // Show/hide elderly management section based on user role
-    const elderlySection = document.getElementById('elderlyManagementSection');
-    console.log('Elderly section element:', elderlySection);
-    console.log('User role for elderly management:', userRole);
-    
-    if (elderlySection) {
-        if (userRole === 'relative') {
-            console.log('Showing elderly management section for relative user');
-            elderlySection.style.display = 'flex';
-        } else {
-            console.log('Hiding elderly management section for non-relative user');
-            elderlySection.style.display = 'none';
-        }
-    } else {
-        console.error('Elderly management section not found in DOM');
-    }
-    
-    // Reset edit form visibility
-    hideEditEndDateForm();
-    
-    // Display premium key
-    const premiumKeyElement = document.getElementById('premiumKey');
-    if (premiumKeyElement) {
-        premiumKeyElement.textContent = premiumKey || 'Chưa có thông tin';
-        premiumKeyElement.title = premiumKey ? 'Click để sao chép Premium Key' : '';
+    try {
+        // Show loading state
+        showPremiumModalLoading(true);
         
-        // Add click-to-copy functionality for premium key
-        if (premiumKey) {
-            premiumKeyElement.style.cursor = 'pointer';
-            premiumKeyElement.onclick = function() {
-                navigator.clipboard.writeText(premiumKey).then(function() {
-                    // Show temporary feedback
-                    const originalText = premiumKeyElement.textContent;
-                    premiumKeyElement.textContent = 'Đã sao chép!';
-                    premiumKeyElement.style.backgroundColor = '#d4edda';
-                    premiumKeyElement.style.color = '#155724';
-                    
-                    setTimeout(function() {
-                        premiumKeyElement.textContent = originalText;
-                        premiumKeyElement.style.backgroundColor = '';
-                        premiumKeyElement.style.color = '';
-                    }, 1500);
-                }).catch(function(err) {
-                    console.error('Could not copy premium key: ', err);
-                    alert('Không thể sao chép Premium Key');
-                });
-            };
-        } else {
-            premiumKeyElement.style.cursor = 'default';
-            premiumKeyElement.onclick = null;
+        // Fetch premium subscription details from the API
+        const response = await fetch(`../php/get_premium_details.php?user_id=${userId}`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            alert('Lỗi: ' + result.message);
+            return;
         }
+        
+        const premiumData = result.data;
+        console.log('Premium subscription data:', premiumData);
+        
+        // Show/hide elderly management section based on user role
+        const elderlySection = document.getElementById('elderlyManagementSection');
+        if (elderlySection) {
+            if (premiumData.user_role === 'relative') {
+                console.log('Showing elderly management section for relative user');
+                elderlySection.style.display = 'flex';
+                
+                // Load elderly list
+                loadElderlyList();
+            } else {
+                console.log('Hiding elderly management section for non-relative user');
+                elderlySection.style.display = 'none';
+            }
+        }
+        
+        // Reset edit form visibility
+        hideEditEndDateForm();
+        
+        // Display premium key
+        const premiumKeyElement = document.getElementById('premiumKey');
+        if (premiumKeyElement) {
+            premiumKeyElement.textContent = premiumData.premium_key || 'Chưa có thông tin';
+            premiumKeyElement.title = premiumData.premium_key ? 'Click để sao chép Premium Key' : '';
+            
+            // Add click-to-copy functionality for premium key
+            if (premiumData.premium_key) {
+                premiumKeyElement.style.cursor = 'pointer';
+                premiumKeyElement.onclick = function() {
+                    navigator.clipboard.writeText(premiumData.premium_key).then(function() {
+                        // Show temporary feedback
+                        const originalText = premiumKeyElement.textContent;
+                        premiumKeyElement.textContent = 'Đã sao chép!';
+                        premiumKeyElement.style.backgroundColor = '#d4edda';
+                        premiumKeyElement.style.color = '#155724';
+                        
+                        setTimeout(function() {
+                            premiumKeyElement.textContent = originalText;
+                            premiumKeyElement.style.backgroundColor = '';
+                            premiumKeyElement.style.color = '';
+                        }, 1500);
+                    }).catch(function(err) {
+                        console.error('Could not copy premium key: ', err);
+                        alert('Không thể sao chép Premium Key');
+                    });
+                };
+            } else {
+                premiumKeyElement.style.cursor = 'default';
+                premiumKeyElement.onclick = null;
+            }
+        }
+        
+        // Format and display dates from subscription table
+        const startDateElement = document.getElementById('premiumStartDate');
+        const endDateElement = document.getElementById('premiumEndDate');
+        
+        if (startDateElement && endDateElement) {
+            // Format dates or show "Chưa có thông tin"
+            startDateElement.textContent = premiumData.start_date ? formatDate(premiumData.start_date) : 'Chưa có thông tin';
+            endDateElement.textContent = premiumData.end_date ? formatDate(premiumData.end_date) : 'Chưa có thông tin';
+            
+            // Store original end date for editing
+            const dateInput = document.getElementById('newEndDate');
+            if (dateInput && premiumData.end_date) {
+                try {
+                    // Convert to local datetime format for input
+                    const date = new Date(premiumData.end_date);
+                    if (!isNaN(date.getTime())) {
+                        const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                        dateInput.value = localDateTime;
+                    }
+                } catch (error) {
+                    console.error('Error setting date input:', error);
+                }
+            }
+        }
+        
+        // Update premium status based on data from subscription table
+        updatePremiumStatusDisplay(premiumData);
+        
+        // Hide loading and show modal
+        showPremiumModalLoading(false);
+        modal.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error fetching premium details:', error);
+        alert('Có lỗi xảy ra khi tải thông tin Premium: ' + error.message);
+        showPremiumModalLoading(false);
+}
+
+// Helper function to show/hide loading state in premium modal
+function showPremiumModalLoading(show) {
+    const modal = document.getElementById('premiumDetailsModal');
+    if (modal) {
+        const loadingDiv = modal.querySelector('.premium-loading') || createPremiumLoadingDiv();
+        loadingDiv.style.display = show ? 'flex' : 'none';
     }
+}
+
+// Helper function to create loading div if it doesn't exist
+function createPremiumLoadingDiv() {
+    const modal = document.getElementById('premiumDetailsModal');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'premium-loading';
+    loadingDiv.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+    loadingDiv.innerHTML = '<div style="text-align: center;"><i class="fas fa-spinner fa-spin"></i><br>Đang tải...</div>';
+    modal.querySelector('.modal-content').appendChild(loadingDiv);
+    return loadingDiv;
+}
+
+// Helper function to update premium status display
+function updatePremiumStatusDisplay(premiumData) {
+    const timeRemainingElement = document.getElementById('premiumTimeRemaining');
+    const statusElement = document.getElementById('premiumStatusText');
     
-    // Format and display dates
-    const startDateElement = document.getElementById('premiumStartDate');
-    const endDateElement = document.getElementById('premiumEndDate');
-    
-    if (!startDateElement || !endDateElement) {
-        console.error('Premium date elements not found');
-        alert('Lỗi: Không tìm thấy các phần tử hiển thị ngày tháng');
+    if (!timeRemainingElement || !statusElement) {
+        console.error('Premium status elements not found');
         return;
     }
     
-    // Clean and validate dates
-    const cleanStartDate = startDate && startDate !== 'null' && startDate !== 'undefined' && startDate.trim() !== '' ? startDate.trim() : null;
-    const cleanEndDate = endDate && endDate !== 'null' && endDate !== 'undefined' && endDate.trim() !== '' ? endDate.trim() : null;
-    
-    // Format dates or show "Chưa có thông tin"
-    startDateElement.textContent = cleanStartDate ? formatDate(cleanStartDate) : 'Chưa có thông tin';
-    endDateElement.textContent = cleanEndDate ? formatDate(cleanEndDate) : 'Chưa có thông tin';
-    
-    // Store original end date for editing
-    const dateInput = document.getElementById('newEndDate');
-    if (dateInput && cleanEndDate) {
-        try {
-            // Convert to local datetime format for input
-            const date = new Date(cleanEndDate);
-            if (!isNaN(date.getTime())) {
-                const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                dateInput.value = localDateTime;
-            }
-        } catch (error) {
-            console.error('Error setting date input:', error);
+    if (premiumData.time_remaining_days !== null) {
+        if (premiumData.status === 'active') {
+            timeRemainingElement.textContent = `${premiumData.time_remaining_days} ngày`;
+            statusElement.textContent = 'Đang hoạt động';
+            statusElement.className = 'status-active';
+        } else if (premiumData.status === 'expired') {
+            timeRemainingElement.textContent = 'Đã hết hạn';
+            statusElement.textContent = 'Đã hết hạn';
+            statusElement.className = 'status-expired';
         }
+    } else {
+        timeRemainingElement.textContent = 'Chưa có thông tin';
+        statusElement.textContent = 'Không xác định';
+        statusElement.className = '';
     }
-    
-    // Calculate time remaining and status
-    updatePremiumStatus(cleanEndDate);
-    
-    modal.style.display = 'block';
 }
     
     
@@ -1600,7 +1667,7 @@ async function saveNewEndDate() {
         formData.append('userId', currentPremiumUserId);
         formData.append('newEndDate', newEndDate);
         
-        const response = await fetch('https://viegrand.site/viegrandwebadmin/php/update_premium_date.php', {
+        const response = await fetch('https://viegrand.site/viegrandwebadmin/php/update_premium_date_v2.php', {
             method: 'POST',
             body: formData
         });
@@ -1786,6 +1853,7 @@ async function removeElderlyUser(elderlyPrivateKey) {
         alert('Có lỗi xảy ra khi xóa người cao tuổi: ' + error.message);
     }
 }
+}
 
 async function loadElderlyList() {
     if (!currentPremiumUserId) {
@@ -1841,20 +1909,3 @@ async function loadElderlyList() {
         }
     }
 }
-
-// Initialize elderly list when premium details modal is opened
-document.addEventListener('DOMContentLoaded', function() {
-    // Override the showPremiumDetails function to include elderly list loading
-    const originalShowPremiumDetails = window.showPremiumDetails;
-    window.showPremiumDetails = function(userId, startDate, endDate, premiumKey = null, userRole = null) {
-        // Call the original function
-        originalShowPremiumDetails(userId, startDate, endDate, premiumKey, userRole);
-        
-        // Load elderly list after modal is shown (only for relative users)
-        if (userRole === 'relative') {
-            setTimeout(() => {
-                loadElderlyList();
-            }, 100);
-        }
-    };
-});
