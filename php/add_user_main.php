@@ -35,7 +35,7 @@ try {
     $full_name = $_POST['full_name'] ?? '';  // Ignore this for viegrand database
     $phone = $_POST['phone'] ?? '';
     $password = $_POST['password'] ?? '';
-    $role = $_POST['role'] ?? 'user';  // Default to 'user' if not specified
+    $role = $_POST['role'] ?? 'relative';  // Default to 'relative' if not specified
     $age = !empty($_POST['age']) ? (int)$_POST['age'] : null;
     $gender = $_POST['gender'] ?? '';
     $blood = $_POST['blood'] ?? '';

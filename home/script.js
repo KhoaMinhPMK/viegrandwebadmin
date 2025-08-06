@@ -689,7 +689,7 @@ function showEditModal(user, database) {
         document.getElementById('editAge').value = user.age || '';
         document.getElementById('editGender').value = user.gender || '';
         document.getElementById('editBlood').value = user.blood || '';
-        document.getElementById('editUserRole').value = user.user_role || 'user';  // Set user role
+        document.getElementById('editUserRole').value = user.user_role || 'relative';  // Set user role, default to 'relative'
         document.getElementById('editPremiumStatus').value = user.premium_status ? '1' : '0';
         document.getElementById('editHeight').value = user.height || '';
         document.getElementById('editWeight').value = user.weight || '';
@@ -1158,6 +1158,7 @@ async function saveNewUser() {
             formData.append('status', document.getElementById('addStatus').value);
         } else {
             // Main database specific fields
+            formData.append('role', document.getElementById('addRole').value || 'relative');  // Add role field
             formData.append('age', document.getElementById('addAge').value || null);
             formData.append('gender', document.getElementById('addGender').value || '');
             formData.append('blood', document.getElementById('addBlood').value || '');

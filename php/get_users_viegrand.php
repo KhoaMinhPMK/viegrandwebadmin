@@ -102,7 +102,7 @@ try {
         $statusDisplay = getStatusDisplay($status);
         
         // Get user role from database (relative/elderly)
-        $userRole = $user['role'] ?? 'user';
+        $userRole = $user['role'] ?? 'relative';  // Default to 'relative' if not set
         $userRoleDisplay = getUserRoleDisplay($userRole);
         
         // Format health data
@@ -263,9 +263,8 @@ function formatHealthInfo($user) {
 function getUserRoleDisplay($userRole) {
     $userRoles = [
         'relative' => 'Người thân',
-        'elderly' => 'Người cao tuổi',
-        'user' => 'Người dùng'
+        'elderly' => 'Người cao tuổi'
     ];
-    return $userRoles[$userRole] ?? 'Người dùng';
+    return $userRoles[$userRole] ?? 'Người thân';  // Default to 'Người thân' instead of 'Người dùng'
 }
 ?>
