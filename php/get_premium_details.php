@@ -57,23 +57,36 @@ try {
     
     $premium = null;
     $isElderly = false;
+    $debugInfo = [
+        'user_id' => $userId,
+        'user_private_key' => $user['private_key'],
+        'user_role' => $user['role'],
+        'premium_status' => $user['premium_status']
+    ];
     
     if ($user['role'] === 'relative') {
         // For relative users, find subscription where they are the young_person_key
         $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note FROM premium_subscriptions_json WHERE young_person_key = ?");
         $premiumStmt->execute([$user['private_key']]);
         $premium = $premiumStmt->fetch();
+        $debugInfo['query_type'] = 'relative_lookup';
+        $debugInfo['search_key'] = $user['private_key'];
     } else if ($user['role'] === 'elderly') {
         // For elderly users, find subscription where their private_key is in elderly_keys JSON array
         $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note FROM premium_subscriptions_json WHERE JSON_CONTAINS(elderly_keys, JSON_QUOTE(?))");
         $premiumStmt->execute([$user['private_key']]);
         $premium = $premiumStmt->fetch();
         $isElderly = true;
+        $debugInfo['query_type'] = 'elderly_lookup';
+        $debugInfo['search_key'] = $user['private_key'];
     }
-    $premium = $premiumStmt->fetch();
     
     if (!$premium) {
-        echo json_encode(['success' => false, 'message' => 'Premium subscription not found']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Premium subscription not found',
+            'debug' => $debugInfo
+        ]);
         exit;
     }
     
