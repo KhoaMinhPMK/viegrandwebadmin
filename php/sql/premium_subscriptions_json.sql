@@ -25,15 +25,17 @@ SET time_zone = "+00:00";
 
 --
 -- Table structure for table `premium_subscriptions_json`
+-- premium_key format: dd0000000000mmyy (day + 10-digit ID + month/year)
+-- Example: 0600000000010825 (6th August 2025, subscription ID 1)
 --
 
 CREATE TABLE `premium_subscriptions_json` (
-  `premium_key` char(8) NOT NULL,
-  `young_person_key` char(8) NOT NULL,
-  `elderly_keys` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`elderly_keys`)),
-  `start_date` datetime NOT NULL,
-  `end_date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `premium_key` char(16) NOT NULL COMMENT 'Format: dd0000000000mmyy (day + 10-digit auto-increment + month/year)',
+  `young_person_key` char(8) NOT NULL COMMENT 'Private key of the young person (main user)',
+  `elderly_keys` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`elderly_keys`)) COMMENT 'JSON array of elderly persons private keys',
+  `start_date` datetime NOT NULL COMMENT 'Premium subscription start date',
+  `end_date` datetime NOT NULL COMMENT 'Premium subscription end date'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Premium subscription tracking with family grouping';
 
 --
 -- Indexes for dumped tables

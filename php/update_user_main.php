@@ -144,8 +144,8 @@ try {
     $isPremiumDowngrade = false;
     
     if (isset($input['premium_status'])) {
-        // Check current premium status to see if this is an upgrade or downgrade
-        $currentStatusStmt = $pdo->prepare("SELECT premium_status FROM user WHERE userId = ?");
+        // Check current premium status and get private_key to see if this is an upgrade or downgrade
+        $currentStatusStmt = $pdo->prepare("SELECT premium_status, private_key FROM user WHERE userId = ?");
         $currentStatusStmt->execute([$userId]);
         $currentUser = $currentStatusStmt->fetch();
         
@@ -171,6 +171,40 @@ try {
         
         $updateFields[] = "premium_end_date = ?";
         $params[] = $endDate->format('Y-m-d H:i:s');
+        
+        // Insert into premium_subscriptions_json table
+        if ($currentUser && $currentUser['private_key']) {
+            try {
+                // Generate premium_key in format: dd + 10-digit auto-increment ID + mmyy
+                // First, get the next auto-increment value for this table
+                $countStmt = $pdo->prepare("SELECT COUNT(*) + 1 as next_id FROM premium_subscriptions_json");
+                $countStmt->execute();
+                $nextId = $countStmt->fetch()['next_id'];
+                
+                // Format the premium_key: dd + 10-digit zero-padded ID + mmyy
+                $dayStr = $now->format('d'); // dd format (day)
+                $monthYearStr = $now->format('my'); // mmyy format (month + year)
+                $idStr = str_pad($nextId, 10, '0', STR_PAD_LEFT); // 10-digit zero-padded
+                $premiumKey = $dayStr . $idStr . $monthYearStr;
+                
+                // Insert into premium_subscriptions_json
+                $premiumInsertStmt = $pdo->prepare("
+                    INSERT INTO premium_subscriptions_json 
+                    (premium_key, young_person_key, elderly_keys, start_date, end_date) 
+                    VALUES (?, ?, '[]', ?, ?)
+                ");
+                $premiumInsertStmt->execute([
+                    $premiumKey,
+                    $currentUser['private_key'],
+                    $now->format('Y-m-d H:i:s'),
+                    $endDate->format('Y-m-d H:i:s')
+                ]);
+                
+            } catch (Exception $e) {
+                // Log the error but don't fail the main update
+                error_log("Failed to insert into premium_subscriptions_json: " . $e->getMessage());
+            }
+        }
     }
     
     // Clear premium dates if downgrading from premium

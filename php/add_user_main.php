@@ -120,6 +120,43 @@ try {
     
     if ($stmt->execute()) {
         $newUserId = $pdo->lastInsertId();
+        
+        // Insert into premium_subscriptions_json if user is premium
+        if ($premium_status === '1') {
+            try {
+                // Generate premium_key in format: dd + 10-digit auto-increment ID + mmyy
+                $now = new DateTime();
+                
+                // Get the next auto-increment value for premium_subscriptions_json table
+                $countStmt = $pdo->prepare("SELECT COUNT(*) + 1 as next_id FROM premium_subscriptions_json");
+                $countStmt->execute();
+                $nextId = $countStmt->fetch()['next_id'];
+                
+                // Format the premium_key: dd + 10-digit zero-padded ID + mmyy
+                $dayStr = $now->format('d'); // dd format (day)
+                $monthYearStr = $now->format('my'); // mmyy format (month + year)
+                $idStr = str_pad($nextId, 10, '0', STR_PAD_LEFT); // 10-digit zero-padded
+                $premiumKey = $dayStr . $idStr . $monthYearStr;
+                
+                // Insert into premium_subscriptions_json
+                $premiumInsertStmt = $pdo->prepare("
+                    INSERT INTO premium_subscriptions_json 
+                    (premium_key, young_person_key, elderly_keys, start_date, end_date) 
+                    VALUES (?, ?, '[]', ?, ?)
+                ");
+                $premiumInsertStmt->execute([
+                    $premiumKey,
+                    $private_key,
+                    $premium_start_date,
+                    $premium_end_date
+                ]);
+                
+            } catch (Exception $e) {
+                // Log the error but don't fail the main insertion
+                error_log("Failed to insert into premium_subscriptions_json during add user: " . $e->getMessage());
+            }
+        }
+        
         echo json_encode([
             'success' => true, 
             'message' => 'User added successfully',
