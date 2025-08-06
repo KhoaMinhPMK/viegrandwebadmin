@@ -56,7 +56,7 @@ try {
     }
     
     // Find the premium subscription using the user's private_key as young_person_key
-    $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note, created_at FROM premium_subscriptions_json WHERE young_person_key = ?");
+    $premiumStmt = $pdo->prepare("SELECT premium_key, young_person_key, elderly_keys, start_date, end_date, note FROM premium_subscriptions_json WHERE young_person_key = ?");
     $premiumStmt->execute([$user['private_key']]);
     $premium = $premiumStmt->fetch();
     
@@ -102,8 +102,7 @@ try {
             'elderly_keys' => $elderlyKeys,
             'time_remaining_days' => $timeRemaining,
             'status' => $status,
-            'note' => $premium['note'],
-            'created_at' => $premium['created_at']
+            'note' => $premium['note']
         ]
     ]);
     
