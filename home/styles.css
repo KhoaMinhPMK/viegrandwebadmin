@@ -2685,3 +2685,78 @@ body {
         text-align: center;
     }
 }
+
+/* Private Key Styles */
+.private-key-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 200px;
+}
+
+.private-key-text {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #333;
+    background: rgba(99, 102, 241, 0.05);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.private-key-empty {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.copy-key-btn {
+    background: #6366f1;
+    border: none;
+    color: white;
+    padding: 0.4rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+}
+
+.copy-key-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.copy-key-btn:active {
+    transform: translateY(0);
+}
+
+.copy-key-btn i {
+    font-size: 0.75rem;
+}
+
+/* Responsive adjustments for private key */
+@media (max-width: 768px) {
+    .private-key-container {
+        max-width: 150px;
+    }
+    
+    .private-key-text {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .copy-key-btn {
+        min-width: 24px;
+        height: 24px;
+        padding: 0.3rem;
+    }
+}

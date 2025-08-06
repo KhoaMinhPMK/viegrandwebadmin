@@ -337,6 +337,49 @@ async function loadMainUsers() {
     }
 }
 
+function formatPrivateKey(privateKey) {
+    if (!privateKey) {
+        return '<span class="private-key-empty">No key</span>';
+    }
+    
+    // Truncate long keys and add ellipsis
+    const maxLength = 20;
+    const displayKey = privateKey.length > maxLength ? 
+        privateKey.substring(0, maxLength) + '...' : privateKey;
+    
+    return `
+        <div class="private-key-container">
+            <span class="private-key-text" title="${privateKey}">${displayKey}</span>
+            <button class="copy-key-btn" onclick="copyPrivateKey('${privateKey}')" title="Copy private key">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+    `;
+}
+
+function copyPrivateKey(key) {
+    if (!key) {
+        showNotification('No key to copy', 'error');
+        return;
+    }
+    
+    // Create a temporary textarea to copy the text
+    const textarea = document.createElement('textarea');
+    textarea.value = key;
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showNotification('Private key copied to clipboard!', 'success');
+    } catch (err) {
+        console.error('Error copying private key:', err);
+        showNotification('Failed to copy private key', 'error');
+    }
+    
+    document.body.removeChild(textarea);
+}
+
 function displayMainUsers(users) {
     const tbody = document.getElementById('mainUsersTableBody');
     tbody.innerHTML = '';
@@ -346,6 +389,9 @@ function displayMainUsers(users) {
         
         // Format health info
         const healthInfoHtml = formatHealthInfoHtml(user.health_info);
+        
+        // Format private key with copy button
+        const privateKeyHtml = formatPrivateKey(user.private_key);
         
         // Format premium status with clickable functionality for premium users
         const premiumStatus = user.premium_status ? 
@@ -367,12 +413,7 @@ function displayMainUsers(users) {
                 </div>
             </td>
             <td>${user.email || 'N/A'}</td>
-            <td>
-                <span class="role-badge ${user.role}">${user.role_display}</span>
-            </td>
-            <td>
-                <span class="status-badge ${user.status}">${user.status_display}</span>
-            </td>
+            <td>${privateKeyHtml}</td>
             <td>${premiumStatus}</td>
             <td>
                 <div class="health-info">

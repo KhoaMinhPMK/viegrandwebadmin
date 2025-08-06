@@ -65,6 +65,9 @@ try {
     // Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
+    // Generate private key
+    $private_key = 'pk_' . bin2hex(random_bytes(16)) . '_' . time();
+    
     // Handle premium dates if user is premium
     $premium_start_date = null;
     $premium_end_date = null;
@@ -90,10 +93,10 @@ try {
     }
     
     // Insert new user (userName field stores the username value)
-    $sql = "INSERT INTO user (userName, email, phone, password, age, gender, blood, premium_status, 
+    $sql = "INSERT INTO user (userName, email, phone, private_key, password, age, gender, blood, premium_status, 
                               height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, 
                               premium_start_date, premium_end_date, created_at) 
-            VALUES (:username, :email, :phone, :password, :age, :gender, :blood, :premium_status,
+            VALUES (:username, :email, :phone, :private_key, :password, :age, :gender, :blood, :premium_status,
                     :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate,
                     :premium_start_date, :premium_end_date, NOW())";
     
@@ -101,6 +104,7 @@ try {
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);  // Store username in userName field
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
+    $stmt->bindParam(':private_key', $private_key, PDO::PARAM_STR);
     $stmt->bindParam(':password', $hashed_password, PDO::PARAM_STR);
     $stmt->bindParam(':age', $age, PDO::PARAM_INT);
     $stmt->bindParam(':gender', $gender, PDO::PARAM_STR);
