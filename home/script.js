@@ -198,6 +198,19 @@ function setupEventListeners() {
     document.getElementById('editEndDateBtn').addEventListener('click', showEditEndDateForm);
     document.getElementById('saveEndDateBtn').addEventListener('click', saveNewEndDate);
     document.getElementById('cancelEndDateBtn').addEventListener('click', hideEditEndDateForm);
+    
+    // Elderly management event listeners
+    document.getElementById('showAddElderlyBtn').addEventListener('click', showAddElderlyForm);
+    document.getElementById('confirmAddElderly').addEventListener('click', addElderlyUser);
+    document.getElementById('cancelAddElderly').addEventListener('click', hideAddElderlyForm);
+    
+    // Add Enter key support for elderly private key input
+    document.getElementById('elderlyPrivateKey').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addElderlyUser();
+        }
+    });
 }
 
 function switchDatabase(database) {
@@ -1635,7 +1648,7 @@ function formatDate(dateString) {
 
 function showAddElderlyForm() {
     const addForm = document.getElementById('addElderlyForm');
-    const addButton = document.getElementById('addElderlyButton');
+    const addButton = document.getElementById('showAddElderlyBtn');
     
     if (addForm && addButton) {
         addForm.style.display = 'block';
@@ -1651,7 +1664,7 @@ function showAddElderlyForm() {
 
 function hideAddElderlyForm() {
     const addForm = document.getElementById('addElderlyForm');
-    const addButton = document.getElementById('addElderlyButton');
+    const addButton = document.getElementById('showAddElderlyBtn');
     
     if (addForm && addButton) {
         addForm.style.display = 'none';
