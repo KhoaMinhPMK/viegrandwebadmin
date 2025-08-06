@@ -208,10 +208,41 @@ try {
         }
     }
     
-    // Clear premium dates if downgrading from premium
+    // Handle premium downgrade: set end dates to current moment in both tables
     if ($isPremiumDowngrade) {
-        $updateFields[] = "premium_start_date = NULL";
-        $updateFields[] = "premium_end_date = NULL";
+        $now = new DateTime();
+        $currentMoment = $now->format('Y-m-d H:i:s');
+        
+        // Set end date to current moment instead of NULL in viegrand.user table
+        $updateFields[] = "premium_end_date = ?";
+        $params[] = $currentMoment;
+        
+        // Also update the premium_subscriptions_json table to set end_date to current moment
+        if ($currentUser && $currentUser['private_key']) {
+            try {
+                // Update the end_date in premium_subscriptions_json table for this user
+                // Only update records where end_date is in the future (active subscriptions)
+                $updatePremiumStmt = $pdo->prepare("
+                    UPDATE premium_subscriptions_json 
+                    SET end_date = ? 
+                    WHERE young_person_key = ? AND end_date > NOW()
+                ");
+                $updatePremiumStmt->execute([
+                    $currentMoment,
+                    $currentUser['private_key']
+                ]);
+                
+                // Log the number of affected rows for debugging
+                $affectedRows = $updatePremiumStmt->rowCount();
+                if ($affectedRows > 0) {
+                    error_log("Premium downgrade: Updated {$affectedRows} subscription record(s) for user {$currentUser['private_key']}");
+                }
+                
+            } catch (Exception $e) {
+                // Log the error but don't fail the main update
+                error_log("Failed to update premium_subscriptions_json end_date during downgrade: " . $e->getMessage());
+            }
+        }
     }
     
     if (empty($updateFields)) {
