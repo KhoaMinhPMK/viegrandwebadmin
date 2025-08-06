@@ -413,6 +413,9 @@ function displayMainUsers(users) {
                 </div>
             </td>
             <td>${user.email || 'N/A'}</td>
+            <td>
+                <span class="role-badge ${user.user_role}">${user.user_role_display || 'N/A'}</span>
+            </td>
             <td>${privateKeyHtml}</td>
             <td>${premiumStatus}</td>
             <td>
@@ -673,6 +676,7 @@ function showEditModal(user, database) {
         document.getElementById('adminFields').style.display = 'block';
         document.getElementById('mainFields').style.display = 'none';
         document.getElementById('healthFields').style.display = 'none';
+        document.getElementById('editRoleGroup').style.display = 'none';  // Hide user role field for admin
         
         document.getElementById('editRole').value = user.role || '';
         document.getElementById('editStatus').value = user.status || '';
@@ -680,10 +684,12 @@ function showEditModal(user, database) {
         document.getElementById('adminFields').style.display = 'none';
         document.getElementById('mainFields').style.display = 'block';
         document.getElementById('healthFields').style.display = 'block';
+        document.getElementById('editRoleGroup').style.display = 'block';  // Show user role field for main database
         
         document.getElementById('editAge').value = user.age || '';
         document.getElementById('editGender').value = user.gender || '';
         document.getElementById('editBlood').value = user.blood || '';
+        document.getElementById('editUserRole').value = user.user_role || 'user';  // Set user role
         document.getElementById('editPremiumStatus').value = user.premium_status ? '1' : '0';
         document.getElementById('editHeight').value = user.height || '';
         document.getElementById('editWeight').value = user.weight || '';
@@ -1042,6 +1048,7 @@ function openAddModal(database) {
         addAdminFields.style.display = 'flex';
         addMainFields.style.display = 'none';
         addHealthFields.style.display = 'none';
+        document.getElementById('addRoleGroup').style.display = 'none';  // Hide role field for admin
         
         // Set required attributes for admin fields
         document.getElementById('addRole').required = true;
@@ -1059,6 +1066,7 @@ function openAddModal(database) {
         addAdminFields.style.display = 'none';
         addMainFields.style.display = 'flex';
         addHealthFields.style.display = 'flex';
+        document.getElementById('addRoleGroup').style.display = 'block';  // Show role field for main database
         
         // Remove required attributes for admin fields
         document.getElementById('addRole').required = false;

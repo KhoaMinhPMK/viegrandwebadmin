@@ -45,6 +45,7 @@ try {
             userName,
             email,
             phone,
+            role,
             private_key,
             age,
             gender,
@@ -100,6 +101,10 @@ try {
         $roleDisplay = getRoleDisplay($role);
         $statusDisplay = getStatusDisplay($status);
         
+        // Get user role from database (relative/elderly)
+        $userRole = $user['role'] ?? 'user';
+        $userRoleDisplay = getUserRoleDisplay($userRole);
+        
         // Format health data
         $healthInfo = formatHealthInfo($user);
         
@@ -109,6 +114,8 @@ try {
             'email' => $user['email'],
             'full_name' => $user['userName'],
             'phone' => $user['phone'],
+            'user_role' => $userRole,
+            'user_role_display' => $userRoleDisplay,
             'private_key' => $user['private_key'],
             'role' => $role,
             'role_display' => $roleDisplay,
@@ -248,5 +255,17 @@ function formatHealthInfo($user) {
     if ($user['ever_married']) $healthInfo['marital'] = $user['ever_married'];
     
     return $healthInfo;
+}
+
+/**
+ * Get user role display name (relative/elderly)
+ */
+function getUserRoleDisplay($userRole) {
+    $userRoles = [
+        'relative' => 'Người thân',
+        'elderly' => 'Người cao tuổi',
+        'user' => 'Người dùng'
+    ];
+    return $userRoles[$userRole] ?? 'Người dùng';
 }
 ?>

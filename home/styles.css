@@ -531,6 +531,16 @@ body {
     color: white;
 }
 
+.role-relative {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+    color: white;
+}
+
+.role-elderly {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+}
+
 .status-badge {
     display: inline-block;
     padding: 0.25rem 0.6rem;

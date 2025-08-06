@@ -35,6 +35,7 @@ try {
     $full_name = $_POST['full_name'] ?? '';  // Ignore this for viegrand database
     $phone = $_POST['phone'] ?? '';
     $password = $_POST['password'] ?? '';
+    $role = $_POST['role'] ?? 'user';  // Default to 'user' if not specified
     $age = !empty($_POST['age']) ? (int)$_POST['age'] : null;
     $gender = $_POST['gender'] ?? '';
     $blood = $_POST['blood'] ?? '';
@@ -93,10 +94,10 @@ try {
     }
     
     // Insert new user (userName field stores the username value)
-    $sql = "INSERT INTO user (userName, email, phone, private_key, password, age, gender, blood, premium_status, 
+    $sql = "INSERT INTO user (userName, email, phone, role, private_key, password, age, gender, blood, premium_status, 
                               height, weight, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, 
                               premium_start_date, premium_end_date, created_at) 
-            VALUES (:username, :email, :phone, :private_key, :password, :age, :gender, :blood, :premium_status,
+            VALUES (:username, :email, :phone, :role, :private_key, :password, :age, :gender, :blood, :premium_status,
                     :height, :weight, :blood_pressure_systolic, :blood_pressure_diastolic, :heart_rate,
                     :premium_start_date, :premium_end_date, NOW())";
     
@@ -104,6 +105,7 @@ try {
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);  // Store username in userName field
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
+    $stmt->bindParam(':role', $role, PDO::PARAM_STR);
     $stmt->bindParam(':private_key', $private_key, PDO::PARAM_STR);
     $stmt->bindParam(':password', $hashed_password, PDO::PARAM_STR);
     $stmt->bindParam(':age', $age, PDO::PARAM_INT);

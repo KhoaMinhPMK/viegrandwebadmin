@@ -93,7 +93,7 @@ try {
     
     // Allowed fields to update
     $allowedFields = [
-        'userName', 'email', 'phone', 'age', 'gender', 'blood', 
+        'userName', 'email', 'phone', 'role', 'age', 'gender', 'blood', 
         'chronic_diseases', 'allergies', 'premium_status', 'notifications',
         'relative_phone', 'home_address', 'hypertension', 'heart_disease',
         'ever_married', 'work_type', 'residence_type', 'avg_glucose_level',
