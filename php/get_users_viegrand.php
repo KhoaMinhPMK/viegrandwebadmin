@@ -132,7 +132,14 @@ try {
                                                
     // Format user data for frontend
     $formattedUsers = [];
-    foreach ($users as $user) {
+    $processedCount = 0;
+    $skippedCount = 0;
+    $skippedUsers = [];
+    
+    foreach ($users as $index => $user) {
+        $processedCount++;
+        error_log("Processing user $processedCount (index $index): userId=" . ($user['userId'] ?? 'NULL') . ", userName=" . ($user['userName'] ?? 'NULL'));
+        
         try {
             // Sanitize and encode all string data to prevent UTF-8 issues
             $user = array_map(function($value) {
@@ -196,10 +203,32 @@ try {
                 'last_health_check' => $user['last_health_check'],
                 'last_health_check_formatted' => $lastHealthCheck
             ];
+            
+            error_log("Successfully processed user: userId=" . $user['userId'] . ", userName=" . $user['userName']);
+            
         } catch (Exception $e) {
-            error_log("Error formatting user data: " . $e->getMessage());
+            $skippedCount++;
+            $skippedUsers[] = [
+                'userId' => $user['userId'] ?? 'NULL',
+                'userName' => $user['userName'] ?? 'NULL',
+                'error' => $e->getMessage()
+            ];
+            error_log("Error formatting user data: userId=" . ($user['userId'] ?? 'NULL') . ", userName=" . ($user['userName'] ?? 'NULL') . ", error=" . $e->getMessage());
             // Continue with other users even if one fails
             continue;
+        }
+    }
+    
+    error_log("=== PROCESSING SUMMARY ===");
+    error_log("Raw users from database: " . count($users));
+    error_log("Successfully processed: " . count($formattedUsers));
+    error_log("Skipped due to errors: " . $skippedCount);
+    error_log("Total processed: " . $processedCount);
+    
+    if ($skippedCount > 0) {
+        error_log("Skipped users details:");
+        foreach ($skippedUsers as $skipped) {
+            error_log("  - userId: " . $skipped['userId'] . ", userName: " . $skipped['userName'] . ", error: " . $skipped['error']);
         }
     }
     
@@ -234,7 +263,14 @@ try {
             'offset' => $offset,
             'users_found' => count($formattedUsers),
             'raw_users_count' => count($users),
-            'total_pages' => $totalPages
+            'total_pages' => $totalPages,
+            'processing_summary' => [
+                'raw_users_from_db' => count($users),
+                'successfully_processed' => count($formattedUsers),
+                'skipped_due_to_errors' => $skippedCount,
+                'total_processed' => $processedCount
+            ],
+            'skipped_users' => $skippedUsers
         ]
     ];
     
