@@ -7,9 +7,13 @@
 // Start output buffering to prevent any unwanted output
 ob_start();
 
-// Suppress errors to prevent breaking JSON output
-error_reporting(0);
-ini_set('display_errors', 0);
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Log errors to a file for debugging
+ini_set('log_errors', 1);
+ini_set('error_log', '/tmp/php_errors.log');
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -30,6 +34,9 @@ $password = '';      // Empty password for root
 $charset = 'utf8mb4';
 
 try {
+    // Log request parameters
+    error_log("API Request - Page: " . ($_GET['page'] ?? 'undefined') . ", Limit: " . ($_GET['limit'] ?? 'undefined'));
+    
     // Create PDO connection
     $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
     $pdo = new PDO($dsn, $username, $password);
@@ -41,13 +48,27 @@ try {
     $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
     $offset = ($page - 1) * $limit;
     
+    // Validate parameters
+    if ($page < 1) {
+        throw new Exception('Invalid page number');
+    }
+    if ($limit < 1 || $limit > 100) {
+        throw new Exception('Invalid limit value');
+    }
+    
+    error_log("Calculated offset: $offset");
+    
     // Count total users
     $countStmt = $pdo->query("SELECT COUNT(*) as total FROM user");
     $totalUsers = $countStmt->fetch()['total'];
     
+    error_log("Total users: $totalUsers");
+    
     // Check if premium_subscriptions_json table exists
     $tableCheckStmt = $pdo->query("SHOW TABLES LIKE 'premium_subscriptions_json'");
     $premiumTableExists = $tableCheckStmt->rowCount() > 0;
+    
+    error_log("Premium table exists: " . ($premiumTableExists ? 'yes' : 'no'));
     
     // Prepare query based on table existence
     if ($premiumTableExists) {
@@ -137,12 +158,16 @@ try {
         ";
     }
     
+    error_log("SQL Query: " . str_replace([':limit', ':offset'], [$limit, $offset], $sql));
+    
     // Get users with pagination
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     $users = $stmt->fetchAll();
+    
+    error_log("Users found: " . count($users));
                                                
     // Format user data for frontend
     $formattedUsers = [];
@@ -202,10 +227,17 @@ try {
     // Calculate pagination info
     $totalPages = ceil($totalUsers / $limit);
     
+    error_log("Total pages: $totalPages, Current page: $page");
+    
     // Clean any output buffer before JSON output
     ob_clean();
     
-    echo json_encode([
+    // Ensure no output before JSON
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    
+    $response = [
         'success' => true,
         'data' => [
             'users' => $formattedUsers,
@@ -223,12 +255,19 @@ try {
             'current_page' => $page,
             'limit' => $limit,
             'offset' => $offset,
+            'users_found' => count($formattedUsers),
             'premium_table_exists' => $premiumTableExists ?? false,
             'query_used' => $premiumTableExists ? 'with_premium_join' : 'without_premium_join'
         ]
-    ]);
+    ];
+    
+    error_log("Sending response with " . count($formattedUsers) . " users");
+    echo json_encode($response);
+    exit();
     
 } catch (PDOException $e) {
+    error_log("PDO Error: " . $e->getMessage());
+    
     // Clean any output buffer before error response
     ob_clean();
     
@@ -241,10 +280,15 @@ try {
             'host' => $host,
             'dbname' => $dbname,
             'username' => $username,
-            'error_code' => $e->getCode()
+            'error_code' => $e->getCode(),
+            'file' => basename(__FILE__),
+            'line' => $e->getLine()
         ]
     ]);
+    exit();
 } catch (Exception $e) {
+    error_log("General Error: " . $e->getMessage());
+    
     // Clean any output buffer before error response
     ob_clean();
     
@@ -255,9 +299,13 @@ try {
         'error' => $e->getMessage(),
         'debug' => [
             'file' => basename(__FILE__),
-            'line' => $e->getLine()
+            'line' => $e->getLine(),
+            'page' => $page ?? 'undefined',
+            'limit' => $limit ?? 'undefined',
+            'offset' => $offset ?? 'undefined'
         ]
     ]);
+    exit();
 }
 
 /**
@@ -299,7 +347,7 @@ function getStatusDisplay($status) {
         'pending' => 'Chờ duyệt',
         'premium' => 'Premium'
     ];
-    return $statuses[$status] ?? 'Không xác định';
+    return $statuses[$status] ?? 'Hoạt động';
 }
 
 /**
@@ -308,49 +356,41 @@ function getStatusDisplay($status) {
 function formatHealthInfo($user) {
     $healthInfo = [];
     
-    // Basic health data
-    if ($user['age']) $healthInfo['age'] = $user['age'] . ' tuổi';
-    if ($user['gender']) $healthInfo['gender'] = $user['gender'];
-    if ($user['blood']) $healthInfo['blood'] = 'Nhóm máu ' . $user['blood'];
+    // Basic health measurements
+    if (!empty($user['height'])) $healthInfo['height'] = $user['height'];
+    if (!empty($user['weight'])) $healthInfo['weight'] = $user['weight'];
+    if (!empty($user['blood_pressure_systolic']) && !empty($user['blood_pressure_diastolic'])) {
+        $healthInfo['blood_pressure'] = $user['blood_pressure_systolic'] . '/' . $user['blood_pressure_diastolic'];
+    }
+    if (!empty($user['heart_rate'])) $healthInfo['heart_rate'] = $user['heart_rate'];
     
     // Health conditions
-    if ($user['hypertension']) $healthInfo['hypertension'] = 'Cao huyết áp';
-    if ($user['heart_disease']) $healthInfo['heart_disease'] = 'Bệnh tim';
-    if ($user['stroke']) $healthInfo['stroke'] = 'Đột quỵ';
+    if (!empty($user['hypertension'])) $healthInfo['hypertension'] = $user['hypertension'];
+    if (!empty($user['heart_disease'])) $healthInfo['heart_disease'] = $user['heart_disease'];
+    if (!empty($user['stroke'])) $healthInfo['stroke'] = $user['stroke'];
+    if (!empty($user['bmi'])) $healthInfo['bmi'] = $user['bmi'];
+    if (!empty($user['avg_glucose_level'])) $healthInfo['avg_glucose_level'] = $user['avg_glucose_level'];
+    if (!empty($user['smoking_status'])) $healthInfo['smoking_status'] = $user['smoking_status'];
     
-    // Measurements
-    if ($user['height']) $healthInfo['height'] = $user['height'] . ' cm';
-    if ($user['weight']) $healthInfo['weight'] = $user['weight'] . ' kg';
-    if ($user['bmi']) $healthInfo['bmi'] = 'BMI: ' . $user['bmi'];
-    
-    // Blood pressure
-    if ($user['blood_pressure_systolic'] && $user['blood_pressure_diastolic']) {
-        $healthInfo['blood_pressure'] = $user['blood_pressure_systolic'] . '/' . $user['blood_pressure_diastolic'] . ' mmHg';
-    }
-    
-    // Heart rate
-    if ($user['heart_rate']) $healthInfo['heart_rate'] = $user['heart_rate'] . ' bpm';
-    
-    // Glucose level
-    if ($user['avg_glucose_level']) $healthInfo['glucose'] = $user['avg_glucose_level'] . ' mg/dL';
-    
-    // Lifestyle
-    if ($user['smoking_status']) $healthInfo['smoking'] = $user['smoking_status'];
-    if ($user['work_type']) $healthInfo['work'] = $user['work_type'];
-    if ($user['residence_type']) $healthInfo['residence'] = $user['residence_type'];
-    if ($user['ever_married']) $healthInfo['marital'] = $user['ever_married'];
+    // Personal info
+    if (!empty($user['blood'])) $healthInfo['blood_type'] = $user['blood'];
+    if (!empty($user['age'])) $healthInfo['age'] = $user['age'];
+    if (!empty($user['gender'])) $healthInfo['gender'] = $user['gender'];
     
     return $healthInfo;
 }
 
 /**
- * Get user role display name (relative/elderly)
+ * Get user role display name
  */
 function getUserRoleDisplay($userRole) {
-    $userRoles = [
+    $roles = [
         'relative' => 'Người thân',
-        'elderly' => 'Người cao tuổi'
+        'elderly' => 'Người cao tuổi',
+        'admin' => 'Quản trị viên',
+        'manager' => 'Quản lý',
+        'user' => 'Người dùng'
     ];
-    return $userRoles[$userRole] ?? 'Người thân';  // Default to 'Người thân' instead of 'Người dùng'
+    return $roles[$userRole] ?? 'Người dùng';
 }
 ?>

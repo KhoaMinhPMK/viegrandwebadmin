@@ -394,7 +394,15 @@ async function loadMainUsers() {
         const url = `${MAIN_API_URL}?page=${mainCurrentPage}&limit=${mainCurrentLimit}`;
         console.log('Fetching main users from:', url);
         
-        const response = await fetch(url);
+        // Add timeout to the fetch request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const response = await fetch(url, {
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         // Check if response is ok
         if (!response.ok) {
@@ -426,8 +434,33 @@ async function loadMainUsers() {
         }
     } catch (error) {
         console.error('Error loading main users:', error);
-        showNotification(`Có lỗi xảy ra khi tải danh sách Main: ${error.message}`, 'error');
+        
+        // Handle specific error types
+        if (error.name === 'AbortError') {
+            showNotification('Yêu cầu tải dữ liệu bị timeout. Vui lòng thử lại.', 'error');
+        } else if (error.message.includes('JSON')) {
+            showNotification('Lỗi định dạng dữ liệu từ server. Vui lòng thử lại.', 'error');
+        } else {
+            showNotification(`Có lỗi xảy ra khi tải danh sách Main: ${error.message}`, 'error');
+        }
+        
         showMainNoData(true);
+        
+        // Additional debugging
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            currentPage: mainCurrentPage,
+            currentLimit: mainCurrentLimit,
+            url: `${MAIN_API_URL}?page=${mainCurrentPage}&limit=${mainCurrentLimit}`
+        });
+        
+        // Reset to page 1 if there's an error on other pages
+        if (mainCurrentPage > 1) {
+            console.log('Resetting to page 1 due to error');
+            mainCurrentPage = 1;
+            // Don't call loadMainUsers() here to avoid infinite loop
+        }
     } finally {
         showMainLoading(false);
     }
