@@ -110,7 +110,7 @@ try {
             u.heart_rate,
             u.last_health_check
         FROM user u
-        ORDER BY u.created_at DESC 
+        ORDER BY u.created_at DESC, u.userId DESC 
         LIMIT :limit OFFSET :offset
     ";
     
