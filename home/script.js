@@ -29,9 +29,13 @@ const deleteModal = document.getElementById('deleteConfirmModal');
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, initializing...');
     initializePage();
     setupEventListeners();
+    console.log('Loading admin users...');
     loadAdminUsers();
+    console.log('Loading main users...');
+    loadMainUsers(); // Also load main users on page load
 });
 
 function initializePage() {
@@ -389,6 +393,7 @@ function changeAdminPage(page) {
 // Main Database Functions
 async function loadMainUsers() {
     try {
+        console.log('loadMainUsers() called');
         showMainLoading(true);
         
         const url = `${MAIN_API_URL}?page=${mainCurrentPage}&limit=${mainCurrentLimit}`;
