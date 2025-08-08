@@ -395,6 +395,20 @@ async function loadMainUsers() {
         console.log('Fetching main users from:', url);
         
         const response = await fetch(url);
+        
+        // Check if response is ok
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Check content type
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text);
+            throw new Error(`Expected JSON, got: ${contentType}`);
+        }
+        
         const result = await response.json();
         
         console.log('Main API Response:', result);
@@ -412,7 +426,7 @@ async function loadMainUsers() {
         }
     } catch (error) {
         console.error('Error loading main users:', error);
-        showNotification('Có lỗi xảy ra khi tải danh sách Main', 'error');
+        showNotification(`Có lỗi xảy ra khi tải danh sách Main: ${error.message}`, 'error');
         showMainNoData(true);
     } finally {
         showMainLoading(false);

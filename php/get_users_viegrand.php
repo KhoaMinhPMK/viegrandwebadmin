@@ -4,6 +4,13 @@
  * Fetches users from viegrand.user table
  */
 
+// Start output buffering to prevent any unwanted output
+ob_start();
+
+// Suppress errors to prevent breaking JSON output
+error_reporting(0);
+ini_set('display_errors', 0);
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
@@ -38,54 +45,105 @@ try {
     $countStmt = $pdo->query("SELECT COUNT(*) as total FROM user");
     $totalUsers = $countStmt->fetch()['total'];
     
+    // Check if premium_subscriptions_json table exists
+    $tableCheckStmt = $pdo->query("SHOW TABLES LIKE 'premium_subscriptions_json'");
+    $premiumTableExists = $tableCheckStmt->rowCount() > 0;
+    
+    // Prepare query based on table existence
+    if ($premiumTableExists) {
+        $sql = "
+            SELECT 
+                u.userId,
+                u.userName,
+                u.email,
+                u.phone,
+                u.role,
+                u.private_key,
+                u.age,
+                u.gender,
+                u.blood,
+                u.chronic_diseases,
+                u.allergies,
+                u.premium_status,
+                u.notifications,
+                u.relative_phone,
+                u.home_address,
+                u.created_at,
+                u.updated_at,
+                u.premium_start_date,
+                u.premium_end_date,
+                u.hypertension,
+                u.heart_disease,
+                u.ever_married,
+                u.work_type,
+                u.residence_type,
+                u.avg_glucose_level,
+                u.bmi,
+                u.smoking_status,
+                u.stroke,
+                u.height,
+                u.weight,
+                u.blood_pressure_systolic,
+                u.blood_pressure_diastolic,
+                u.heart_rate,
+                u.last_health_check,
+                p.premium_key
+            FROM user u
+            LEFT JOIN premium_subscriptions_json p ON u.private_key = p.young_person_key
+            ORDER BY u.created_at DESC 
+            LIMIT :limit OFFSET :offset
+        ";
+    } else {
+        $sql = "
+            SELECT 
+                u.userId,
+                u.userName,
+                u.email,
+                u.phone,
+                u.role,
+                u.private_key,
+                u.age,
+                u.gender,
+                u.blood,
+                u.chronic_diseases,
+                u.allergies,
+                u.premium_status,
+                u.notifications,
+                u.relative_phone,
+                u.home_address,
+                u.created_at,
+                u.updated_at,
+                u.premium_start_date,
+                u.premium_end_date,
+                u.hypertension,
+                u.heart_disease,
+                u.ever_married,
+                u.work_type,
+                u.residence_type,
+                u.avg_glucose_level,
+                u.bmi,
+                u.smoking_status,
+                u.stroke,
+                u.height,
+                u.weight,
+                u.blood_pressure_systolic,
+                u.blood_pressure_diastolic,
+                u.heart_rate,
+                u.last_health_check,
+                NULL as premium_key
+            FROM user u
+            ORDER BY u.created_at DESC 
+            LIMIT :limit OFFSET :offset
+        ";
+    }
+    
     // Get users with pagination
-    $stmt = $pdo->prepare("
-        SELECT 
-            u.userId,
-            u.userName,
-            u.email,
-            u.phone,
-            u.role,
-            u.private_key,
-            u.age,
-            u.gender,
-            u.blood,
-            u.chronic_diseases,
-            u.allergies,
-            u.premium_status,
-            u.notifications,
-            u.relative_phone,
-            u.home_address,
-            u.created_at,
-            u.updated_at,
-            u.premium_start_date,
-            u.premium_end_date,
-            u.hypertension,
-            u.heart_disease,
-            u.ever_married,
-            u.work_type,
-            u.residence_type,
-            u.avg_glucose_level,
-            u.bmi,
-            u.smoking_status,
-            u.stroke,
-            u.height,
-            u.weight,
-            u.blood_pressure_systolic,
-            u.blood_pressure_diastolic,
-            u.heart_rate,
-            u.last_health_check,
-            p.premium_key
-        FROM user u
-        LEFT JOIN premium_subscriptions_json p ON u.private_key = p.young_person_key
-        ORDER BY u.created_at DESC 
-        LIMIT :limit OFFSET :offset
-    ");
+    $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     $users = $stmt->fetchAll();
-    
+                                               
     // Format user data for frontend
     $formattedUsers = [];
     foreach ($users as $user) {
@@ -144,6 +202,9 @@ try {
     // Calculate pagination info
     $totalPages = ceil($totalUsers / $limit);
     
+    // Clean any output buffer before JSON output
+    ob_clean();
+    
     echo json_encode([
         'success' => true,
         'data' => [
@@ -161,18 +222,40 @@ try {
             'total_users' => $totalUsers,
             'current_page' => $page,
             'limit' => $limit,
-            'offset' => $offset
+            'offset' => $offset,
+            'premium_table_exists' => $premiumTableExists ?? false,
+            'query_used' => $premiumTableExists ? 'with_premium_join' : 'without_premium_join'
         ]
     ]);
     
 } catch (PDOException $e) {
+    // Clean any output buffer before error response
+    ob_clean();
+    
+    http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage(),
+        'message' => 'Database connection error',
+        'error' => $e->getMessage(),
         'debug' => [
             'host' => $host,
             'dbname' => $dbname,
-            'username' => $username
+            'username' => $username,
+            'error_code' => $e->getCode()
+        ]
+    ]);
+} catch (Exception $e) {
+    // Clean any output buffer before error response
+    ob_clean();
+    
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server error',
+        'error' => $e->getMessage(),
+        'debug' => [
+            'file' => basename(__FILE__),
+            'line' => $e->getLine()
         ]
     ]);
 }

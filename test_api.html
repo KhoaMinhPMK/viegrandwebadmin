@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing get_users_viegrand.php API</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testAPI() {
+            try {
+                console.log('Testing API...');
+                
+                // Test page 1
+                const response1 = await fetch('https://viegrand.site/viegrandwebadmin/php/get_users_viegrand.php?page=1&limit=10');
+                const result1 = await response1.json();
+                console.log('Page 1 result:', result1);
+                
+                // Test page 2
+                const response2 = await fetch('https://viegrand.site/viegrandwebadmin/php/get_users_viegrand.php?page=2&limit=10');
+                const result2 = await response2.json();
+                console.log('Page 2 result:', result2);
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>Page 1 Results:</h2>
+                    <pre>${JSON.stringify(result1, null, 2)}</pre>
+                    <h2>Page 2 Results:</h2>
+                    <pre>${JSON.stringify(result2, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<h2>Error:</h2><pre>${error.message}</pre>`;
+            }
+        }
+        
+        // Test when page loads
+        testAPI();
+    </script>
+</body>
+</html>
