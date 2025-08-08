@@ -64,99 +64,56 @@ try {
     
     error_log("Total users: $totalUsers");
     
-    // Check if premium_subscriptions_json table exists
-    $tableCheckStmt = $pdo->query("SHOW TABLES LIKE 'premium_subscriptions_json'");
-    $premiumTableExists = $tableCheckStmt->rowCount() > 0;
+    // Calculate pagination info first
+    $totalPages = ceil($totalUsers / $limit);
     
-    error_log("Premium table exists: " . ($premiumTableExists ? 'yes' : 'no'));
-    
-    // Prepare query based on table existence
-    if ($premiumTableExists) {
-        $sql = "
-            SELECT 
-                u.userId,
-                u.userName,
-                u.email,
-                u.phone,
-                u.role,
-                u.private_key,
-                u.age,
-                u.gender,
-                u.blood,
-                u.chronic_diseases,
-                u.allergies,
-                u.premium_status,
-                u.notifications,
-                u.relative_phone,
-                u.home_address,
-                u.created_at,
-                u.updated_at,
-                u.premium_start_date,
-                u.premium_end_date,
-                u.hypertension,
-                u.heart_disease,
-                u.ever_married,
-                u.work_type,
-                u.residence_type,
-                u.avg_glucose_level,
-                u.bmi,
-                u.smoking_status,
-                u.stroke,
-                u.height,
-                u.weight,
-                u.blood_pressure_systolic,
-                u.blood_pressure_diastolic,
-                u.heart_rate,
-                u.last_health_check,
-                p.premium_key
-            FROM user u
-            LEFT JOIN premium_subscriptions_json p ON u.private_key = p.young_person_key
-            ORDER BY u.created_at DESC 
-            LIMIT :limit OFFSET :offset
-        ";
-    } else {
-        $sql = "
-            SELECT 
-                u.userId,
-                u.userName,
-                u.email,
-                u.phone,
-                u.role,
-                u.private_key,
-                u.age,
-                u.gender,
-                u.blood,
-                u.chronic_diseases,
-                u.allergies,
-                u.premium_status,
-                u.notifications,
-                u.relative_phone,
-                u.home_address,
-                u.created_at,
-                u.updated_at,
-                u.premium_start_date,
-                u.premium_end_date,
-                u.hypertension,
-                u.heart_disease,
-                u.ever_married,
-                u.work_type,
-                u.residence_type,
-                u.avg_glucose_level,
-                u.bmi,
-                u.smoking_status,
-                u.stroke,
-                u.height,
-                u.weight,
-                u.blood_pressure_systolic,
-                u.blood_pressure_diastolic,
-                u.heart_rate,
-                u.last_health_check,
-                NULL as premium_key
-            FROM user u
-            ORDER BY u.created_at DESC 
-            LIMIT :limit OFFSET :offset
-        ";
+    // Validate page number against total pages
+    if ($page > $totalPages && $totalPages > 0) {
+        throw new Exception("Page $page does not exist. Total pages: $totalPages");
     }
+    
+    // Use a simpler query without the problematic LEFT JOIN
+    $sql = "
+        SELECT 
+            u.userId,
+            u.userName,
+            u.email,
+            u.phone,
+            u.role,
+            u.private_key,
+            u.age,
+            u.gender,
+            u.blood,
+            u.chronic_diseases,
+            u.allergies,
+            u.premium_status,
+            u.notifications,
+            u.relative_phone,
+            u.home_address,
+            u.created_at,
+            u.updated_at,
+            u.premium_start_date,
+            u.premium_end_date,
+            u.hypertension,
+            u.heart_disease,
+            u.ever_married,
+            u.work_type,
+            u.residence_type,
+            u.avg_glucose_level,
+            u.bmi,
+            u.smoking_status,
+            u.stroke,
+            u.height,
+            u.weight,
+            u.blood_pressure_systolic,
+            u.blood_pressure_diastolic,
+            u.heart_rate,
+            u.last_health_check,
+            NULL as premium_key
+        FROM user u
+        ORDER BY u.created_at DESC 
+        LIMIT :limit OFFSET :offset
+    ";
     
     error_log("SQL Query: " . str_replace([':limit', ':offset'], [$limit, $offset], $sql));
     
@@ -168,66 +125,75 @@ try {
     $users = $stmt->fetchAll();
     
     error_log("Users found: " . count($users));
+    
+    // Ensure we have a valid response even if no users found
+    if (count($users) === 0 && $page <= $totalPages) {
+        error_log("No users found for page $page, but page is valid. This might indicate a data issue.");
+    }
                                                
     // Format user data for frontend
     $formattedUsers = [];
     foreach ($users as $user) {
-        // Generate avatar from name
-        $avatar = generateAvatar($user['userName']);
-        
-        // Format dates
-        $createdAt = $user['created_at'] ? date('d/m/Y H:i', strtotime($user['created_at'])) : 'N/A';
-        $updatedAt = $user['updated_at'] ? date('d/m/Y H:i', strtotime($user['updated_at'])) : 'N/A';
-        $lastHealthCheck = $user['last_health_check'] ? date('d/m/Y H:i', strtotime($user['last_health_check'])) : 'Chưa kiểm tra';
-        
-        // Get role and status based on premium_status
-        $role = $user['premium_status'] ? 'premium' : 'user';
-        $status = $user['premium_status'] ? 'premium' : 'active';
-        $roleDisplay = getRoleDisplay($role);
-        $statusDisplay = getStatusDisplay($status);
-        
-        // Get user role from database (relative/elderly)
-        $userRole = $user['role'] ?? 'relative';  // Default to 'relative' if not set
-        $userRoleDisplay = getUserRoleDisplay($userRole);
-        
-        // Format health data
-        $healthInfo = formatHealthInfo($user);
-        
-        $formattedUsers[] = [
-            'id' => $user['userId'],
-            'username' => $user['userName'],
-            'email' => $user['email'],
-            'full_name' => $user['userName'],
-            'phone' => $user['phone'],
-            'user_role' => $userRole,
-            'user_role_display' => $userRoleDisplay,
-            'private_key' => $user['private_key'],
-            'role' => $role,
-            'role_display' => $roleDisplay,
-            'status' => $status,
-            'status_display' => $statusDisplay,
-            'created_at' => $user['created_at'],
-            'created_at_formatted' => $createdAt,
-            'updated_at' => $user['updated_at'],
-            'updated_at_formatted' => $updatedAt,
-            'avatar' => $avatar,
-            'premium_status' => $user['premium_status'],
-            'premium_start_date' => $user['premium_start_date'],
-            'premium_end_date' => $user['premium_end_date'],
-            'premium_key' => $user['premium_key'] ?? null,
-            'age' => $user['age'],
-            'gender' => $user['gender'],
-            'blood' => $user['blood'],
-            'health_info' => $healthInfo,
-            'last_health_check' => $user['last_health_check'],
-            'last_health_check_formatted' => $lastHealthCheck
-        ];
+        try {
+            // Generate avatar from name
+            $avatar = generateAvatar($user['userName']);
+            
+            // Format dates
+            $createdAt = $user['created_at'] ? date('d/m/Y H:i', strtotime($user['created_at'])) : 'N/A';
+            $updatedAt = $user['updated_at'] ? date('d/m/Y H:i', strtotime($user['updated_at'])) : 'N/A';
+            $lastHealthCheck = $user['last_health_check'] ? date('d/m/Y H:i', strtotime($user['last_health_check'])) : 'Chưa kiểm tra';
+            
+            // Get role and status based on premium_status
+            $role = $user['premium_status'] ? 'premium' : 'user';
+            $status = $user['premium_status'] ? 'premium' : 'active';
+            $roleDisplay = getRoleDisplay($role);
+            $statusDisplay = getStatusDisplay($status);
+            
+            // Get user role from database (relative/elderly)
+            $userRole = $user['role'] ?? 'relative';  // Default to 'relative' if not set
+            $userRoleDisplay = getUserRoleDisplay($userRole);
+            
+            // Format health data
+            $healthInfo = formatHealthInfo($user);
+            
+            $formattedUsers[] = [
+                'id' => $user['userId'],
+                'username' => $user['userName'],
+                'email' => $user['email'],
+                'full_name' => $user['userName'],
+                'phone' => $user['phone'],
+                'user_role' => $userRole,
+                'user_role_display' => $userRoleDisplay,
+                'private_key' => $user['private_key'],
+                'role' => $role,
+                'role_display' => $roleDisplay,
+                'status' => $status,
+                'status_display' => $statusDisplay,
+                'created_at' => $user['created_at'],
+                'created_at_formatted' => $createdAt,
+                'updated_at' => $user['updated_at'],
+                'updated_at_formatted' => $updatedAt,
+                'avatar' => $avatar,
+                'premium_status' => $user['premium_status'],
+                'premium_start_date' => $user['premium_start_date'],
+                'premium_end_date' => $user['premium_end_date'],
+                'premium_key' => $user['premium_key'] ?? null,
+                'age' => $user['age'],
+                'gender' => $user['gender'],
+                'blood' => $user['blood'],
+                'health_info' => $healthInfo,
+                'last_health_check' => $user['last_health_check'],
+                'last_health_check_formatted' => $lastHealthCheck
+            ];
+        } catch (Exception $e) {
+            error_log("Error formatting user data: " . $e->getMessage());
+            // Continue with other users even if one fails
+            continue;
+        }
     }
     
-    // Calculate pagination info
-    $totalPages = ceil($totalUsers / $limit);
-    
     error_log("Total pages: $totalPages, Current page: $page");
+    error_log("Formatted users count: " . count($formattedUsers));
     
     // Clean any output buffer before JSON output
     ob_clean();
@@ -256,13 +222,20 @@ try {
             'limit' => $limit,
             'offset' => $offset,
             'users_found' => count($formattedUsers),
-            'premium_table_exists' => $premiumTableExists ?? false,
-            'query_used' => $premiumTableExists ? 'with_premium_join' : 'without_premium_join'
+            'raw_users_count' => count($users),
+            'total_pages' => $totalPages
         ]
     ];
     
     error_log("Sending response with " . count($formattedUsers) . " users");
-    echo json_encode($response);
+    
+    // Ensure we always return valid JSON
+    $jsonResponse = json_encode($response);
+    if ($jsonResponse === false) {
+        throw new Exception('Failed to encode JSON response: ' . json_last_error_msg());
+    }
+    
+    echo $jsonResponse;
     exit();
     
 } catch (PDOException $e) {
