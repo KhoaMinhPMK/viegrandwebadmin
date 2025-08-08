@@ -15,7 +15,7 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', '/tmp/php_errors.log');
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -108,8 +108,7 @@ try {
             u.blood_pressure_systolic,
             u.blood_pressure_diastolic,
             u.heart_rate,
-            u.last_health_check,
-            NULL as premium_key
+            u.last_health_check
         FROM user u
         ORDER BY u.created_at DESC 
         LIMIT :limit OFFSET :offset
@@ -135,10 +134,22 @@ try {
     $formattedUsers = [];
     foreach ($users as $user) {
         try {
+            // Sanitize and encode all string data to prevent UTF-8 issues
+            $user = array_map(function($value) {
+                if (is_string($value)) {
+                    // Remove any invalid UTF-8 characters
+                    $value = iconv('UTF-8', 'UTF-8//IGNORE', $value);
+                    // Ensure it's properly encoded
+                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                    return $value;
+                }
+                return $value;
+            }, $user);
+            
             // Generate avatar from name
             $avatar = generateAvatar($user['userName']);
             
-            // Format dates
+            // Format dates with proper encoding
             $createdAt = $user['created_at'] ? date('d/m/Y H:i', strtotime($user['created_at'])) : 'N/A';
             $updatedAt = $user['updated_at'] ? date('d/m/Y H:i', strtotime($user['updated_at'])) : 'N/A';
             $lastHealthCheck = $user['last_health_check'] ? date('d/m/Y H:i', strtotime($user['last_health_check'])) : 'Chưa kiểm tra';
@@ -177,7 +188,7 @@ try {
                 'premium_status' => $user['premium_status'],
                 'premium_start_date' => $user['premium_start_date'],
                 'premium_end_date' => $user['premium_end_date'],
-                'premium_key' => $user['premium_key'] ?? null,
+                'premium_key' => null,
                 'age' => $user['age'],
                 'gender' => $user['gender'],
                 'blood' => $user['blood'],
@@ -229,10 +240,29 @@ try {
     
     error_log("Sending response with " . count($formattedUsers) . " users");
     
-    // Ensure we always return valid JSON
-    $jsonResponse = json_encode($response);
+    // Ensure we always return valid JSON with proper UTF-8 encoding
+    $jsonResponse = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($jsonResponse === false) {
-        throw new Exception('Failed to encode JSON response: ' . json_last_error_msg());
+        $error = json_last_error_msg();
+        error_log("JSON encoding failed: " . $error);
+        
+        // Try to identify which field is causing the issue
+        foreach ($formattedUsers as $index => $user) {
+            $testJson = json_encode($user, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if ($testJson === false) {
+                error_log("User $index causes JSON error: " . json_last_error_msg());
+                // Remove problematic user
+                unset($formattedUsers[$index]);
+            }
+        }
+        
+        // Try again with cleaned data
+        $response['data']['users'] = array_values($formattedUsers);
+        $jsonResponse = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        
+        if ($jsonResponse === false) {
+            throw new Exception('Failed to encode JSON response even after cleaning: ' . json_last_error_msg());
+        }
     }
     
     echo $jsonResponse;
@@ -257,7 +287,7 @@ try {
             'file' => basename(__FILE__),
             'line' => $e->getLine()
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     exit();
 } catch (Exception $e) {
     error_log("General Error: " . $e->getMessage());
@@ -277,7 +307,7 @@ try {
             'limit' => $limit ?? 'undefined',
             'offset' => $offset ?? 'undefined'
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
@@ -286,6 +316,10 @@ try {
  */
 function generateAvatar($name) {
     if (!$name) return 'U';
+    
+    // Ensure proper UTF-8 encoding
+    $name = iconv('UTF-8', 'UTF-8//IGNORE', $name);
+    $name = mb_convert_encoding($name, 'UTF-8', 'UTF-8');
     
     $words = trim($name) ? explode(' ', trim($name)) : ['User'];
     if (count($words) >= 2) {
