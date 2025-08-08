@@ -2,8 +2,8 @@
 let currentDatabase = 'admin';
 let adminCurrentPage = 1;
 let mainCurrentPage = 1;
-let adminCurrentLimit = 10;
-let mainCurrentLimit = 10;
+let adminCurrentLimit = 100; // Show all users on one page
+let mainCurrentLimit = 100; // Show all users on one page
 let currentUserData = null;
 let adminUsersData = []; // Store admin users data
 let mainUsersData = []; // Store main users data
