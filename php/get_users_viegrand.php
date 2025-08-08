@@ -141,17 +141,19 @@ try {
         error_log("Processing user $processedCount (index $index): userId=" . ($user['userId'] ?? 'NULL') . ", userName=" . ($user['userName'] ?? 'NULL'));
         
         try {
-            // Sanitize and encode all string data to prevent UTF-8 issues
-            $user = array_map(function($value) {
+            // More gentle UTF-8 handling - only fix if there are actual issues
+            $sanitizedUser = [];
+            foreach ($user as $key => $value) {
                 if (is_string($value)) {
-                    // Remove any invalid UTF-8 characters
-                    $value = iconv('UTF-8', 'UTF-8//IGNORE', $value);
-                    // Ensure it's properly encoded
-                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-                    return $value;
+                    // Only sanitize if the string contains invalid UTF-8
+                    if (!mb_check_encoding($value, 'UTF-8')) {
+                        error_log("Found invalid UTF-8 in user $user[userId], field $key: " . substr($value, 0, 50));
+                        $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                    }
                 }
-                return $value;
-            }, $user);
+                $sanitizedUser[$key] = $value;
+            }
+            $user = $sanitizedUser;
             
             // Generate avatar from name
             $avatar = generateAvatar($user['userName']);
@@ -211,9 +213,11 @@ try {
             $skippedUsers[] = [
                 'userId' => $user['userId'] ?? 'NULL',
                 'userName' => $user['userName'] ?? 'NULL',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
             ];
-            error_log("Error formatting user data: userId=" . ($user['userId'] ?? 'NULL') . ", userName=" . ($user['userName'] ?? 'NULL') . ", error=" . $e->getMessage());
+            error_log("Error formatting user data: userId=" . ($user['userId'] ?? 'NULL') . ", userName=" . ($user['userName'] ?? 'NULL') . ", error=" . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
             // Continue with other users even if one fails
             continue;
         }
@@ -228,7 +232,7 @@ try {
     if ($skippedCount > 0) {
         error_log("Skipped users details:");
         foreach ($skippedUsers as $skipped) {
-            error_log("  - userId: " . $skipped['userId'] . ", userName: " . $skipped['userName'] . ", error: " . $skipped['error']);
+            error_log("  - userId: " . $skipped['userId'] . ", userName: " . $skipped['userName'] . ", error: " . $skipped['error'] . " at " . $skipped['error_file'] . ":" . $skipped['error_line']);
         }
     }
     
@@ -353,15 +357,20 @@ try {
 function generateAvatar($name) {
     if (!$name) return 'U';
     
-    // Ensure proper UTF-8 encoding
-    $name = iconv('UTF-8', 'UTF-8//IGNORE', $name);
-    $name = mb_convert_encoding($name, 'UTF-8', 'UTF-8');
+    // More gentle UTF-8 handling
+    if (!mb_check_encoding($name, 'UTF-8')) {
+        $name = mb_convert_encoding($name, 'UTF-8', 'UTF-8');
+    }
     
     $words = trim($name) ? explode(' ', trim($name)) : ['User'];
     if (count($words) >= 2) {
-        return strtoupper($words[0][0] . $words[count($words) - 1][0]);
+        $first = isset($words[0][0]) ? $words[0][0] : 'U';
+        $last = isset($words[count($words) - 1][0]) ? $words[count($words) - 1][0] : 'U';
+        return strtoupper($first . $last);
     } else {
-        return strtoupper(substr($words[0], 0, 2));
+        $first = isset($words[0][0]) ? $words[0][0] : 'U';
+        $second = isset($words[0][1]) ? $words[0][1] : 'U';
+        return strtoupper($first . $second);
     }
 }
 
