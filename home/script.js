@@ -126,15 +126,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Gọi API logout (nếu có token)
                 const token = localStorage.getItem('viegrand_token');
                 if (token) {
-                    await fetch(API_BASE_URL + 'login.php', {
+                    await fetch(API_BASE_URL + 'api/auth.php?action=logout', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            action: 'logout',
-                            session_token: token
-                        })
+                        body: JSON.stringify({})
                     });
                 }
             } catch (error) {

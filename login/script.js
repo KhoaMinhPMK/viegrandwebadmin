@@ -34,15 +34,14 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<span class="loading-spinner"></span> Đang đăng nhập...';
         
         try {
-            console.log('Attempting login with API:', API_BASE_URL + 'login.php');
+            console.log('Attempting login with API:', API_BASE_URL + 'api/auth.php?action=login');
             
-            const response = await fetch(API_BASE_URL + 'login.php', {
+            const response = await fetch(API_BASE_URL + 'api/auth.php?action=login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    action: 'login',
                     username: username,
                     password: password
                 })
@@ -167,15 +166,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Test API Button
     const testApiBtn = document.getElementById('testApiBtn');
-    testApiBtn.addEventListener('click', async function() {
+    if (testApiBtn) testApiBtn.addEventListener('click', async function() {
         const originalText = this.innerHTML;
         this.disabled = true;
         this.innerHTML = '<span class="loading-spinner"></span> Testing...';
         
         try {
-            console.log('Testing API connection to:', API_BASE_URL + 'login.php');
+            console.log('Testing API connection to:', API_BASE_URL + 'api/auth.php?action=me');
             
-            const response = await fetch(API_BASE_URL + 'login.php', {
+            const response = await fetch(API_BASE_URL + 'api/auth.php?action=me', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
