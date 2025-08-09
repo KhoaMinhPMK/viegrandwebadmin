@@ -62,9 +62,11 @@ class LoginHandler {
                 ];
             }
             
-            // Kiểm tra mật khẩu (tạm thời so sánh trực tiếp vì trong DB lưu plain text)
-            // Trong production nên hash password
-            if ($password !== $user['password']) {
+            // Kiểm tra mật khẩu: hỗ trợ cả plain text và bcrypt
+            $stored = (string)$user['password'];
+            $isBcrypt = (bool)preg_match('/^\$2y\$/' , $stored);
+            $validPassword = $isBcrypt ? password_verify($password, $stored) : ($password === $stored);
+            if (!$validPassword) {
                 $this->recordFailedLogin($username);
                 Utils::logActivity("Login failed - wrong password for user: $username", 'WARNING');
                 return [
@@ -138,16 +140,17 @@ class LoginHandler {
      * Kiểm tra tài khoản có bị khóa không
      */
     private function isAccountLocked($username) {
+        // Tính mốc thời gian thay vì dùng INTERVAL ? để tránh lỗi bind tham số
+        $threshold = date('Y-m-d H:i:s', time() - (int)LOGIN_LOCKOUT_TIME);
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as failed_count 
             FROM user_sessions 
-            WHERE ip_address = ? AND created_at > DATE_SUB(NOW(), INTERVAL ? SECOND)
-            AND session_token LIKE 'FAILED_%'
+            WHERE ip_address = ? AND created_at > ?
+              AND session_token LIKE 'FAILED_%'
         ");
-        $stmt->execute([Utils::getClientIP(), LOGIN_LOCKOUT_TIME]);
+        $stmt->execute([Utils::getClientIP(), $threshold]);
         $result = $stmt->fetch();
-        
-        return $result['failed_count'] >= MAX_LOGIN_ATTEMPTS;
+        return ((int)($result['failed_count'] ?? 0)) >= (int)MAX_LOGIN_ATTEMPTS;
     }
     
     /**
