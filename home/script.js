@@ -307,10 +307,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             showLoading(true);
             
-            let url = `${API_BASE_URL}users.php?action=list&db=${currentDatabase}&page=${currentPage}&limit=${currentLimit}`;
+            let url = `${API_BASE_URL}api/users.php?action=list&db=${currentDatabase}&page=${currentPage}&limit=${currentLimit}`;
             
             if (currentSearchQuery) {
-                url = `${API_BASE_URL}users.php?action=search&db=${currentDatabase}&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
+                url = `${API_BASE_URL}api/users.php?action=search&db=${currentDatabase}&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
             }
             
             const response = await fetch(url);
@@ -617,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function fetchUserDetail(userId, database) {
         try {
-            const response = await fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`);
+            const response = await fetch(`${API_BASE_URL}api/users.php?action=get&id=${userId}&db=${database}`);
             const responseText = await response.text();
             
             let result;
@@ -704,7 +704,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         showNotification('Đang tải thông tin người dùng...', 'info');
         
-        fetch(`${API_BASE_URL}users.php?action=get&id=${userId}&db=${database}`)
+        fetch(`${API_BASE_URL}api/users.php?action=get&id=${userId}&db=${database}`)
             .then(response => response.json())
             .then(result => {
                 if (result.success && result.data) {
@@ -939,7 +939,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch(`${API_BASE_URL}users.php?email=${encodeURIComponent(currentEditUser.email)}&db=${currentDatabase}`, {
+        fetch(`${API_BASE_URL}api/users.php?email=${encodeURIComponent(currentEditUser.email)}&db=${currentDatabase}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
