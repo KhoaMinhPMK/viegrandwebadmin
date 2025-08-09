@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Premium Status Restrictions - VieGrand Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        select:disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .field-note {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Premium Status Restrictions</h1>
+        <p>This tool tests the new feature where only "relative" users can have their premium status updated, while "elderly" users cannot.</p>
+        
+        <div class="test-section">
+            <h3>🧪 Test Case 1: Role Change Simulation</h3>
+            <p>Test how the premium status field behaves when changing user roles.</p>
+            
+            <div class="form-group">
+                <label for="testRole">User Role:</label>
+                <select id="testRole">
+                    <option value="relative">Người thân (Relative)</option>
+                    <option value="elderly">Người cao tuổi (Elderly)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="testPremiumStatus">Premium Status:</label>
+                <select id="testPremiumStatus">
+                    <option value="0">Regular User</option>
+                    <option value="1">Premium User</option>
+                </select>
+                <small class="field-note" id="testPremiumNote" style="display: none;">
+                    <i>ℹ️</i> Chỉ người thân mới có thể thay đổi trạng thái Premium. Người cao tuổi không thể thay đổi.
+                </small>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔬 Test Case 2: API Update Test</h3>
+            <p>Test the API restriction for premium status updates.</p>
+            
+            <div class="form-group">
+                <label for="apiTestUserId">User ID to Test:</label>
+                <input type="number" id="apiTestUserId" placeholder="Enter user ID" value="1">
+            </div>
+            
+            <div class="form-group">
+                <label for="apiTestRole">New Role:</label>
+                <select id="apiTestRole">
+                    <option value="relative">Người thân (Relative)</option>
+                    <option value="elderly">Người cao tuổi (Elderly)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="apiTestPremium">New Premium Status:</label>
+                <select id="apiTestPremium">
+                    <option value="0">Regular User</option>
+                    <option value="1">Premium User</option>
+                </select>
+            </div>
+            
+            <button onclick="testApiUpdate()">Test API Update</button>
+            <button onclick="testApiUpdateElderly()">Test Elderly Premium Update (Should Fail)</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Test Results</h3>
+            <div id="testResults" class="log">No tests run yet...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://viegrand.site/viegrandwebadmin/php/';
+        
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            resultsDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        // Test Case 1: Role change simulation
+        document.getElementById('testRole').addEventListener('change', function(e) {
+            const selectedRole = e.target.value;
+            const premiumField = document.getElementById('testPremiumStatus');
+            const noteField = document.getElementById('testPremiumNote');
+            
+            if (selectedRole === 'elderly') {
+                premiumField.disabled = true;
+                premiumField.title = 'Người cao tuổi không thể thay đổi trạng thái Premium';
+                premiumField.style.backgroundColor = '#f8f9fa';
+                premiumField.style.color = '#6c757d';
+                noteField.style.display = 'block';
+                
+                log('✅ UI Test: Premium field disabled for elderly user', 'success');
+            } else {
+                premiumField.disabled = false;
+                premiumField.title = '';
+                premiumField.style.backgroundColor = '';
+                premiumField.style.color = '';
+                noteField.style.display = 'none';
+                
+                log('✅ UI Test: Premium field enabled for relative user', 'success');
+            }
+        });
+        
+        // Test Case 2: API update tests
+        async function testApiUpdate() {
+            const userId = document.getElementById('apiTestUserId').value;
+            const role = document.getElementById('apiTestRole').value;
+            const premiumStatus = document.getElementById('apiTestPremium').value;
+            
+            if (!userId) {
+                log('❌ Error: Please enter a user ID', 'error');
+                return;
+            }
+            
+            log(`🧪 Testing API update for User ID: ${userId}, Role: ${role}, Premium: ${premiumStatus}`);
+            
+            try {
+                const response = await fetch(`${API_BASE}update_user_main.php`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: parseInt(userId),
+                        role: role,
+                        premium_status: premiumStatus
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ API Test Success: ${result.message}`, 'success');
+                    if (result.data && result.data.role) {
+                        log(`   Updated Role: ${result.data.role}`, 'success');
+                    }
+                } else {
+                    log(`❌ API Test Failed: ${result.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ API Test Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testApiUpdateElderly() {
+            const userId = document.getElementById('apiTestUserId').value;
+            
+            if (!userId) {
+                log('❌ Error: Please enter a user ID', 'error');
+                return;
+            }
+            
+            log(`🧪 Testing API restriction: Trying to update premium status for elderly user (should fail)`);
+            
+            try {
+                // First set user to elderly
+                const setElderlyResponse = await fetch(`${API_BASE}update_user_main.php`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: parseInt(userId),
+                        role: 'elderly'
+                    })
+                });
+                
+                const elderlyResult = await setElderlyResponse.json();
+                
+                if (elderlyResult.success) {
+                    log('✅ Step 1: Set user role to elderly', 'success');
+                    
+                    // Now try to update premium status (should fail)
+                    const premiumResponse = await fetch(`${API_BASE}update_user_main.php`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            id: parseInt(userId),
+                            premium_status: '1'
+                        })
+                    });
+                    
+                    const premiumResult = await premiumResponse.json();
+                    
+                    if (!premiumResult.success) {
+                        log(`✅ Step 2: API correctly blocked premium update: ${premiumResult.message}`, 'success');
+                    } else {
+                        log(`❌ Step 2: API should have blocked this update but didn't!`, 'error');
+                    }
+                } else {
+                    log(`❌ Step 1 Failed: ${elderlyResult.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Test Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize
+        log('🚀 Premium Status Restriction Test Tool Initialized');
+        log('💡 Change the role dropdown to see UI restrictions in action');
+        log('💡 Use the API test to verify server-side restrictions');
+    </script>
+</body>
+</html>

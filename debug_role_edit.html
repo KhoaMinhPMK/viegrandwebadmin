@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Role Edit - VieGrand Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .debug-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .role-relative {
+            background-color: #9c27b0;
+        }
+        .role-elderly {
+            background-color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Debug Role Edit - VieGrand Admin</h1>
+        
+        <div class="form-group">
+            <label for="userId">User ID to Test:</label>
+            <input type="number" id="userId" placeholder="Enter user ID" value="1">
+        </div>
+        
+        <button onclick="loadUser()">Load User Data</button>
+        <button onclick="testEditRole()">Test Role Edit</button>
+        
+        <div id="userInfo" class="debug-output" style="display: none;">
+            <strong>Current User Data:</strong>
+            <div id="userDetails"></div>
+        </div>
+        
+        <form id="editForm" style="display: none;">
+            <h3>Edit User Role</h3>
+            
+            <div class="form-group">
+                <label for="editUserRole">Role:</label>
+                <select id="editUserRole" name="role">
+                    <option value="relative">Người thân</option>
+                    <option value="elderly">Người cao tuổi</option>
+                </select>
+            </div>
+            
+            <button type="button" onclick="submitRoleEdit()">Update Role</button>
+        </form>
+        
+        <div id="debugOutput" class="debug-output"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://viegrand.site/viegrandwebadmin/php/';
+        let currentUser = null;
+        
+        function log(message) {
+            const output = document.getElementById('debugOutput');
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+        
+        async function loadUser() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                log('Please enter a user ID');
+                return;
+            }
+            
+            try {
+                log('Loading user data for ID: ' + userId);
+                
+                const response = await fetch(`${API_BASE}get_users_viegrand.php`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const user = result.users.find(u => u.id == userId);
+                    if (user) {
+                        currentUser = user;
+                        displayUserInfo(user);
+                        setupEditForm(user);
+                        log('User data loaded successfully');
+                    } else {
+                        log('User not found with ID: ' + userId);
+                    }
+                } else {
+                    log('Error loading users: ' + result.message);
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+        
+        function displayUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            const userDetails = document.getElementById('userDetails');
+            
+            userDetails.innerHTML = `
+                <strong>ID:</strong> ${user.id}<br>
+                <strong>Username:</strong> ${user.username}<br>
+                <strong>Email:</strong> ${user.email}<br>
+                <strong>Current Role:</strong> <span class="role-badge role-${user.user_role}">${user.user_role_display}</span><br>
+                <strong>Role Value:</strong> ${user.user_role}<br>
+                <strong>Full User Object:</strong><br>
+                ${JSON.stringify(user, null, 2)}
+            `;
+            
+            userInfo.style.display = 'block';
+        }
+        
+        function setupEditForm(user) {
+            const editForm = document.getElementById('editForm');
+            const roleSelect = document.getElementById('editUserRole');
+            
+            roleSelect.value = user.user_role || 'relative';
+            editForm.style.display = 'block';
+            
+            log('Edit form setup with role: ' + (user.user_role || 'relative'));
+        }
+        
+        async function submitRoleEdit() {
+            if (!currentUser) {
+                log('No user loaded');
+                return;
+            }
+            
+            const roleField = document.getElementById('editUserRole');
+            const selectedRole = roleField.value;
+            
+            log('Submitting role edit...');
+            log('Selected role: ' + selectedRole);
+            
+            const data = {
+                id: currentUser.id,
+                role: selectedRole
+            };
+            
+            log('Data being sent: ' + JSON.stringify(data));
+            
+            try {
+                const response = await fetch(`${API_BASE}update_user_main.php`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                log('API Response: ' + JSON.stringify(result, null, 2));
+                
+                if (result.success) {
+                    log('Role updated successfully!');
+                    // Reload user data to verify the change
+                    setTimeout(() => loadUser(), 1000);
+                } else {
+                    log('Error updating role: ' + result.message);
+                }
+                
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+        
+        function testEditRole() {
+            log('=== Starting Role Edit Test ===');
+            log('This will test the role editing functionality step by step');
+            loadUser();
+        }
+    </script>
+</body>
+</html>

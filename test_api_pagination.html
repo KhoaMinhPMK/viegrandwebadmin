@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Pagination Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Pagination Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Information</h3>
+        <p>This page tests the pagination functionality of the get_users_viegrand.php API.</p>
+        <p>Expected: 21 users split into 3 pages (10, 10, 1)</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Controls</h3>
+        <button onclick="testPage(1)">Test Page 1</button>
+        <button onclick="testPage(2)">Test Page 2</button>
+        <button onclick="testPage(3)">Test Page 3</button>
+        <button onclick="testAllPages()">Test All Pages</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_URL = 'https://viegrand.site/viegrandwebadmin/php/get_users_viegrand.php';
+        
+        async function testPage(page) {
+            const resultsDiv = document.getElementById('results');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-section';
+            testDiv.innerHTML = `<h4>Testing Page ${page}</h4><div>Loading...</div>`;
+            resultsDiv.appendChild(testDiv);
+            
+            try {
+                const response = await fetch(`${API_URL}?page=${page}&limit=10`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    testDiv.className = 'test-section success';
+                    testDiv.innerHTML = `
+                        <h4>✅ Page ${page} - SUCCESS</h4>
+                        <p><strong>Users found:</strong> ${result.data.users.length}</p>
+                        <p><strong>Pagination:</strong> Page ${result.data.pagination.current_page} of ${result.data.pagination.total_pages}</p>
+                        <p><strong>Total users:</strong> ${result.data.pagination.total_users}</p>
+                        <details>
+                            <summary>Raw Response</summary>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </details>
+                    `;
+                } else {
+                    testDiv.className = 'test-section error';
+                    testDiv.innerHTML = `
+                        <h4>❌ Page ${page} - FAILED</h4>
+                        <p><strong>Error:</strong> ${result.message}</p>
+                        <details>
+                            <summary>Error Details</summary>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </details>
+                    `;
+                }
+            } catch (error) {
+                testDiv.className = 'test-section error';
+                testDiv.innerHTML = `
+                    <h4>❌ Page ${page} - ERROR</h4>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <details>
+                        <summary>Error Details</summary>
+                        <pre>${error.stack}</pre>
+                    </details>
+                `;
+            }
+        }
+        
+        async function testAllPages() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-section info"><h4>Testing All Pages...</h4></div>';
+            
+            for (let page = 1; page <= 3; page++) {
+                await testPage(page);
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    </script>
+</body>
+</html> 

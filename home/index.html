@@ -51,34 +51,50 @@
         <div class="content-wrapper">
             <h1><i class="fas fa-home"></i> Trang chủ VieGrand</h1>
             
-            <!-- Users Management Section -->
-            <div class="users-section">
+            <!-- Database Tabs -->
+            <div class="database-tabs">
+                <button class="tab-btn active" data-database="admin">
+                    <i class="fas fa-database"></i>
+                    Admin Database
+                </button>
+                <button class="tab-btn" data-database="main">
+                    <i class="fas fa-users"></i>
+                    Main Database
+                </button>
+            </div>
+
+            <!-- Admin Database Section -->
+            <div class="database-section active" id="adminDatabaseSection">
                 <div class="section-header">
-                    <h2><i class="fas fa-users"></i> Quản lý người dùng</h2>
+                    <h2><i class="fas fa-shield-alt"></i> Admin Database (viegrand_admin.users)</h2>
                     <div class="section-controls">
-                        <!-- Database Selector -->
-                        <select id="databaseSelector" class="database-selector">
-                            <option value="admin">Admin Database (Login Web)</option>
-                            <option value="main">Main Database (VieGrand Chính)</option>
-                        </select>
-                        
-                        <div class="search-box">
-                            <input type="text" id="searchInput" placeholder="Tìm kiếm người dùng...">
-                            <button id="searchBtn"><i class="fas fa-search"></i></button>
+                        <div class="search-container">
+                            <input type="text" id="adminSearchInput" placeholder="Tìm kiếm admin (tên, email, vai trò...)" class="search-input">
+                            <button class="clear-search-btn" id="adminClearSearch" title="Xóa tìm kiếm">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                        <button class="refresh-btn" id="refreshBtn">
+                        <button class="add-btn" id="addAdminBtn" title="Thêm admin mới vào hệ thống">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Thêm Admin</span>
+                        </button>
+                        <button class="delete-all-btn" id="deleteAllAdminBtn" title="Xóa tất cả admin">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Xóa tất cả</span>
+                        </button>
+                        <button class="refresh-btn" id="refreshAdminBtn" title="Làm mới danh sách admin">
                             <i class="fas fa-sync-alt"></i> Làm mới
                         </button>
                     </div>
                 </div>
                 
                 <div class="users-table-container">
-                    <div class="loading-spinner" id="loadingSpinner">
+                    <div class="loading-spinner" id="adminLoadingSpinner">
                         <i class="fas fa-spinner fa-spin"></i>
-                        <span>Đang tải dữ liệu...</span>
+                        <span>Đang tải dữ liệu Admin...</span>
                     </div>
                     
-                    <table class="users-table" id="usersTable" style="display: none;">
+                    <table class="users-table" id="adminUsersTable" style="display: none;">
                         <thead>
                             <tr>
                                 <th>Avatar</th>
@@ -91,19 +107,81 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody">
-                            <!-- Data will be loaded here -->
+                        <tbody id="adminUsersTableBody">
+                            <!-- Admin data will be loaded here -->
                         </tbody>
                     </table>
                     
-                    <div class="pagination" id="paginationContainer" style="display: none;">
-                        <!-- Pagination will be generated here -->
+                    <div class="pagination" id="adminPaginationContainer" style="display: none;">
+                        <!-- Admin pagination will be generated here -->
                     </div>
                     
-                    <div class="no-data" id="noDataMessage" style="display: none;">
-                        <i class="fas fa-users-slash"></i>
-                        <h3>Không tìm thấy người dùng</h3>
-                        <p>Không có dữ liệu để hiển thị</p>
+                    <div class="no-data" id="adminNoDataMessage" style="display: none;">
+                        <i class="fas fa-database"></i>
+                        <h3>Không có dữ liệu Admin</h3>
+                        <p>Chưa có dữ liệu người dùng Admin nào.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Database Section -->
+            <div class="database-section" id="mainDatabaseSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-heartbeat"></i> Main Database (viegrand.user)</h2>
+                    <div class="section-controls">
+                        <div class="search-container">
+                            <input type="text" id="mainSearchInput" placeholder="Tìm kiếm người dùng (tên, email, private key...)" class="search-input">
+                            <button class="clear-search-btn" id="mainClearSearch" title="Xóa tìm kiếm">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button class="add-btn" id="addMainBtn" title="Thêm người dùng mới vào hệ thống">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Thêm User</span>
+                        </button>
+                        <button class="delete-all-btn" id="deleteAllMainBtn" title="Xóa tất cả người dùng">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Xóa tất cả</span>
+                        </button>
+                        <button class="refresh-btn" id="refreshMainBtn" title="Làm mới danh sách người dùng">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="users-table-container">
+                    <div class="loading-spinner" id="mainLoadingSpinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Đang tải dữ liệu Main...</span>
+                    </div>
+                    
+                    <table class="users-table" id="mainUsersTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Avatar</th>
+                                <th>Tên người dùng</th>
+                                <th>Email</th>
+                                <th>Vai trò</th>
+                                <th>Private Key</th>
+                                <th>Premium</th>
+                                <th>Thông tin sức khỏe</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mainUsersTableBody">
+                            <!-- Main data will be loaded here -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination" id="mainPaginationContainer" style="display: none;">
+                        <!-- Main pagination will be generated here -->
+                    </div>
+                    
+                    <div class="no-data" id="mainNoDataMessage" style="display: none;">
+                        <i class="fas fa-database"></i>
+                        <h3>Không có dữ liệu Main</h3>
+                        <p>Chưa có dữ liệu người dùng Main nào.</p>
                     </div>
                 </div>
             </div>
@@ -139,67 +217,116 @@
         </div>
     </main>
 
-    <!-- User Detail Modal -->
-    <div id="userDetailModal" class="modal">
+    <!-- View User Modal -->
+    <div id="viewUserModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-user"></i> Chi tiết người dùng</h2>
-                <span class="close">&times;</span>
+                <span class="close" id="closeViewModal">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="user-detail-container">
-                    <div class="user-avatar-large">
-                        <span id="modalUserAvatar">U</span>
+                    <div class="user-profile-section">
+                        <div class="user-avatar-large">
+                            <span id="viewUserAvatar">U</span>
+                        </div>
+                        <div class="user-basic-info">
+                            <h3 id="viewUserDisplayName" class="user-display-name">-</h3>
+                            <p id="viewUserDatabaseType" class="database-type">-</p>
+                            <div class="user-status-indicators">
+                                <span id="viewUserRole" class="role-badge">-</span>
+                                <span id="viewUserStatus" class="status-badge">-</span>
+                                <span id="viewUserPremiumBadge" class="premium-badge" style="display: none;">
+                                    <i class="fas fa-crown"></i> Premium
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="user-detail-info">
-                        <div class="detail-row">
-                            <label>ID:</label>
-                            <span id="modalUserId">-</span>
+                    
+                    <div class="user-detail-grid">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-user-circle"></i> Thông tin cơ bản</h4>
+                            <div class="detail-group">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-hashtag"></i> ID:</label>
+                                    <span id="viewUserId" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-signature"></i> Tên đầy đủ:</label>
+                                    <span id="viewUserFullName" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-at"></i> Tên đăng nhập:</label>
+                                    <span id="viewUserUsername" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-envelope"></i> Email:</label>
+                                    <span id="viewUserEmail" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-phone"></i> Số điện thoại:</label>
+                                    <span id="viewUserPhone" class="detail-value">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <label>Tên đầy đủ:</label>
-                            <span id="modalUserFullName">-</span>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-calendar-alt"></i> Thông tin thời gian</h4>
+                            <div class="detail-group">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-calendar-plus"></i> Ngày tạo:</label>
+                                    <span id="viewUserCreated" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item" id="viewUserLastLoginRow">
+                                    <label><i class="fas fa-sign-in-alt"></i> Đăng nhập cuối:</label>
+                                    <span id="viewUserLastLogin" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item" id="viewUserUpdatedRow" style="display: none;">
+                                    <label><i class="fas fa-edit"></i> Cập nhật cuối:</label>
+                                    <span id="viewUserUpdated" class="detail-value">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <label>Tên đăng nhập:</label>
-                            <span id="modalUserUsername">-</span>
+
+                        <div class="detail-section" id="viewUserMainDataSection" style="display: none;">
+                            <h4><i class="fas fa-user-plus"></i> Thông tin bổ sung</h4>
+                            <div class="detail-group">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-birthday-cake"></i> Tuổi:</label>
+                                    <span id="viewUserAge" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-venus-mars"></i> Giới tính:</label>
+                                    <span id="viewUserGender" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-tint"></i> Nhóm máu:</label>
+                                    <span id="viewUserBlood" class="detail-value">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-crown"></i> Trạng thái Premium:</label>
+                                    <span id="viewUserPremium" class="detail-value">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <label>Email:</label>
-                            <span id="modalUserEmail">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Số điện thoại:</label>
-                            <span id="modalUserPhone">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Vai trò:</label>
-                            <span id="modalUserRole" class="role-badge">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Trạng thái:</label>
-                            <span id="modalUserStatus" class="status-badge">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Ngày tạo:</label>
-                            <span id="modalUserCreated">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>Đăng nhập cuối:</label>
-                            <span id="modalUserLastLogin">-</span>
-                        </div>
-                        <div class="detail-row" id="modalPremiumRow" style="display: none;">
-                            <label>Premium:</label>
-                            <span id="modalUserPremium">-</span>
+
+                        <div class="detail-section health-section" id="viewUserHealthSection" style="display: none;">
+                            <h4><i class="fas fa-heartbeat"></i> Thông tin sức khỏe</h4>
+                            <div id="viewUserHealth" class="health-info-display">
+                                <!-- Health info will be populated here -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-edit" id="editUserBtn">
+                <button class="btn btn-edit" id="editFromViewBtn">
                     <i class="fas fa-edit"></i> Chỉnh sửa
                 </button>
-                <button class="btn btn-secondary" id="closeModalBtn">
+                <button class="btn btn-danger" id="deleteFromViewBtn">
+                    <i class="fas fa-trash"></i> Xóa
+                </button>
+                <button class="btn btn-secondary" id="closeViewBtn">
                     <i class="fas fa-times"></i> Đóng
                 </button>
             </div>
@@ -214,10 +341,13 @@
                     <i class="fas fa-user-edit"></i>
                     Chỉnh sửa thông tin người dùng
                 </h2>
-                <span class="close" id="closeEditModalBtn">&times;</span>
+                <span class="close" id="closeEditModal">&times;</span>
             </div>
             <div class="modal-body">
                 <form id="editUserForm" class="edit-form">
+                    <input type="hidden" id="editUserId" name="id">
+                    <input type="hidden" id="editUserDatabase" name="database">
+                    
                     <div class="form-grid">
                         <!-- Left Column -->
                         <div class="form-column">
@@ -232,10 +362,20 @@
                             <div class="form-group">
                                 <label for="editEmail">
                                     <i class="fas fa-envelope"></i>
-                                    Email (không thể thay đổi)
+                                    Email
                                 </label>
-                                <input type="email" id="editEmail" name="email" placeholder="Nhập địa chỉ email" readonly class="readonly-field">
-                                <small class="field-note">Email được sử dụng làm định danh và không thể thay đổi</small>
+                                <input type="email" id="editEmail" name="email" placeholder="Nhập địa chỉ email">
+                            </div>
+
+                            <div class="form-group" id="editRoleGroup" style="display: none;">
+                                <label for="editUserRole">
+                                    <i class="fas fa-user-tag"></i>
+                                    Vai trò
+                                </label>
+                                <select id="editUserRole" name="role">
+                                    <option value="relative">Người thân</option>
+                                    <option value="elderly">Người cao tuổi</option>
+                                </select>
                             </div>
 
                             <div class="form-group">
@@ -253,22 +393,19 @@
                                 </label>
                                 <input type="tel" id="editPhone" name="phone" placeholder="Nhập số điện thoại">
                             </div>
-                        </div>
 
-                        <!-- Right Column -->
-                        <div class="form-column">
-                            <!-- Admin Fields -->
-                            <div class="admin-only-fields" id="adminOnlyFields" style="display: none;">
+                            <!-- Admin Database Fields -->
+                            <div class="admin-fields" id="adminFields" style="display: none;">
                                 <div class="form-group">
                                     <label for="editRole">
                                         <i class="fas fa-user-tag"></i>
                                         Vai trò
                                     </label>
                                     <select id="editRole" name="role">
-                                        <option value="">-- Không thay đổi --</option>
+                                        <option value="">-- Chọn vai trò --</option>
                                         <option value="admin">Admin</option>
-                                        <option value="editor">Editor</option>
-                                        <option value="viewer">Viewer</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="user">User</option>
                                     </select>
                                 </div>
 
@@ -278,14 +415,64 @@
                                         Trạng thái
                                     </label>
                                     <select id="editStatus" name="status">
-                                        <option value="">-- Không thay đổi --</option>
+                                        <option value="">-- Chọn trạng thái --</option>
                                         <option value="active">Hoạt động</option>
                                         <option value="inactive">Không hoạt động</option>
-                                        <option value="suspended">Tạm khóa</option>
+                                        <option value="suspended">Bị khóa</option>
                                     </select>
                                 </div>
                             </div>
 
+                            <!-- Main Database Fields -->
+                            <div class="main-fields" id="mainFields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="editAge">
+                                        <i class="fas fa-birthday-cake"></i>
+                                        Tuổi
+                                    </label>
+                                    <input type="number" id="editAge" name="age" placeholder="Nhập tuổi">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editGender">
+                                        <i class="fas fa-venus-mars"></i>
+                                        Giới tính
+                                    </label>
+                                    <select id="editGender" name="gender">
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editBlood">
+                                        <i class="fas fa-tint"></i>
+                                        Nhóm máu
+                                    </label>
+                                    <input type="text" id="editBlood" name="blood" placeholder="Nhập nhóm máu">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editPremiumStatus">
+                                        <i class="fas fa-crown"></i>
+                                        Trạng thái Premium
+                                    </label>
+                                    <select id="editPremiumStatus" name="premium_status">
+                                        <option value="0">Regular User</option>
+                                        <option value="1">Premium User</option>
+                                    </select>
+                                    <small class="field-note" id="premiumStatusNote" style="display: none;">
+                                        <i class="fas fa-info-circle"></i>
+                                        Chỉ người thân mới có thể thay đổi trạng thái Premium. Người cao tuổi không thể thay đổi.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-column">
                             <!-- Current Info -->
                             <div class="current-info">
                                 <h4>
@@ -309,6 +496,50 @@
                                         <span class="info-label">Cập nhật cuối:</span>
                                         <span id="currentUpdated">-</span>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Health Info for Main Database -->
+                            <div class="health-fields" id="healthFields" style="display: none;">
+                                <h4>
+                                    <i class="fas fa-heartbeat"></i>
+                                    Thông tin sức khỏe
+                                </h4>
+                                
+                                <div class="form-group">
+                                    <label for="editHeight">
+                                        <i class="fas fa-ruler-vertical"></i>
+                                        Chiều cao (cm)
+                                    </label>
+                                    <input type="number" id="editHeight" name="height" placeholder="Chiều cao">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editWeight">
+                                        <i class="fas fa-weight"></i>
+                                        Cân nặng (kg)
+                                    </label>
+                                    <input type="number" id="editWeight" name="weight" placeholder="Cân nặng">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editBloodPressure">
+                                        <i class="fas fa-heart"></i>
+                                        Huyết áp (mmHg)
+                                    </label>
+                                    <div class="blood-pressure-inputs">
+                                        <input type="number" id="editSystolic" name="blood_pressure_systolic" placeholder="Tâm thu">
+                                        <span>/</span>
+                                        <input type="number" id="editDiastolic" name="blood_pressure_diastolic" placeholder="Tâm trương">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editHeartRate">
+                                        <i class="fas fa-heartbeat"></i>
+                                        Nhịp tim (bpm)
+                                    </label>
+                                    <input type="number" id="editHeartRate" name="heart_rate" placeholder="Nhịp tim">
                                 </div>
                             </div>
                         </div>
@@ -349,6 +580,348 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content delete-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Xác nhận xóa người dùng
+                </h2>
+                <span class="close" id="closeDeleteModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Bạn có chắc chắn muốn xóa người dùng này?</h3>
+                    <p>Hành động này không thể hoàn tác. Tất cả dữ liệu của người dùng sẽ bị xóa vĩnh viễn.</p>
+                </div>
+                <div class="user-to-delete">
+                    <div class="user-avatar-small">
+                        <span id="deleteUserAvatar">U</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="deleteUserName">-</div>
+                        <div class="user-email" id="deleteUserEmail">-</div>
+                        <div class="user-database" id="deleteUserDatabase">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Xóa người dùng
+                </button>
+                <button class="btn btn-secondary" id="cancelDeleteBtn">
+                    <i class="fas fa-times"></i> Hủy bỏ
+                </button>
+                <div class="loading-indicator" id="deleteLoadingIndicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Đang xóa...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content add-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-user-plus"></i>
+                    <span id="addModalTitle">Thêm người dùng mới</span>
+                </h2>
+                <span class="close" id="closeAddModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm" class="add-form">
+                    <input type="hidden" id="addUserDatabase" name="database">
+                    
+                    <div class="form-grid">
+                        <!-- Left Column -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="addUsername">
+                                    <i class="fas fa-user"></i>
+                                    Tên đăng nhập <span class="required">*</span>
+                                </label>
+                                <input type="text" id="addUsername" name="username" placeholder="Nhập tên đăng nhập" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="addEmail">
+                                    <i class="fas fa-envelope"></i>
+                                    Email <span class="required">*</span>
+                                </label>
+                                <input type="email" id="addEmail" name="email" placeholder="Nhập địa chỉ email" required>
+                            </div>
+
+                            <div class="form-group" id="addRoleGroup" style="display: none;">
+                                <label for="addRole">
+                                    <i class="fas fa-user-tag"></i>
+                                    Vai trò
+                                </label>
+                                <select id="addRole" name="role">
+                                    <option value="relative">Người thân</option>
+                                    <option value="elderly">Người cao tuổi</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="addFullName">
+                                    <i class="fas fa-signature"></i>
+                                    Họ và tên <span class="required" id="addFullNameRequired">*</span>
+                                </label>
+                                <input type="text" id="addFullName" name="full_name" placeholder="Nhập họ và tên (cho Admin) hoặc tên hiển thị (cho User)" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="addPhone">
+                                    <i class="fas fa-phone"></i>
+                                    Số điện thoại
+                                </label>
+                                <input type="tel" id="addPhone" name="phone" placeholder="Nhập số điện thoại">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="addPassword">
+                                    <i class="fas fa-lock"></i>
+                                    Mật khẩu <span class="required">*</span>
+                                </label>
+                                <input type="password" id="addPassword" name="password" placeholder="Nhập mật khẩu" required>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-column">
+                            <!-- Admin Fields -->
+                            <div id="addAdminFields" class="admin-specific-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="addRole">
+                                        <i class="fas fa-user-tag"></i>
+                                        Vai trò <span class="required">*</span>
+                                    </label>
+                                    <select id="addRole" name="role" required>
+                                        <option value="">Chọn vai trò</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="user">User</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addStatus">
+                                        <i class="fas fa-toggle-on"></i>
+                                        Trạng thái <span class="required">*</span>
+                                    </label>
+                                    <select id="addStatus" name="status" required>
+                                        <option value="">Chọn trạng thái</option>
+                                        <option value="active" selected>Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="suspended">Suspended</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Main Database Fields -->
+                            <div id="addMainFields" class="main-specific-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="addAge">
+                                        <i class="fas fa-birthday-cake"></i>
+                                        Tuổi
+                                    </label>
+                                    <input type="number" id="addAge" name="age" placeholder="Nhập tuổi" min="0" max="150">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addGender">
+                                        <i class="fas fa-venus-mars"></i>
+                                        Giới tính
+                                    </label>
+                                    <select id="addGender" name="gender">
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="male">Nam</option>
+                                        <option value="female">Nữ</option>
+                                        <option value="other">Khác</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addBlood">
+                                        <i class="fas fa-tint"></i>
+                                        Nhóm máu
+                                    </label>
+                                    <input type="text" id="addBlood" name="blood" placeholder="Nhập nhóm máu (A+, B-, O+, ...)">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addPremiumStatus">
+                                        <i class="fas fa-crown"></i>
+                                        Trạng thái Premium
+                                    </label>
+                                    <select id="addPremiumStatus" name="premium_status">
+                                        <option value="0" selected>Regular</option>
+                                        <option value="1">Premium</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Health Fields for Main Database -->
+                            <div id="addHealthFields" class="health-specific-fields" style="display: none;">
+                                <h4><i class="fas fa-heartbeat"></i> Thông tin sức khỏe</h4>
+                                
+                                <div class="form-group">
+                                    <label for="addHeight">
+                                        <i class="fas fa-ruler-vertical"></i>
+                                        Chiều cao (cm)
+                                    </label>
+                                    <input type="number" id="addHeight" name="height" placeholder="Chiều cao">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addWeight">
+                                        <i class="fas fa-weight"></i>
+                                        Cân nặng (kg)
+                                    </label>
+                                    <input type="number" id="addWeight" name="weight" placeholder="Cân nặng">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addSystolic">
+                                        <i class="fas fa-heartbeat"></i>
+                                        Huyết áp tâm thu (mmHg)
+                                    </label>
+                                    <input type="number" id="addSystolic" name="blood_pressure_systolic" placeholder="120">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addDiastolic">
+                                        <i class="fas fa-heartbeat"></i>
+                                        Huyết áp tâm trương (mmHg)
+                                    </label>
+                                    <input type="number" id="addDiastolic" name="blood_pressure_diastolic" placeholder="80">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addHeartRate">
+                                        <i class="fas fa-pulse"></i>
+                                        Nhịp tim (BPM)
+                                    </label>
+                                    <input type="number" id="addHeartRate" name="heart_rate" placeholder="75">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="saveAddBtn">
+                    <i class="fas fa-save"></i> Thêm mới
+                </button>
+                <button class="btn btn-secondary" id="cancelAddBtn">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <div class="loading-indicator" id="addLoadingIndicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Đang thêm...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Details Modal -->
+    <div id="premiumDetailsModal" class="modal">
+        <div class="modal-content premium-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-crown"></i>
+                    <span>Thông tin Premium</span>
+                </h2>
+                <span class="close" id="closePremiumModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="premium-info">
+                    <div class="premium-status-header">
+                        <div class="premium-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="premium-title">
+                            <h3>Tài khoản Premium</h3>
+                            <p>Thông tin chi tiết về gói Premium</p>
+                        </div>
+                    </div>
+                    
+                    <div class="premium-details">
+                        <div class="detail-row">
+                            <label><i class="fas fa-key"></i> Premium Key:</label>
+                            <span id="premiumKey" class="premium-key-display">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-calendar-alt"></i> Ngày bắt đầu:</label>
+                            <span id="premiumStartDate">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-calendar-check"></i> Ngày kết thúc:</label>
+                            <div class="premium-end-date-container">
+                                <span id="premiumEndDate">--</span>
+                                <button class="edit-end-date-btn" id="editEndDateBtn" title="Chỉnh sửa ngày kết thúc">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <div class="edit-end-date-form" id="editEndDateForm" style="display: none;">
+                                <input type="datetime-local" id="newEndDate" class="date-input">
+                                <div class="edit-buttons">
+                                    <button class="save-date-btn" id="saveEndDateBtn">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button class="cancel-date-btn" id="cancelEndDateBtn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-clock"></i> Thời gian còn lại:</label>
+                            <span id="premiumTimeRemaining">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <label><i class="fas fa-info-circle"></i> Trạng thái:</label>
+                            <span id="premiumStatusText" class="status-active">Đang hoạt động</span>
+                        </div>
+                        
+                        <!-- Elderly Management Section -->
+                        <div class="detail-row elderly-management-section" id="elderlyManagementSection">
+                            <label><i class="fas fa-users"></i> Quản lý người cao tuổi:</label>
+                            <div class="elderly-management-container">
+                                <div class="elderly-list" id="elderlyList">
+                                    <!-- Elderly users will be populated here -->
+                                </div>
+                                <div class="add-elderly-form" id="addElderlyForm" style="display: none;">
+                                    <input type="text" id="elderlyPrivateKey" placeholder="Nhập Private Key của người cao tuổi" class="elderly-key-input">
+                                    <div class="add-elderly-buttons">
+                                        <button class="btn btn-primary btn-sm" id="confirmAddElderly">
+                                            <i class="fas fa-plus"></i> Thêm
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" id="cancelAddElderly">
+                                            <i class="fas fa-times"></i> Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" id="showAddElderlyBtn">
+                                    <i class="fas fa-user-plus"></i> Thêm người cao tuổi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closePremiumModalBtn">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=2.6"></script>
 </body>
 </html>
