@@ -140,15 +140,14 @@ class LoginHandler {
      * Kiểm tra tài khoản có bị khóa không
      */
     private function isAccountLocked($username) {
-        // Tính mốc thời gian thay vì dùng INTERVAL ? để tránh lỗi bind tham số
+        // Đếm số lần đăng nhập thất bại trong login_attempts để tránh đụng FK user_sessions
         $threshold = date('Y-m-d H:i:s', time() - (int)LOGIN_LOCKOUT_TIME);
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as failed_count 
-            FROM user_sessions 
-            WHERE ip_address = ? AND created_at > ?
-              AND session_token LIKE 'FAILED_%'
+            FROM login_attempts 
+            WHERE ip_address = ? AND username = ? AND success = 0 AND attempted_at > ?
         ");
-        $stmt->execute([Utils::getClientIP(), $threshold]);
+        $stmt->execute([Utils::getClientIP(), $username, $threshold]);
         $result = $stmt->fetch();
         return ((int)($result['failed_count'] ?? 0)) >= (int)MAX_LOGIN_ATTEMPTS;
     }
@@ -157,13 +156,12 @@ class LoginHandler {
      * Ghi nhận đăng nhập thất bại
      */
     private function recordFailedLogin($username) {
+        // Ghi nhận thất bại vào login_attempts để không vi phạm FK
         $stmt = $this->db->prepare("
-            INSERT INTO user_sessions 
-            (user_id, session_token, ip_address, user_agent, expires_at, is_active) 
-            VALUES (0, ?, ?, ?, NOW(), 0)
+            INSERT INTO login_attempts (username, ip_address, success, user_agent)
+            VALUES (?, ?, 0, ?)
         ");
-        $failedToken = 'FAILED_' . $username . '_' . time();
-        $stmt->execute([$failedToken, Utils::getClientIP(), $_SERVER['HTTP_USER_AGENT'] ?? '']);
+        $stmt->execute([$username, Utils::getClientIP(), $_SERVER['HTTP_USER_AGENT'] ?? '']);
     }
     
     /**
@@ -171,10 +169,10 @@ class LoginHandler {
      */
     private function clearFailedLogins($username) {
         $stmt = $this->db->prepare("
-            DELETE FROM user_sessions 
-            WHERE ip_address = ? AND session_token LIKE 'FAILED_%'
+            DELETE FROM login_attempts
+            WHERE ip_address = ? AND username = ? AND success = 0
         ");
-        $stmt->execute([Utils::getClientIP()]);
+        $stmt->execute([Utils::getClientIP(), $username]);
     }
     
     /**
