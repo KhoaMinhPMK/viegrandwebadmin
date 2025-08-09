@@ -256,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Xử lý responsive cho ticker
     function handleResponsive() {
         const ticker = document.querySelector('.ticker-content');
+        if (!ticker) return;
         if (window.innerWidth <= 768) {
             ticker.style.animationDuration = '20s';
         } else {
@@ -272,26 +273,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const refreshBtn = document.getElementById('refreshBtn');
-        
-        // Search on Enter key
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
-        
-        // Search button click
-        searchBtn.addEventListener('click', performSearch);
-        
-        // Refresh button click
-        refreshBtn.addEventListener('click', function() {
-            currentSearchQuery = '';
-            searchInput.value = '';
-            currentPage = 1;
-            loadUsers();
-        });
-        
+
+        // Guard when elements are not on page
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        }
+
+        if (searchBtn) {
+            searchBtn.addEventListener('click', performSearch);
+        }
+
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                currentSearchQuery = '';
+                if (searchInput) searchInput.value = '';
+                currentPage = 1;
+                loadUsers();
+            });
+        }
+
         function performSearch() {
+            if (!searchInput) return;
             const query = searchInput.value.trim();
             if (query.length >= 2 || query.length === 0) {
                 currentSearchQuery = query;
@@ -313,7 +319,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 url = `${API_BASE_URL}api/users.php?action=search&db=${currentDatabase}&q=${encodeURIComponent(currentSearchQuery)}&page=${currentPage}&limit=${currentLimit}`;
             }
             
-            const response = await fetch(url);
+            // Đính kèm session_token nếu có (từ login.php trả về và lưu sessionStorage/localStorage)
+            const token = sessionStorage.getItem('session_token') || localStorage.getItem('session_token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const response = await fetch(url, { headers });
             const result = await response.json();
             
             if (result.success) {
@@ -469,7 +479,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const spinner = document.getElementById('loadingSpinner');
         const table = document.getElementById('usersTable');
         const pagination = document.getElementById('paginationContainer');
-        
+        if (!spinner || !table || !pagination) {
+            return; // Elements not present, nothing to toggle
+        }
         if (show) {
             spinner.style.display = 'flex';
             table.style.display = 'none';
@@ -498,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const noDataMsg = document.getElementById('noDataMessage');
         const table = document.getElementById('usersTable');
         const pagination = document.getElementById('paginationContainer');
-        
+        if (!noDataMsg || !table || !pagination) return;
         if (show) {
             noDataMsg.style.display = 'block';
             table.style.display = 'none';
@@ -542,10 +554,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('userDetailModal');
         const closeBtn = document.querySelector('.close');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        
-        // Close modal events
-        closeBtn.onclick = closeModal;
-        closeModalBtn.onclick = closeModal;
+        if (!modal) {
+            return;
+        }
+        // Close modal events (guard nulls)
+        if (closeBtn) closeBtn.onclick = closeModal;
+        if (closeModalBtn) closeModalBtn.onclick = closeModal;
         
         // Close modal when clicking outside
         window.onclick = function(event) {
@@ -556,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // ESC key to close modal
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && modal.style.display === 'block') {
+            if (event.key === 'Escape' && modal && modal.style.display === 'block') {
                 closeModal();
             }
         });

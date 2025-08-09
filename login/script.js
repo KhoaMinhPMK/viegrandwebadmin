@@ -60,7 +60,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 // Không lưu thông tin đăng nhập để bắt buộc đăng nhập lại mỗi lần
                 // localStorage.setItem('viegrand_user', JSON.stringify(result.data));
-                // localStorage.setItem('viegrand_token', result.data.session_token);
+                // Lưu session_token để gọi các API bảo vệ
+                try {
+                    if (result.data && result.data.session_token) {
+                        sessionStorage.setItem('session_token', result.data.session_token);
+                    }
+                } catch (e) {}
                 
                 showMessage('<i class="fas fa-check-circle"></i> Đăng nhập thành công!', 'success');
                 

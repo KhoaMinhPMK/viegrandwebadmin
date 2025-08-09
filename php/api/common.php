@@ -50,8 +50,35 @@ function current_user_id(): ?int {
     if (isset($_SESSION['user_id']) && is_numeric($_SESSION['user_id'])) {
         return (int)$_SESSION['user_id'];
     }
-    // Optional: Support Authorization: Bearer <token> (future)
+    // Bearer token
+    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['Authorization'] ?? '';
+    if (preg_match('/Bearer\s+(\S+)/i', $auth, $m)) {
+        $uid = user_id_from_token($m[1]);
+        if ($uid) return $uid;
+    }
+    // Query param session_token
+    if (!empty($_GET['session_token'])) {
+        $uid = user_id_from_token($_GET['session_token']);
+        if ($uid) return $uid;
+    }
+    // JSON body session_token
+    $input = read_json_input();
+    if (!empty($input['session_token'])) {
+        $uid = user_id_from_token($input['session_token']);
+        if ($uid) return $uid;
+    }
     return null;
+}
+
+function user_id_from_token(string $token): ?int {
+    try {
+        $stmt = db()->prepare('SELECT user_id FROM user_sessions WHERE session_token = ? AND is_active = 1 AND expires_at > NOW() LIMIT 1');
+        $stmt->execute([$token]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['user_id'] : null;
+    } catch (Throwable $e) {
+        return null;
+    }
 }
 
 function require_auth(): int {
