@@ -34,14 +34,15 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<span class="loading-spinner"></span> Đang đăng nhập...';
         
         try {
-            console.log('Attempting login with API:', API_BASE_URL + 'api/auth.php?action=login');
+            console.log('Attempting login with API:', API_BASE_URL + 'login.php');
             
-            const response = await fetch(API_BASE_URL + 'api/auth.php?action=login', {
+            const response = await fetch(API_BASE_URL + 'login.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    action: 'login',
                     username: username,
                     password: password
                 })
@@ -172,9 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
         this.innerHTML = '<span class="loading-spinner"></span> Testing...';
         
         try {
-            console.log('Testing API connection to:', API_BASE_URL + 'api/auth.php?action=me');
+            console.log('Testing API connection to:', API_BASE_URL + 'login.php');
             
-            const response = await fetch(API_BASE_URL + 'api/auth.php?action=me', {
+            const response = await fetch(API_BASE_URL + 'login.php', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
