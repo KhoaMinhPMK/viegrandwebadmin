@@ -99,7 +99,7 @@ class LoginHandler {
             Utils::logActivity("Login error: " . $e->getMessage(), 'ERROR');
             return [
                 'success' => false,
-                'message' => 'Có lỗi xảy ra trong quá trình đăng nhập'
+                'message' => 'Có lỗi xảy ra trong quá trình đăng nhập: ' . $e->getMessage()
             ];
         }
     }
